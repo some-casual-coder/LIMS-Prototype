@@ -1,16 +1,40 @@
 import { Link } from 'react-router-dom';
-import { CalendarClock, TriangleAlert, Clock3, ChevronRight } from 'lucide-react';
+import { CalendarClock, TriangleAlert, Clock3, ChevronRight, FileCheck2, Link2, ShieldCheck, UserRoundCheck } from 'lucide-react';
 import { Panel } from '@/components/ui';
+import { LogoMark } from '@/components/shell/LogoMark';
 import { toneVars } from '@/components/ui/tone';
 import type { CommandCentreData } from '@/data/commandCentre';
 import styles from './ReadinessRail.module.css';
 
 export function ReadinessRail({ data }: { data: CommandCentreData }) {
+  const activityIcons = [FileCheck2, ShieldCheck, Link2, UserRoundCheck];
   return (
     <div className={styles.rail}>
       <Panel title="Sitting & Publication Readiness" icon={<CalendarClock />}>
-        <p className={styles.nextLabel}>Next sitting</p>
-        <p className={styles.nextDate}>{data.readiness.nextSitting}</p>
+        <div className={styles.readinessLead}>
+          <div>
+            <p className={styles.nextLabel}>Next sitting</p>
+            <p className={styles.nextDate}>{data.readiness.nextSitting}</p>
+          </div>
+          <LogoMark size={54} />
+        </div>
+
+        <div className={styles.stageChart} role="img" aria-label={data.readiness.items.map((item) => `${item.label}: ${item.count}`).join(', ')}>
+          {data.readiness.items.map((item) => (
+            <div key={item.label} className={styles.stageColumn} aria-hidden>
+              {Array.from({ length: 8 }, (_, index) => (
+                <span
+                  key={index}
+                  className={styles.stageTick}
+                  style={{
+                    background: index < item.count * 2 ? toneVars[item.tone].dot : 'rgba(255,255,255,.72)',
+                    opacity: index < item.count * 2 ? 0.56 + index * 0.055 : 1,
+                  }}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
 
         <ul className={styles.readList}>
           {data.readiness.items.map((item) => (
@@ -24,20 +48,6 @@ export function ReadinessRail({ data }: { data: CommandCentreData }) {
           ))}
         </ul>
 
-        <p className={styles.distLabel}>Stage distribution</p>
-        <div
-          className={styles.distBar}
-          role="img"
-          aria-label={data.readiness.items.map((i) => `${i.label}: ${i.count}`).join(', ')}
-        >
-          {data.readiness.items.map((item) => (
-            <span
-              key={item.label}
-              className={styles.distSeg}
-              style={{ background: toneVars[item.tone].dot, flex: item.count }}
-            />
-          ))}
-        </div>
       </Panel>
 
       <Panel title="Attention Required" icon={<TriangleAlert />}>
@@ -60,7 +70,7 @@ export function ReadinessRail({ data }: { data: CommandCentreData }) {
         <ul className={styles.activity}>
           {data.activity.map((ev, i) => (
             <li key={i} className={styles.activityItem}>
-              <span className={styles.activityDot} aria-hidden />
+              <span className={styles.activityIcon} aria-hidden>{(() => { const Icon = activityIcons[i % activityIcons.length]; return <Icon width={15} height={15} />; })()}</span>
               <span className={styles.activityTime}>{ev.time}</span>
               <span className={styles.activityText}>{ev.text}</span>
             </li>

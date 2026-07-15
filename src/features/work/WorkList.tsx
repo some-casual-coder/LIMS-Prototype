@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ChevronDown, ChevronRight, MoreVertical, MoreHorizontal } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { StatusBadge } from '@/components/ui';
 import { priorityTone, toneVars } from '@/components/ui/tone';
 import type { WorkItem } from '@/data/myWork';
@@ -28,63 +28,58 @@ export function WorkList({ groups, collapsed, onToggleGroup, selected, onToggleS
   const hideClasses = [...(hidden ?? [])].map((k) => styles[HIDE_CLASS[k]]).filter(Boolean).join(' ');
   return (
     <div className={`${styles.wrap} ${compact ? styles.compact : ''} ${hideClasses}`}>
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            {COLS.map((c, i) => (
-              <th key={i} scope="col" className={i === 9 ? styles.thActions : ''}>
-                <span className={c ? '' : 'sr-only'}>{c || 'Select'}</span>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        {groups.map((group) => {
-          const isCollapsed = collapsed[group.key] ?? group.defaultCollapsed ?? false;
-          const tv = toneVars[group.tone];
-          const groupIds = group.items.map((i) => i.recordId);
-          const allSelected = groupIds.length > 0 && groupIds.every((id) => selected.has(id));
-          return (
-            <tbody key={group.key}>
-              <tr>
-                <th colSpan={10} className={styles.groupHeader} style={{ background: tv.bg }} scope="colgroup">
-                  <button className={styles.groupToggle} onClick={() => onToggleGroup(group.key)} aria-expanded={!isCollapsed}>
-                    {isCollapsed ? <ChevronRight width={16} height={16} /> : <ChevronDown width={16} height={16} />}
-                    <span className={styles.groupTitle} style={{ color: tv.fg }}>{group.title}</span>
-                    <span className={styles.groupCount} style={{ color: tv.fg }}>{group.items.length}</span>
-                  </button>
-                  <button className={styles.groupMenu} aria-label={`${group.title} options`} title="Group options">
-                    <MoreHorizontal width={16} height={16} />
-                  </button>
-                </th>
-              </tr>
-              {!isCollapsed && group.items.length > 0 && (
-                <tr className={styles.selectAllRow}>
-                  <td className={styles.cellCheck}>
-                    <input
-                      type="checkbox"
-                      checked={allSelected}
-                      onChange={(e) => onToggleSelectGroup(groupIds, e.target.checked)}
-                      aria-label={`Select all in ${group.title}`}
-                    />
-                  </td>
-                  <td colSpan={9} className={styles.selectAllHint}>
-                    {allSelected ? `All ${groupIds.length} selected` : ''}
-                  </td>
-                </tr>
-              )}
-              {!isCollapsed && group.items.map((item) => (
-                <Row
-                  key={item.recordId}
-                  item={item}
-                  selected={selected.has(item.recordId)}
-                  onToggleSelect={onToggleSelect}
-                  onOpen={onOpenItem}
+      {groups.map((group) => {
+        const isCollapsed = collapsed[group.key] ?? group.defaultCollapsed ?? false;
+        const tv = toneVars[group.tone];
+        const groupIds = group.items.map((item) => item.recordId);
+        const allSelected = groupIds.length > 0 && groupIds.every((id) => selected.has(id));
+        return (
+          <section key={group.key} className={styles.groupSection} aria-label={group.title}>
+            <div className={styles.groupBar} style={{ background: tv.bg }}>
+              {group.items.length > 0 && (
+                <input
+                  className={styles.groupCheck}
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={(event) => onToggleSelectGroup(groupIds, event.target.checked)}
+                  aria-label={`Select all in ${group.title}`}
                 />
-              ))}
-            </tbody>
-          );
-        })}
-      </table>
+              )}
+              <button className={styles.groupToggle} onClick={() => onToggleGroup(group.key)} aria-expanded={!isCollapsed}>
+                {isCollapsed ? <ChevronRight width={16} height={16} /> : <ChevronDown width={16} height={16} />}
+                <span className={styles.groupTitle} style={{ color: tv.fg }}>{group.title}</span>
+                <span className={styles.groupCount} style={{ color: tv.fg }}>{group.items.length}</span>
+              </button>
+            </div>
+            {!isCollapsed && (
+              <div className={styles.tableScroll}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      {COLS.map((column, index) => (
+                        <th key={index} scope="col" className={index === 9 ? styles.thActions : ''}>
+                          <span className={column ? '' : 'sr-only'}>{column || 'Select'}</span>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {group.items.map((item) => (
+                      <Row
+                        key={item.recordId}
+                        item={item}
+                        selected={selected.has(item.recordId)}
+                        onToggleSelect={onToggleSelect}
+                        onOpen={onOpenItem}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        );
+      })}
     </div>
   );
 }
@@ -93,7 +88,7 @@ function Row({ item, selected, onToggleSelect, onOpen }: {
   item: WorkItem; selected: boolean; onToggleSelect: (id: string) => void; onOpen: (id: string) => void;
 }) {
   return (
-    <tr className={`${styles.row} ${selected ? styles.rowSelected : ''}`} onClick={() => onOpen(item.recordId)}>
+    <tr className={`${styles.row} ${selected ? styles.rowSelected : ''}`}>
       <td className={styles.cellCheck} onClick={(e) => e.stopPropagation()}>
         <input type="checkbox" checked={selected} onChange={() => onToggleSelect(item.recordId)} aria-label={`Select ${item.title}`} />
       </td>
@@ -109,10 +104,7 @@ function Row({ item, selected, onToggleSelect, onOpen }: {
       <td className={styles.cellPriority}><StatusBadge tone={priorityTone[item.priority]} size="sm">{item.priority}</StatusBadge></td>
       <td className={styles.cellActivity}>{item.lastActivity}</td>
       <td className={styles.cellRowAction} onClick={(e) => e.stopPropagation()}>
-        <span className={styles.actionGroup}>
-          <Link to={item.actionTo} className={styles.rowActionBtn}>{item.actionLabel}</Link>
-          <button className={styles.rowOverflow} aria-label="More actions" title="More actions"><MoreVertical width={15} height={15} /></button>
-        </span>
+        <Link to={item.actionTo} className={styles.rowActionBtn}>{item.actionLabel}</Link>
       </td>
     </tr>
   );

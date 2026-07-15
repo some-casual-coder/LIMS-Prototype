@@ -8,6 +8,32 @@
   font-size: var(--fs-meta);
   color: var(--text-muted);
 }
+.readinessLead { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.stageChart {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: end;
+  gap: 16px;
+  height: 118px;
+  margin: 16px 0 6px;
+  padding: 16px 18px 12px;
+  border-radius: var(--r-button);
+  background: var(--soft-grey);
+}
+.stageColumn {
+  height: 88px;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.stageTick {
+  width: min(100%, 50px);
+  height: 7px;
+  flex: none;
+  border-radius: 3px;
+}
 .nextDate {
   font-size: 15px;
   font-weight: var(--fw-semibold);
@@ -43,24 +69,6 @@
   font-size: var(--fs-body);
   font-weight: var(--fw-bold);
   color: var(--text-strong);
-}
-
-.distLabel {
-  font-size: var(--fs-meta);
-  color: var(--text-muted);
-  margin: 16px 0 8px;
-}
-.distBar {
-  display: flex;
-  gap: 3px;
-  height: 8px;
-  border-radius: 999px;
-  overflow: hidden;
-}
-.distSeg {
-  height: 100%;
-  border-radius: 999px;
-  min-width: 6px;
 }
 
 .panelLink {
@@ -126,18 +134,12 @@
 }
 .activityItem {
   display: grid;
-  grid-template-columns: 14px 62px 1fr;
-  align-items: baseline;
+  grid-template-columns: 30px 62px 1fr;
+  align-items: center;
   gap: 8px;
   padding: 6px 0;
 }
-.activityDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--green-700);
-  transform: translateY(3px);
-}
+.activityIcon { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--r-button); background: var(--soft-green); color: var(--green-700); }
 .activityTime {
   font-size: var(--fs-meta);
   color: var(--text-muted);

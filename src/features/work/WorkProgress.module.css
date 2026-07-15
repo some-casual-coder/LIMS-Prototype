@@ -1,0 +1,20 @@
+.track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+}
+
+.segment {
+  height: 7px;
+  border: 1px solid #dce3de;
+  border-radius: 3px;
+  background: var(--soft-grey);
+}
+
+.complete {
+  border-color: var(--ink);
+  background: var(--ink);
+}

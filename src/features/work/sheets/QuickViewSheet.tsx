@@ -6,6 +6,7 @@ import { priorityTone } from '@/components/ui/tone';
 import { useDemoStore } from '@/store/demoStore';
 import type { WorkItem } from '@/data/myWork';
 import styles from './QuickViewSheet.module.css';
+import { WorkProgress } from '../WorkProgress';
 
 export function QuickViewSheet({ item, open, onClose }: { item: WorkItem | null; open: boolean; onClose: () => void }) {
   const navigate = useNavigate();
@@ -19,7 +20,6 @@ export function QuickViewSheet({ item, open, onClose }: { item: WorkItem | null;
 
   if (!item) return null;
   const isPinned = pinned.includes(item.recordId);
-  const pct = Math.round((item.progress.done / item.progress.total) * 100);
 
   return (
     <SideSheet
@@ -79,7 +79,7 @@ export function QuickViewSheet({ item, open, onClose }: { item: WorkItem | null;
         </dl>
         <div className={styles.progressRow}>
           <span className={styles.progressLabel}>Progress</span>
-          <div className={styles.progressTrack}><div className={styles.progressFill} style={{ width: `${pct}%` }} /></div>
+          <WorkProgress done={item.progress.done} total={item.progress.total} />
         </div>
         <p className={styles.progressText}>{item.progress.done} of {item.progress.total} completed</p>
       </Section>

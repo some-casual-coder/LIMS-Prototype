@@ -36,8 +36,6 @@
   display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 18px; padding: 0 6px;
   font-size: 11.5px; font-weight: var(--fw-bold); background: rgba(255,255,255,0.6); border-radius: 999px;
 }
-.colMenu { border: none; background: transparent; color: currentColor; opacity: 0.7; display: inline-flex; padding: 2px; border-radius: 4px; }
-.colMenu:hover { background: rgba(255,255,255,0.5); }
 
 .colBody {
   padding: 10px;
@@ -50,7 +48,7 @@
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: var(--r-card);
   padding: 13px;
   box-shadow: var(--shadow-sm);
   cursor: pointer;
@@ -65,26 +63,15 @@
 .cardDueUrgent { color: var(--on-red); }
 .cardTopRight { display: inline-flex; align-items: center; gap: 4px; }
 .cardLock { color: var(--text-muted); }
-.cardMenu { border: none; background: transparent; color: var(--text-muted); display: inline-flex; padding: 2px; border-radius: 4px; }
-.cardMenu:hover { background: var(--soft-grey); }
 
 .cardTitle { font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--text-strong); line-height: 1.3; margin: 8px 0 3px; }
 .cardRef { font-size: var(--fs-meta); color: var(--text-muted); }
 .cardAction { font-size: var(--fs-table); color: var(--text); margin: 9px 0 10px; line-height: 1.4; }
 
 .cardProgress { margin: 12px 0 10px; }
-.progressTrack { height: 6px; background: var(--soft-grey); border-radius: 999px; overflow: hidden; }
-.progressFill { height: 100%; background: var(--green-700); border-radius: 999px; }
 .progressText { font-size: 11px; color: var(--text-muted); margin-top: 5px; display: inline-block; }
 
 .cardBottom { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 10px; border-top: 1px solid var(--border); }
 .cardRole { font-size: var(--fs-meta); color: var(--text-muted); font-weight: var(--fw-medium); }
 .cardMeta { display: inline-flex; align-items: center; gap: 8px; }
 .metaItem { display: inline-flex; align-items: center; gap: 3px; font-size: var(--fs-meta); color: var(--text-muted); }
-
-.addCard {
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  height: 34px; border: 1px dashed var(--border-strong); background: transparent;
-  border-radius: var(--r-button); color: var(--text-muted); font-size: var(--fs-table); font-weight: var(--fw-medium);
-}
-.addCard:hover { background: var(--bg-card); color: var(--text-strong); }

@@ -6,9 +6,10 @@ import styles from './WorkIndicators.module.css';
 const icons = { active: Target, action: UserRound, due: CalendarClock, waiting: Clock4, overdue: CircleAlert } as const;
 
 export function WorkIndicators({ activeStatus, onSelect }: { activeStatus: string; onSelect: (filter: string) => void }) {
+  const visibleIndicators = indicators.filter((indicator) => indicator.id !== 'waiting');
   return (
     <div className={styles.grid}>
-      {indicators.map((ind) => {
+      {visibleIndicators.map((ind) => {
         const Icon = icons[ind.icon];
         const tv = toneVars[ind.tone];
         const active = activeStatus === ind.filter;

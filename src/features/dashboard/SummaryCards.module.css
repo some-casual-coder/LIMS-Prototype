@@ -9,11 +9,10 @@
 
 .item {
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-height: 84px;
-  padding: 14px 16px;
+  display: grid;
+  gap: 8px;
+  min-height: 116px;
+  padding: 14px 15px;
   border-right: 1px solid var(--border);
 }
 .item:last-child {
@@ -26,9 +25,9 @@
 .top {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  gap: 12px;
   min-width: 0;
-  flex: 1;
 }
 .iconWrap {
   display: inline-flex;
@@ -40,30 +39,34 @@
   flex: none;
 }
 .label {
-  display: block;
   font-size: var(--fs-table);
   font-weight: var(--fw-semibold);
   color: var(--text-strong);
   line-height: 1.25;
 }
-.chev {
-  color: var(--text-muted);
-  flex: none;
+.metric {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
 }
 
 .value {
-  font-size: 26px;
+  font-size: 30px;
   font-weight: var(--fw-bold);
   color: var(--text-strong);
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
 }
 .sub {
-  display: block;
   font-size: var(--fs-meta);
   color: var(--text-muted);
-  margin-top: 2px;
 }
+.miniTicks { flex: 1; min-width: 80px; height: 30px; display: flex; align-items: end; justify-content: flex-end; gap: 2px; }
+.miniTicks i { width: 3px; border-radius: 2px; }
+.miniTicks i:nth-child(3n+1) { height: 12px; }
+.miniTicks i:nth-child(3n+2) { height: 20px; }
+.miniTicks i:nth-child(3n) { height: 27px; }
 
 @media (max-width: 760px) {
   .summary {

@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { MoreVertical, Plus, Lock, MessageSquare, Paperclip, Flag } from 'lucide-react';
+import { Lock, MessageSquare, Paperclip, Flag } from 'lucide-react';
 import { StatusBadge } from '@/components/ui';
 import { priorityTone, toneVars } from '@/components/ui/tone';
 import type { WorkItem, WorkState } from '@/data/myWork';
 import { boardColumns } from './logic';
 import type { PendingTransition } from './sheets/TransitionSheet';
+import { WorkProgress } from './WorkProgress';
 import styles from './BoardView.module.css';
 
 // Personal work-state moves permitted from these columns (controlled).
@@ -49,7 +50,6 @@ export function BoardView({ items, onOpenItem, onTransition }: {
               <span className={styles.colDot} style={{ background: tv.dot }} aria-hidden />
               <span className={styles.colTitle} style={{ color: tv.fg }}>{meta.boardTitle}</span>
               <span className={styles.colCount} style={{ color: tv.fg }}>{colItems.length}</span>
-              <button className={styles.colMenu} aria-label={`${meta.boardTitle} options`}><MoreVertical width={15} height={15} /></button>
             </header>
             <div className={styles.colBody}>
               {colItems.map((item) => (
@@ -63,7 +63,6 @@ export function BoardView({ items, onOpenItem, onTransition }: {
                   onOpen={() => onOpenItem(item.recordId)}
                 />
               ))}
-              <button className={styles.addCard}><Plus width={15} height={15} /> Add card</button>
             </div>
           </section>
         );
@@ -76,7 +75,6 @@ function BoardCard({ item, draggable, dragging, onDragStart, onDragEnd, onOpen }
   item: WorkItem; draggable: boolean; dragging: boolean;
   onDragStart: () => void; onDragEnd: () => void; onOpen: () => void;
 }) {
-  const pct = Math.round((item.progress.done / item.progress.total) * 100);
   return (
     <article
       className={`${styles.card} ${dragging ? styles.cardDragging : ''}`}
@@ -91,8 +89,11 @@ function BoardCard({ item, draggable, dragging, onDragStart, onDragEnd, onOpen }
       <div className={styles.cardTop}>
         <span className={`${styles.cardDue} ${item.dueUrgent ? styles.cardDueUrgent : ''}`}>{item.due}</span>
         <span className={styles.cardTopRight}>
-          {item.confidentiality !== 'Public' && <Lock width={13} height={13} className={styles.cardLock} />}
-          <button className={styles.cardMenu} aria-label="Card options" onClick={(e) => e.stopPropagation()}><MoreVertical width={14} height={14} /></button>
+          {item.confidentiality !== 'Public' && (
+            <span title={`${item.confidentiality} record`} aria-label={`${item.confidentiality} record`}>
+              <Lock width={13} height={13} className={styles.cardLock} aria-hidden />
+            </span>
+          )}
         </span>
       </div>
       <h4 className={styles.cardTitle}>{item.title}</h4>
@@ -100,7 +101,7 @@ function BoardCard({ item, draggable, dragging, onDragStart, onDragEnd, onOpen }
       <p className={styles.cardAction}>{item.requiredAction}</p>
       <StatusBadge tone={item.stageTone} size="sm">{item.stage}</StatusBadge>
       <div className={styles.cardProgress}>
-        <div className={styles.progressTrack}><div className={styles.progressFill} style={{ width: `${pct}%` }} /></div>
+        <WorkProgress done={item.progress.done} total={item.progress.total} />
         <span className={styles.progressText}>{item.progress.done} of {item.progress.total} done</span>
       </div>
       <div className={styles.cardBottom}>

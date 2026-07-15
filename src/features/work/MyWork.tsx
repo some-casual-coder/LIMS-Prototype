@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { AppShell } from '@/components/shell';
 import { Button, Popover } from '@/components/ui';
-import { workItems, savedViews, moreSavedViews } from '@/data/myWork';
+import { workItems, savedViews } from '@/data/myWork';
 import { useDemoStore } from '@/store/demoStore';
 import { WorkIndicators } from './WorkIndicators';
 import { WorkList } from './WorkList';
@@ -20,6 +20,7 @@ import { ColumnsSheet } from './sheets/ColumnsSheet';
 import { ReminderSheet } from './sheets/ReminderSheet';
 import { AssignmentSheet } from './sheets/AssignmentSheet';
 import { TransitionSheet, type PendingTransition } from './sheets/TransitionSheet';
+import { useToast } from '@/features/search/Toast';
 import { applyFilters, sortItems, groupItems, emptyFilters, filterCount, type Filters } from './logic';
 import styles from './MyWork.module.css';
 
@@ -59,6 +60,7 @@ export function MyWork() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({ completed: true });
   const [pending, setPending] = useState<PendingTransition | null>(null);
+  const { showToast, ToastHost } = useToast();
 
   const setView = (v: string) => setParams((p) => { p.set('view', v); p.delete('item'); return p; }, { replace: true });
   const setStatus = (value: string) => {
@@ -95,23 +97,36 @@ export function MyWork() {
 
   const savedViewActive = (id: string) => (id === 'all' ? status === 'all' : status === id);
 
+  function exportWorklist() {
+    const quote = (value: string) => `"${value.replaceAll('"', '""')}"`;
+    const rows = filtered.map((item) => [item.reference, item.title, item.type, item.stage, item.requiredAction, item.due, item.priority]);
+    const csv = [['Reference', 'Title', 'Type', 'Stage', 'Required action', 'Due', 'Priority'], ...rows]
+      .map((row) => row.map(quote).join(','))
+      .join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'lims-my-work.csv';
+    anchor.click();
+    URL.revokeObjectURL(url);
+    showToast(`${filtered.length} work items exported.`);
+  }
+
   return (
     <AppShell breadcrumb={[{ label: 'Home', to: '/dashboard' }, { label: 'My Work' }]}>
       {/* Header */}
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>My Work</h1>
-          <p className={styles.supporting}>Manage legislative items assigned to you, awaiting your review or involving your directorate.</p>
-          <p className={styles.context}>Grace Wanjiku · Senior Legal Counsel · Directorate of Legal Services</p>
         </div>
         <div className={styles.headerActions}>
-          <Button variant="secondary" size="lg" leftIcon={<Download width={16} height={16} />}>Export Worklist</Button>
           <Button variant="primary" size="lg" to="/legislative/new" leftIcon={<Plus width={18} height={18} />}>New Legislative Instruction</Button>
           <Popover label="More actions" trigger={({ toggle, ref }) => (
             <button ref={ref} className={styles.moreBtn} onClick={toggle} aria-label="More actions"><MoreVertical width={18} height={18} /></button>
           )}>
             {(close) => (
               <div className={styles.menu} onClick={close}>
+                <button className={styles.menuItem} onClick={exportWorklist}><Download width={15} height={15} /> Export worklist</button>
                 <Link to="/documents/import" className={styles.menuItem}>Import historical document</Link>
                 <button className={styles.menuItem} onClick={() => openSheet('save-view')}>Manage saved views</button>
                 <button className={styles.menuItem} onClick={() => { setFilters(emptyFilters()); setSearch(''); setStatus('all'); }}>Reset filters</button>
@@ -123,30 +138,6 @@ export function MyWork() {
 
       {/* Workload indicators */}
       <WorkIndicators activeStatus={status} onSelect={(f) => setStatus(status === f ? 'all' : f)} />
-
-      {/* Saved views strip */}
-      <div className={styles.savedViews}>
-        <div className={styles.savedChips}>
-          {savedViews.map((v) => (
-            <button key={v.id} className={`${styles.chip} ${savedViewActive(v.id) ? styles.chipActive : ''}`} onClick={() => setStatus(v.id === 'all' ? 'all' : v.id)}>
-              {v.label}{v.count != null && <span className={styles.chipCount}>{v.count}</span>}
-            </button>
-          ))}
-          <Popover label="More views" trigger={({ toggle, ref }) => (
-            <button ref={ref} className={styles.chip} onClick={toggle}>More views <ChevronDown width={13} height={13} /></button>
-          )}>
-            {(close) => (
-              <div className={styles.menu} onClick={close}>
-                <p className={styles.menuLabel}>Saved views</p>
-                {moreSavedViews.map((v) => (
-                  <button key={v.id} className={styles.menuItem} onClick={() => setStatus('all')}><Bookmark width={14} height={14} /> {v.label}</button>
-                ))}
-              </div>
-            )}
-          </Popover>
-        </div>
-        <button className={styles.saveCurrent} onClick={() => openSheet('save-view')}><Plus width={14} height={14} /> Save current view</button>
-      </div>
 
       {/* View switcher + control bar */}
       <div className={styles.controlBar}>
@@ -163,8 +154,28 @@ export function MyWork() {
           <button className={styles.control} onClick={() => openSheet('filters')}>
             <SlidersHorizontal width={16} height={16} /> Filter{activeFilters > 0 && <span className={styles.ctlCount}>{activeFilters}</span>}
           </button>
+          <Popover label="Saved views" trigger={({ toggle, ref, open }) => (
+            <button ref={ref} className={styles.iconControl} onClick={toggle} aria-expanded={open} aria-label="Saved views" title="Saved views">
+              <Bookmark width={16} height={16} />
+            </button>
+          )}>
+            {(close) => (
+              <div className={styles.menu} onClick={close}>
+                {savedViews.map((v) => (
+                  <button
+                    key={v.id}
+                    className={`${styles.menuItem} ${savedViewActive(v.id) ? styles.menuItemActive : ''}`}
+                    onClick={() => setStatus(v.id === 'all' ? 'all' : v.id)}
+                  >
+                    {v.label}{v.count != null && <span className={styles.viewCount}>{v.count}</span>}
+                  </button>
+                ))}
+                <button className={styles.menuItem} onClick={() => openSheet('save-view')}><Plus width={14} height={14} /> Save current view</button>
+              </div>
+            )}
+          </Popover>
           <Popover label="Group by" trigger={({ toggle, ref }) => (
-            <button ref={ref} className={styles.control} onClick={toggle}><GroupIcon width={16} height={16} /> Group by</button>
+            <button ref={ref} className={styles.iconControl} onClick={toggle} aria-label="Group work items" title="Group work items"><GroupIcon width={16} height={16} /></button>
           )}>
             {(close) => (
               <div className={styles.menu} onClick={close}>
@@ -175,7 +186,7 @@ export function MyWork() {
             )}
           </Popover>
           <Popover label="Sort" trigger={({ toggle, ref }) => (
-            <button ref={ref} className={styles.control} onClick={toggle}><ArrowUpDown width={16} height={16} /> Sort</button>
+            <button ref={ref} className={styles.iconControl} onClick={toggle} aria-label="Sort work items" title="Sort work items"><ArrowUpDown width={16} height={16} /></button>
           )}>
             {(close) => (
               <div className={styles.menu} onClick={close}>
@@ -185,8 +196,8 @@ export function MyWork() {
               </div>
             )}
           </Popover>
-          <button className={styles.control} onClick={() => openSheet('columns')} disabled={view !== 'list'} title={view !== 'list' ? 'Columns are available in List View' : undefined}>
-            <Columns3 width={16} height={16} /> Columns
+          <button className={styles.iconControl} onClick={() => openSheet('columns')} disabled={view !== 'list'} aria-label="Choose list columns" title={view !== 'list' ? 'Columns are available in List View' : 'Choose list columns'}>
+            <Columns3 width={16} height={16} />
           </button>
         </div>
       </div>
@@ -257,6 +268,7 @@ export function MyWork() {
       <ReminderSheet open={sheet === 'reminder'} onClose={closeSheet} />
       <AssignmentSheet open={sheet === 'assignment'} onClose={closeSheet} />
       <TransitionSheet pending={pending} onClose={() => setPending(null)} />
+      <ToastHost />
     </AppShell>
   );
 }

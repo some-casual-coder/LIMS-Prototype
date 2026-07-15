@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ClipboardCheck, AlarmClock, RotateCcw, Eye, ChevronRight } from 'lucide-react';
+import { ClipboardCheck, AlarmClock, RotateCcw, Eye } from 'lucide-react';
 import { toneVars } from '@/components/ui/tone';
 import type { SummaryCard } from '@/data/commandCentre';
 import styles from './SummaryCards.module.css';
@@ -20,16 +20,16 @@ export function SummaryCards({ cards }: { cards: SummaryCard[] }) {
         const content = (
           <>
             <div className={styles.top}>
-              <span className={styles.iconWrap} style={{ background: tv.bg, color: tv.fg }} aria-hidden>
-                <Icon width={20} height={20} strokeWidth={2} />
-              </span>
-              <span>
-                <span className={styles.label}>{card.label}</span>
-                <span className={styles.sub}>{card.sub}</span>
+              <span className={styles.label}>{card.label}</span>
+              <span className={styles.iconWrap} style={{ background: tv.bg, color: tv.fg }} aria-hidden><Icon width={17} height={17} strokeWidth={2} /></span>
+            </div>
+            <div className={styles.metric}>
+              <span className={styles.value}>{card.value}</span>
+              <span className={styles.miniTicks} aria-hidden>
+                {Array.from({ length: 18 }, (_, index) => <i key={index} style={{ background: index < Math.min(card.value + 3, 15) ? tv.dot : 'var(--soft-grey)', opacity: index < card.value ? 1 : .42 }} />)}
               </span>
             </div>
-            <div className={styles.value}>{card.value}</div>
-            {card.to && <ChevronRight className={styles.chev} width={16} height={16} aria-hidden />}
+            <span className={styles.sub}>{card.sub}</span>
           </>
         );
         return card.to ? (
