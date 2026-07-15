@@ -1,0 +1,109 @@
+/* LIMS design tokens — derived from the Phase 1 design brief (§14–16).
+   A calm parliamentary workspace: deep institutional green frame, light
+   document-oriented surfaces, restrained gold accent, soft pastel statuses. */
+
+:root {
+  /* ---- Brand greens ---- */
+  --green-sidebar: #073F27;
+  --green-sidebar-2: #0A4A2E;
+  --green-700: #0B6B3A; /* primary action */
+  --green-800: #095B32; /* hover */
+  --green-900: #06341F;
+  --green-100: #E8F4EC;
+  --green-active-nav: #0E5533; /* active nav row on sidebar */
+
+  /* ---- Institutional gold ---- */
+  --gold: #D6B84C;
+  --gold-strong: #B9992F;
+  --gold-soft: #FFF5D8;
+
+  /* ---- Ink (near-black) — primary CTAs and strong emphasis ---- */
+  --ink: #16201A;
+  --ink-hover: #05100A;
+
+  /* ---- Surfaces ---- */
+  --bg-app: #F4F6F3;
+  --bg-card: #FFFFFF;
+  --bg-doc: #FCFDFB;
+  --border: #DCE3DD;
+  --border-strong: #C5CFC7;
+
+  /* ---- Text ---- */
+  --text-strong: #17211B;
+  --text: #29332C;
+  --text-muted: #657168;
+  --text-onDark: #F2F7F3;
+  --text-onDark-muted: #A9C4B4;
+
+  /* ---- Status pastels (backgrounds) ---- */
+  --soft-green: #E8F4EC;
+  --soft-gold: #FFF5D8;
+  --soft-red: #FBEAEC;
+  --soft-amber: #FFF0DE;
+  --soft-grey: #EEF1EE;
+  /* "blue" tone repurposed as a neutral charcoal/slate — no blue in the palette. */
+  --soft-blue: #E7EAE8;
+
+  /* ---- Status foregrounds (accessible on their pastel) ---- */
+  --on-green: #1B6B3F;
+  --on-gold: #8A6D12;
+  --on-red: #B42134;
+  --on-amber: #9A5B14;
+  --on-grey: #55605A;
+  --on-blue: #2B3630;
+
+  /* ---- Semantic status solids (icons / indicators) ---- */
+  --status-success: #1E874B;
+  --status-warning: #C9821B;
+  --status-danger: #C62B3F;
+  --status-info: #3B463F;
+
+  /* ---- Radii (modernised — slightly rounder than the brief minimums) ---- */
+  --r-card: 14px;
+  --r-panel: 16px;
+  --r-button: 10px;
+  --r-input: 10px;
+  --r-pill: 999px;
+  --r-badge: 8px;
+
+  /* ---- Elevation (minimal — structure over floating) ---- */
+  --shadow-sm: 0 1px 2px rgba(16, 33, 24, 0.04);
+  --shadow-card: 0 1px 2px rgba(16, 33, 24, 0.05), 0 1px 0 rgba(16, 33, 24, 0.02);
+  --shadow-pop: 0 8px 28px rgba(16, 33, 24, 0.14);
+
+  /* ---- Typography ---- */
+  --font-ui: 'Source Sans 3 Variable', 'Source Sans 3', system-ui, -apple-system, Segoe UI, sans-serif;
+  --font-serif: 'Source Serif 4 Variable', 'Source Serif 4', Georgia, 'Times New Roman', serif;
+
+  --fs-page-title: 27px;
+  --fs-section: 17px;
+  --fs-card-number: 29px;
+  --fs-body: 14px;
+  --fs-table: 13.5px;
+  --fs-meta: 12.5px;
+  --fs-sidebar: 14px;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  /* ---- Spacing scale ---- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+
+  /* ---- Layout ---- */
+  --sidebar-w: 252px;
+  --sidebar-w-collapsed: 76px;
+  --header-h: 64px;
+
+  /* ---- Focus ---- */
+  --focus-ring: 0 0 0 2px #FFFFFF, 0 0 0 4px #0B6B3A;
+  --focus-ring-onDark: 0 0 0 2px var(--green-sidebar), 0 0 0 4px var(--gold);
+}

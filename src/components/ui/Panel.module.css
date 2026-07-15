@@ -1,0 +1,50 @@
+.panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-panel);
+  box-shadow: var(--shadow-card);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.titleWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--green-700);
+}
+.icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.title {
+  font-size: var(--fs-section);
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+  letter-spacing: -0.01em;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.body {
+  padding: 18px;
+}

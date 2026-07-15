@@ -1,0 +1,136 @@
+/* Discreet, unlabelled trigger — small and translucent, corner-anchored. */
+.trigger {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(23, 33, 27, 0.14);
+  z-index: 80;
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+}
+.trigger:hover {
+  opacity: 0.85;
+  background: rgba(23, 33, 27, 0.3);
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 52, 31, 0.28);
+  z-index: 90;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 24px;
+}
+
+.panel {
+  width: 340px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-panel);
+  box-shadow: var(--shadow-pop);
+  padding: 16px;
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.title {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-bold);
+  color: var(--text-strong);
+}
+.close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  color: var(--text-muted);
+}
+.close:hover { background: var(--soft-grey); }
+
+.groupLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: var(--fw-semibold);
+  color: var(--text-muted);
+  margin: 12px 0 8px;
+}
+
+.roleGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.role {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-button);
+  background: var(--bg-card);
+  text-align: left;
+}
+.role:hover { background: #f7faf7; border-color: var(--border-strong); }
+.roleActive { border-color: var(--green-700); background: var(--soft-green); }
+.roleName { font-size: var(--fs-meta); font-weight: var(--fw-semibold); color: var(--text-strong); }
+.roleTitle { font-size: 11px; color: var(--text-muted); }
+
+.jumpGrid { display: flex; flex-direction: column; gap: 4px; }
+.jump {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-button);
+  background: var(--bg-card);
+  font-size: var(--fs-table);
+  color: var(--text-strong);
+  font-weight: var(--fw-medium);
+}
+.jump:hover { background: var(--soft-grey); }
+.jump svg { color: var(--text-muted); }
+
+.footer {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+.footBtn, .footBtnDanger {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 34px;
+  border-radius: var(--r-button);
+  border: 1px solid var(--border-strong);
+  background: var(--bg-card);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+}
+.footBtn:hover { background: var(--soft-grey); }
+.footBtnDanger { color: var(--on-red); border-color: #edc8ce; }
+.footBtnDanger:hover { background: var(--soft-red); }
+
+.hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 10px;
+}

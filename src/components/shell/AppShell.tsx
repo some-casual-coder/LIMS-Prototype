@@ -1,0 +1,49 @@
+import { useState, type ReactNode } from 'react';
+import { Navigate } from 'react-router-dom';
+import { Sidebar } from './Sidebar';
+import { TopHeader, type Crumb } from './TopHeader';
+import { useDemoStore } from '@/store/demoStore';
+import { allPersonas } from '@/data/personas';
+import styles from './AppShell.module.css';
+
+interface Props {
+  breadcrumb: Crumb[];
+  children: ReactNode;
+}
+
+const COLLAPSE_KEY = 'lims-sidebar-collapsed';
+
+// Internal application frame: role guard + sidebar + header + scrollable content.
+export function AppShell({ breadcrumb, children }: Props) {
+  const currentRole = useDemoStore((s) => s.currentRole);
+  const notifications = useDemoStore((s) => s.notifications);
+  const [collapsed, setCollapsed] = useState<boolean>(() => localStorage.getItem(COLLAPSE_KEY) === '1');
+
+  // No active identity → route to the sign-in screen.
+  if (!currentRole || currentRole === 'citizen') {
+    return <Navigate to="/login" replace />;
+  }
+
+  const persona = allPersonas.find((p) => p.id === currentRole)!;
+  const unreadCount = notifications.filter((n) => n.recipientId === currentRole && !n.read).length;
+
+  function toggleCollapse() {
+    setCollapsed((c) => {
+      const next = !c;
+      localStorage.setItem(COLLAPSE_KEY, next ? '1' : '0');
+      return next;
+    });
+  }
+
+  return (
+    <div className={styles.shell}>
+      <Sidebar collapsed={collapsed} onToggleCollapse={toggleCollapse} unreadCount={unreadCount} persona={persona} />
+      <div className={styles.main}>
+        <TopHeader breadcrumb={breadcrumb} persona={persona} unreadCount={unreadCount} />
+        <main className={styles.content} id="main-content">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}

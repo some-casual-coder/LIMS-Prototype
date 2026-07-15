@@ -1,0 +1,25 @@
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.02em;
+  flex: none;
+  user-select: none;
+}
+
+.green {
+  background: #0e5533;
+  color: #eaf5ee;
+}
+
+.gold {
+  background: var(--gold-soft);
+  color: var(--on-gold);
+}
+
+.neutral {
+  background: var(--soft-grey);
+  color: var(--text);
+}

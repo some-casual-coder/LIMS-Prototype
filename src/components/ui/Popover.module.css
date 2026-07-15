@@ -1,0 +1,22 @@
+.wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  min-width: 220px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-pop);
+  padding: 10px;
+  z-index: 45;
+}
+.right {
+  right: 0;
+}
+.left {
+  left: 0;
+}

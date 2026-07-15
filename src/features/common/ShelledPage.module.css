@@ -1,0 +1,26 @@
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+.title {
+  font-size: var(--fs-page-title);
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+  letter-spacing: -0.02em;
+}
+.subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  max-width: 640px;
+  line-height: 1.5;
+}
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}

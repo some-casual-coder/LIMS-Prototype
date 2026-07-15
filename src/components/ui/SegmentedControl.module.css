@@ -1,0 +1,31 @@
+.group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: var(--soft-grey);
+  border-radius: var(--r-button);
+  border: 1px solid var(--border);
+}
+
+.segment {
+  height: 32px;
+  padding: 0 14px;
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  color: var(--text-muted);
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-table);
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.segment:hover {
+  color: var(--text-strong);
+}
+
+.active {
+  background: var(--bg-card);
+  color: var(--green-800);
+  box-shadow: var(--shadow-sm);
+}

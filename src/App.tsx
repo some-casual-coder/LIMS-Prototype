@@ -1,43 +1,70 @@
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { paths } from '@/routes/paths';
-import { Placeholder } from '@/routes/Placeholder';
+import { HashRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { useDemoStore } from '@/store/demoStore';
+import { Presenter } from '@/components/presenter/Presenter';
+import { Login } from '@/features/auth/Login';
+import { CommandCentre } from '@/features/dashboard/CommandCentre';
+import { MyWork } from '@/features/work/MyWork';
+import { CreateInstruction } from '@/features/legislative/CreateInstruction';
+import { BillWorkspace } from '@/features/legislative/BillWorkspace';
+import { SearchPage } from '@/features/search/SearchPage';
+import { NotificationsPage } from '@/features/notifications/NotificationsPage';
+import {
+  DocumentArchivePage, OcrImportPage, ParticipationInboxPage, AnalyticsPage, AuditPage,
+  HelpPage, DraftingEditorPage, VersionsPage, WorkflowPage, PublishPage,
+} from '@/features/common/previewRoutes';
+import { PublicHome, PublicBill, PublicParticipate, PublicTrack } from '@/features/public/PublicPortal';
 
-// Route skeleton for the whole prototype. Screens are filled in per phase;
-// the internal shell and public shell wrappers are added with the design pass.
+function RootRedirect() {
+  const role = useDemoStore((s) => s.currentRole);
+  return <Navigate to={role && role !== 'citizen' ? '/dashboard' : '/login'} replace />;
+}
+
+function NotFound() {
+  return (
+    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, textAlign: 'center' }}>
+      <div>
+        <h1 style={{ fontSize: 24, color: 'var(--text-strong)' }}>Page not found</h1>
+        <p style={{ color: 'var(--text-muted)', marginTop: 8 }}>The page you are looking for is not available.</p>
+        <p style={{ marginTop: 16 }}><Link to="/dashboard" style={{ color: 'var(--green-700)', fontWeight: 600 }}>Return to the Command Centre</Link></p>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
-        <Route path="/" element={<Navigate to={paths.login} replace />} />
-
-        {/* Entry / identity */}
-        <Route path={paths.login} element={<Placeholder title="Sign in" phase="Phase 1 (design pass)" />} />
+        <Route path="/" element={<RootRedirect />} />
+        <Route path="/login" element={<Login />} />
 
         {/* Internal application */}
-        <Route path={paths.dashboard} element={<Placeholder title="Command Centre" phase="Phase 2" />} />
-        <Route path={paths.work} element={<Placeholder title="My Work" phase="Phase 2" />} />
-        <Route path={paths.legislativeNew} element={<Placeholder title="Create Legislative Instruction" phase="Phase 2" />} />
-        <Route path="/legislative/:id" element={<Placeholder title="Bill Workspace" phase="Phase 2" />} />
-        <Route path="/legislative/:id/draft" element={<Placeholder title="Structured Drafting Workspace" phase="Phase 2" />} />
-        <Route path="/legislative/:id/versions" element={<Placeholder title="Version History and Comparison" phase="Phase 2" />} />
-        <Route path="/legislative/:id/workflow" element={<Placeholder title="Workflow and Approvals" phase="Phase 2" />} />
-        <Route path="/legislative/:id/publish" element={<Placeholder title="Signature, Seal and Publication" phase="Phase 2" />} />
-        <Route path={paths.search} element={<Placeholder title="Search and Knowledge Explorer" phase="Phase 3" />} />
-        <Route path={paths.documents} element={<Placeholder title="Document Archive" phase="Phase 4" />} />
-        <Route path={paths.documentsImport} element={<Placeholder title="OCR Import and Verification" phase="Phase 4" />} />
-        <Route path={paths.participation} element={<Placeholder title="Public Participation Inbox" phase="Phase 3" />} />
-        <Route path={paths.analytics} element={<Placeholder title="Clerk's Analytics Dashboard" phase="Phase 4" />} />
-        <Route path={paths.audit} element={<Placeholder title="Audit and Compliance Explorer" phase="Phase 4" />} />
-        <Route path={paths.notifications} element={<Placeholder title="Notifications Centre" phase="Phase 4" />} />
+        <Route path="/dashboard" element={<CommandCentre />} />
+        <Route path="/work" element={<MyWork />} />
+        <Route path="/legislative/new" element={<CreateInstruction />} />
+        <Route path="/legislative/:id" element={<BillWorkspace />} />
+        <Route path="/legislative/:id/draft" element={<DraftingEditorPage />} />
+        <Route path="/legislative/:id/versions" element={<VersionsPage />} />
+        <Route path="/legislative/:id/workflow" element={<WorkflowPage />} />
+        <Route path="/legislative/:id/publish" element={<PublishPage />} />
+        <Route path="/search" element={<SearchPage />} />
+        <Route path="/documents" element={<DocumentArchivePage />} />
+        <Route path="/documents/import" element={<OcrImportPage />} />
+        <Route path="/participation" element={<ParticipationInboxPage />} />
+        <Route path="/analytics" element={<AnalyticsPage />} />
+        <Route path="/audit" element={<AuditPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
+        <Route path="/help" element={<HelpPage />} />
 
         {/* Public portal */}
-        <Route path={paths.publicHome} element={<Placeholder title="Public Portal" phase="Phase 3" />} />
-        <Route path="/public/bills/:id" element={<Placeholder title="Public Bill Page" phase="Phase 3" />} />
-        <Route path="/public/bills/:id/participate" element={<Placeholder title="Citizen Submission" phase="Phase 3" />} />
-        <Route path="/public/track/:ref" element={<Placeholder title="Track Submission" phase="Phase 3" />} />
+        <Route path="/public" element={<PublicHome />} />
+        <Route path="/public/bills/:id" element={<PublicBill />} />
+        <Route path="/public/bills/:id/participate" element={<PublicParticipate />} />
+        <Route path="/public/track/:ref" element={<PublicTrack />} />
 
-        <Route path="*" element={<Placeholder title="Page not found" phase="review" />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
+      <Presenter />
     </HashRouter>
   );
 }

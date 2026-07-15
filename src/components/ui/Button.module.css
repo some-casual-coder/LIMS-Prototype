@@ -1,0 +1,110 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: var(--r-button);
+  border: 1px solid transparent;
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-body);
+  line-height: 1;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  text-decoration: none;
+}
+
+.btn:disabled,
+.btn[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+}
+.icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.block {
+  width: 100%;
+}
+
+/* Sizes */
+.sm {
+  height: 30px;
+  padding: 0 12px;
+  font-size: var(--fs-table);
+}
+.md {
+  height: 38px;
+  padding: 0 16px;
+}
+.lg {
+  height: 44px;
+  padding: 0 20px;
+  font-size: 15px;
+}
+
+/* Variants */
+.primary {
+  background: var(--ink);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+.primary:hover {
+  background: var(--ink-hover);
+}
+
+.secondary {
+  background: var(--bg-card);
+  color: var(--text-strong);
+  border-color: var(--border-strong);
+}
+.secondary:hover {
+  background: #f7faf7;
+  border-color: #b4c1b7;
+}
+
+.tertiary {
+  background: transparent;
+  color: var(--text-strong);
+  border-color: transparent;
+}
+.tertiary:hover {
+  background: var(--soft-grey);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--green-700);
+  border-color: transparent;
+}
+.ghost:hover {
+  background: var(--soft-green);
+}
+
+/* Compact row action used inside tables */
+.row {
+  height: 30px;
+  padding: 0 12px;
+  background: var(--bg-card);
+  color: var(--green-800);
+  border-color: var(--border-strong);
+  font-size: var(--fs-table);
+  border-radius: var(--r-button);
+}
+.row:hover {
+  background: var(--soft-green);
+  border-color: #b4d3bf;
+}
+
+.danger {
+  background: var(--status-danger);
+  color: #fff;
+}
+.danger:hover {
+  background: #a81f31;
+}
