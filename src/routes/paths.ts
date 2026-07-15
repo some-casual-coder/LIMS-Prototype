@@ -1,0 +1,36 @@
+import { PRIMARY_RECORD_ID } from '@/data/seed';
+
+// Central route table. Stable hash URLs so a presenter can navigate directly.
+export const paths = {
+  login: '/login',
+  dashboard: '/dashboard',
+  work: '/work',
+  legislativeNew: '/legislative/new',
+  record: (id: string = PRIMARY_RECORD_ID) => `/legislative/${id}`,
+  recordDraft: (id: string = PRIMARY_RECORD_ID) => `/legislative/${id}/draft`,
+  recordVersions: (id: string = PRIMARY_RECORD_ID) => `/legislative/${id}/versions`,
+  recordWorkflow: (id: string = PRIMARY_RECORD_ID) => `/legislative/${id}/workflow`,
+  recordPublish: (id: string = PRIMARY_RECORD_ID) => `/legislative/${id}/publish`,
+  search: '/search',
+  documents: '/documents',
+  documentsImport: '/documents/import',
+  participation: '/participation',
+  analytics: '/analytics',
+  audit: '/audit',
+  notifications: '/notifications',
+
+  // Public portal (separate shell)
+  publicHome: '/public',
+  publicBill: (id: string = PRIMARY_RECORD_ID) => `/public/bills/${id}`,
+  publicParticipate: (id: string = PRIMARY_RECORD_ID) => `/public/bills/${id}/participate`,
+  publicTrack: (ref = 'PPS-2026-00841') => `/public/track/${ref}`,
+} as const;
+
+// Presenter deep-link anchors that map to the five hero screens.
+export const presenterAnchors: Record<string, string> = {
+  '1-command-centre': paths.dashboard,
+  '2-bill-workspace': paths.record(),
+  '3-drafting': paths.recordDraft(),
+  '4-search': paths.search,
+  '5-public-participation': paths.publicBill(),
+};
