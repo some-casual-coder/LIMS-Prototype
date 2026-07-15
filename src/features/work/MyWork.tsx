@@ -39,13 +39,19 @@ const SORT_OPTIONS = [
 
 export function MyWork() {
   const [params, setParams] = useSearchParams();
-  const view = (params.get('view') as 'list' | 'board' | 'calendar') || 'list';
+  const requestedView = params.get('view');
+  const view: 'list' | 'board' | 'calendar' = requestedView === 'board' || requestedView === 'calendar' ? requestedView : 'list';
   const quickItemId = params.get('item') || '';
   const sheet = params.get('sheet') || '';
 
-  const [status, setStatus] = useState(params.get('status') || 'all');
+  const [status, setStatusState] = useState(params.get('status') || 'all');
   const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState<Filters>(emptyFilters());
+  const [filters, setFilters] = useState<Filters>(() => {
+    const initial = emptyFilters();
+    const type = params.get('type');
+    if (type) initial.types.add(type);
+    return initial;
+  });
   const [groupBy, setGroupBy] = useState('work-state');
   const [sort, setSort] = useState('urgency');
   const [compact, setCompact] = useState(false);
@@ -55,6 +61,14 @@ export function MyWork() {
   const [pending, setPending] = useState<PendingTransition | null>(null);
 
   const setView = (v: string) => setParams((p) => { p.set('view', v); p.delete('item'); return p; }, { replace: true });
+  const setStatus = (value: string) => {
+    setStatusState(value);
+    setParams((p) => {
+      if (value === 'all') p.delete('status');
+      else p.set('status', value);
+      return p;
+    }, { replace: true });
+  };
   const openSheet = (s: string) => setParams((p) => { p.set('sheet', s); return p; });
   const closeSheet = () => setParams((p) => { p.delete('sheet'); return p; }, { replace: true });
   const openItem = (id: string) => setParams((p) => { p.set('item', id); return p; });
@@ -108,7 +122,7 @@ export function MyWork() {
       </div>
 
       {/* Workload indicators */}
-      <WorkIndicators activeStatus={status} onSelect={(f) => setStatus((s) => (s === f ? 'all' : f))} />
+      <WorkIndicators activeStatus={status} onSelect={(f) => setStatus(status === f ? 'all' : f)} />
 
       {/* Saved views strip */}
       <div className={styles.savedViews}>

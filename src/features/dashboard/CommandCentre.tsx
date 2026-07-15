@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Plus, Upload, ChevronDown, Bookmark, SlidersHorizontal, RefreshCw, Search as SearchIcon,
-  Settings2, ArrowRight, FileStack, Search as SearchIcon2,
+  Plus, SlidersHorizontal, RefreshCw, Search as SearchIcon, AlignJustify,
+  ClipboardCheck, ListChecks, ScanLine, Workflow, ShieldCheck, Bookmark, MoreHorizontal,
 } from 'lucide-react';
 import { AppShell } from '@/components/shell';
 import { Button, Panel, SegmentedControl, Popover } from '@/components/ui';
@@ -15,27 +15,33 @@ import { greeting } from '@/lib/format';
 import { WorkQueue } from './WorkQueue';
 import { SummaryCards } from './SummaryCards';
 import { ReadinessRail } from './ReadinessRail';
-import { RecentlyWorkedOn } from './RecentlyWorkedOn';
 import styles from './CommandCentre.module.css';
 
 const VIEW_OPTIONS = [
   { value: 'my-work', label: 'My Work' },
   { value: 'directorate', label: 'Directorate Work' },
-  { value: 'readiness', label: 'Sitting & Publication Readiness' },
-];
-
-const SAVED_VIEWS = [
-  { label: 'Awaiting my action', to: '/work?view=requires-action' },
-  { label: 'Due within 48 hours', to: '/work?view=due-soon' },
-  { label: 'Returned to me', to: '/work?view=returned' },
-  { label: 'Confidential items', to: '/work?view=confidential' },
-  { label: 'Publication queue', to: '/work?view=publication' },
 ];
 
 const PRIORITIES: Priority[] = ['High', 'Medium', 'Low'];
 const TYPES: WorkflowType[] = ['Bill', 'Motion', 'Petition', 'Statutory Instrument', 'Order Paper', 'Votes and Proceedings'];
 
-const READINESS_STAGES = ['Procedural Review', 'Approval', 'Awaiting Signature', 'Awaiting Supporting Information'];
+const SAVED_VIEWS = [
+  { label: 'Awaiting my action', to: '/work?status=requires-action' },
+  { label: 'Due within 48 hours', to: '/work?status=due-48' },
+  { label: 'Returned to me', to: '/work?status=returned' },
+  { label: 'Awaiting another officer', to: '/work?status=waiting-on-others' },
+  { label: 'Recently completed', to: '/work?status=completed' },
+];
+
+const roleIntro: Record<string, string> = {
+  'dls-drafter': 'Drafting priorities, deadlines and work requiring your decision.',
+  'dls-reviewer': 'Legal reviews, blocking issues and decisions awaiting approval.',
+  'dlps-officer': 'Procedural work, sitting deadlines and publication readiness.',
+  clerk: 'Authorisations, institutional risk and publication readiness.',
+  'records-officer': 'Digitisation, verification and records awaiting archival action.',
+  'ict-admin': 'Workflow configuration, service health and operational exceptions.',
+  'participation-officer': 'Assigned legislative work and records requiring follow-up.',
+};
 
 export function CommandCentre() {
   const role = useDemoStore((s) => s.currentRole);
@@ -49,17 +55,13 @@ export function CommandCentre() {
   const [compact, setCompact] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const firstName = persona.name.split(' ')[0];
+  const firstName = persona.name === 'Office of the Clerk' ? 'Clerk' : persona.name.split(' ')[0];
   const activeFilterCount = priorities.size + types.size;
+  const primaryAction = getPrimaryAction(role);
+  const secondaryActions = getSecondaryActions(role);
 
   const baseGroups = useMemo<QueueGroup[]>(() => {
     if (view === 'directorate') return [...(data.directorateExtra ?? []), ...data.groups];
-    if (view === 'readiness') {
-      const rows = data.groups
-        .flatMap((g) => g.rows)
-        .filter((r) => READINESS_STAGES.includes(r.stage));
-      return [{ id: 'readiness', title: 'Tracked for the next sitting', tone: 'gold', rows }];
-    }
     return data.groups;
   }, [view, data]);
 
@@ -93,77 +95,49 @@ export function CommandCentre() {
 
   return (
     <AppShell breadcrumb={[{ label: 'Home', to: '/dashboard' }, { label: 'Command Centre' }]}>
-      {/* Page introduction */}
       <div className={styles.intro}>
         <div>
-          <h1 className={styles.greeting}>{greeting()}, {firstName}</h1>
-          <p className={styles.lede}>You have {data.attentionCount} legislative items requiring attention today.</p>
+          <p className={styles.welcome}>{greeting()}, {firstName}</p>
+          <h1 className={styles.greeting}>Command Centre</h1>
+          <p className={styles.lede}>{roleIntro[role ?? ''] ?? 'Priority work, deadlines and decisions in one operational view.'}</p>
           <p className={styles.context}>{data.contextDate}</p>
         </div>
         <div className={styles.introActions}>
-          <Button variant="primary" size="lg" to="/legislative/new" leftIcon={<Plus width={18} height={18} />}>
-            New Legislative Instruction
-          </Button>
-          <Button variant="secondary" size="lg" to="/documents/import" leftIcon={<Upload width={17} height={17} />}>
-            Import Historical Document
+          <Button variant="primary" size="lg" to={primaryAction.to} leftIcon={primaryAction.icon}>
+            {primaryAction.label}
           </Button>
           <Popover
-            label="More actions"
-            trigger={({ toggle, ref }) => (
-              <button ref={ref} className={styles.moreBtn} onClick={toggle} aria-label="More actions">
-                <ChevronDown width={18} height={18} />
-              </button>
-            )}
-          >
-            {(close) => (
-              <div className={styles.menu} onClick={close}>
-                <Link to="/documents?view=templates" className={styles.menuItem}><FileStack width={16} height={16} /> Start from template</Link>
-                <Link to="/search" className={styles.menuItem}><SearchIcon2 width={16} height={16} /> Search legislative records</Link>
-              </div>
-            )}
-          </Popover>
-        </div>
-      </div>
-
-      {/* View selector + controls */}
-      <div className={styles.controls}>
-        <SegmentedControl options={VIEW_OPTIONS} value={view} onChange={setView} ariaLabel="Dashboard view" />
-        <div className={styles.controlsRight}>
-          <Popover
-            label="Saved views"
+            label="More Command Centre actions"
             trigger={({ toggle, ref, open }) => (
-              <button ref={ref} className={styles.controlBtn} onClick={toggle} aria-expanded={open}>
-                <Bookmark width={16} height={16} /> Saved view <ChevronDown width={14} height={14} />
+              <button
+                ref={ref}
+                className={styles.moreBtn}
+                onClick={toggle}
+                aria-label="More Command Centre actions"
+                aria-expanded={open}
+                title="More actions"
+              >
+                <MoreHorizontal width={19} height={19} />
               </button>
             )}
           >
             {(close) => (
               <div className={styles.menu} onClick={close}>
-                <p className={styles.menuLabel}>Saved views</p>
-                {SAVED_VIEWS.map((v) => (
-                  <Link key={v.label} to={v.to} className={styles.menuItem}>{v.label}</Link>
+                {secondaryActions.map((action) => (
+                  <Link key={action.label} to={action.to} className={styles.menuItem}>{action.label}</Link>
                 ))}
               </div>
             )}
           </Popover>
-
-          <FilterPopover
-            priorities={priorities} types={types}
-            onTogglePriority={(p) => toggleSet(priorities, p, setPriorities)}
-            onToggleType={(t) => toggleSet(types, t, setTypes)}
-            onClear={() => { setPriorities(new Set()); setTypes(new Set()); }}
-            activeCount={activeFilterCount}
-          />
-
-          <button className={styles.controlBtn} onClick={refresh} aria-label="Refresh queue">
-            <RefreshCw width={16} height={16} className={loading ? styles.spin : ''} /> Refresh
-          </button>
         </div>
       </div>
 
-      {/* Summary cards */}
+      <div className={styles.controls}>
+        <SegmentedControl options={VIEW_OPTIONS} value={view} onChange={setView} ariaLabel="Dashboard view" />
+      </div>
+
       <div className={styles.cards}>
-        <SummaryCards cards={data.summaryCards} />
+        <SummaryCards cards={data.summaryCards.filter((card) => !card.repeatsQueue)} />
       </div>
 
       {/* Main + rail */}
@@ -185,6 +159,31 @@ export function CommandCentre() {
                   onChange={(e) => setQuery(e.target.value)}
                 />
               </label>
+              <Popover
+                label="Saved queue views"
+                trigger={({ toggle, ref, open }) => (
+                  <button
+                    ref={ref}
+                    className={styles.iconControl}
+                    onClick={toggle}
+                    aria-label="Saved queue views"
+                    aria-expanded={open}
+                    title="Saved queue views"
+                  >
+                    <Bookmark width={17} height={17} />
+                  </button>
+                )}
+              >
+                {(close) => (
+                  <div className={styles.menu} onClick={close}>
+                    <p className={styles.menuLabel}>Saved views</p>
+                    {SAVED_VIEWS.map((savedView) => (
+                      <Link key={savedView.label} to={savedView.to} className={styles.menuItem}>{savedView.label}</Link>
+                    ))}
+                    <Link to="/work?sheet=save-view" className={styles.menuItem}>Save current view</Link>
+                  </div>
+                )}
+              </Popover>
               <FilterPopover
                 priorities={priorities} types={types}
                 onTogglePriority={(p) => toggleSet(priorities, p, setPriorities)}
@@ -195,19 +194,28 @@ export function CommandCentre() {
               />
               <button
                 className={styles.iconControl}
+                onClick={refresh}
+                aria-label={loading ? 'Refreshing priority work' : 'Refresh priority work'}
+                title="Refresh priority work"
+                disabled={loading}
+              >
+                <RefreshCw width={17} height={17} className={loading ? styles.spin : ''} />
+              </button>
+              <button
+                className={styles.iconControl}
                 onClick={() => setCompact((c) => !c)}
                 aria-pressed={compact}
                 aria-label={compact ? 'Comfortable row spacing' : 'Compact row spacing'}
                 title={compact ? 'Comfortable rows' : 'Compact rows'}
               >
-                <Settings2 width={17} height={17} />
+                <AlignJustify width={17} height={17} />
               </button>
             </div>
           }
         >
           <div className={styles.queueSubhead}>
-            <p>Legislative items ordered by urgency, deadline and required action.</p>
-            <Link to="/work" className={styles.viewAll}>View all work <ArrowRight width={14} height={14} /></Link>
+            <p>{totalVisible} item{totalVisible === 1 ? '' : 's'}, ordered by urgency and deadline.</p>
+            <Link to="/work" className={styles.viewAll}>Open My Work</Link>
           </div>
           {loading ? (
             <QueueSkeleton />
@@ -215,6 +223,12 @@ export function CommandCentre() {
             <div className={styles.empty}>
               <p className={styles.emptyTitle}>No items match your filters</p>
               <p className={styles.emptyBody}>Adjust the search or filters to see legislative work.</p>
+              <button
+                className={styles.emptyAction}
+                onClick={() => { setQuery(''); setPriorities(new Set()); setTypes(new Set()); }}
+              >
+                Clear search and filters
+              </button>
             </div>
           ) : (
             <div className={compact ? styles.compact : ''}>
@@ -226,11 +240,6 @@ export function CommandCentre() {
         <div className={styles.railCol}>
           <ReadinessRail data={data} />
         </div>
-      </div>
-
-      {/* Recently worked on */}
-      <div className={styles.recent}>
-        <RecentlyWorkedOn items={data.recent} />
       </div>
     </AppShell>
   );
@@ -280,14 +289,46 @@ function FilterPopover(props: {
 
 function QueueSkeleton() {
   return (
-    <div className={styles.skeleton} aria-hidden>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className={styles.skelRow}>
-          <div className={styles.skelBarLg} />
-          <div className={styles.skelBarSm} />
-        </div>
-      ))}
-      <span className="sr-only">Loading legislative work…</span>
+    <div className={styles.skeleton} role="status" aria-live="polite">
+      <div aria-hidden>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className={styles.skelRow}>
+            <div className={styles.skelBarLg} />
+            <div className={styles.skelBarSm} />
+          </div>
+        ))}
+      </div>
+      <span className="sr-only">Loading priority work.</span>
     </div>
   );
+}
+
+function getPrimaryAction(role: string | null) {
+  switch (role) {
+    case 'dls-drafter':
+      return { label: 'New legislative instruction', to: '/legislative/new', icon: <Plus width={18} height={18} /> };
+    case 'dls-reviewer':
+      return { label: 'Open legal review', to: '/legislative/NA-BILL-2026-015/review', icon: <ClipboardCheck width={18} height={18} /> };
+    case 'dlps-officer':
+      return { label: 'Open Bill workflow', to: '/legislative/NA-BILL-2026-015/workflow', icon: <ListChecks width={18} height={18} /> };
+    case 'clerk':
+      return { label: 'Open publication centre', to: '/legislative/NA-BILL-2026-015/publish', icon: <ShieldCheck width={18} height={18} /> };
+    case 'records-officer':
+      return { label: 'Open verification queue', to: '/archive/ocr', icon: <ScanLine width={18} height={18} /> };
+    case 'ict-admin':
+      return { label: 'Open workflow catalogue', to: '/workflows', icon: <Workflow width={18} height={18} /> };
+    default:
+      return { label: 'Open My Work', to: '/work', icon: <ListChecks width={18} height={18} /> };
+  }
+}
+
+function getSecondaryActions(role: string | null) {
+  const actions = [{ label: 'Search legislative records', to: '/search' }];
+  if (role === 'dls-reviewer' || role === 'dlps-officer' || role === 'ict-admin') {
+    actions.unshift({ label: 'New legislative instruction', to: '/legislative/new' });
+  }
+  if (role === 'records-officer') {
+    actions.unshift({ label: 'Import historical document', to: '/documents/import' });
+  }
+  return actions;
 }

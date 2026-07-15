@@ -13,24 +13,31 @@ const icons = {
 
 export function SummaryCards({ cards }: { cards: SummaryCard[] }) {
   return (
-    <div className={styles.grid}>
+    <section className={styles.summary} aria-label="Operational summary">
       {cards.map((card) => {
         const Icon = icons[card.icon];
         const tv = toneVars[card.tone];
-        return (
-          <Link key={card.id} to={card.to} className={styles.card} style={{ background: tv.bg }}>
+        const content = (
+          <>
             <div className={styles.top}>
-              <span className={styles.iconWrap} style={{ color: tv.fg }} aria-hidden>
+              <span className={styles.iconWrap} style={{ background: tv.bg, color: tv.fg }} aria-hidden>
                 <Icon width={20} height={20} strokeWidth={2} />
               </span>
-              <span className={styles.label}>{card.label}</span>
-              <ChevronRight className={styles.chev} width={16} height={16} aria-hidden />
+              <span>
+                <span className={styles.label}>{card.label}</span>
+                <span className={styles.sub}>{card.sub}</span>
+              </span>
             </div>
             <div className={styles.value}>{card.value}</div>
-            <div className={styles.sub}>{card.sub}</div>
-          </Link>
+            {card.to && <ChevronRight className={styles.chev} width={16} height={16} aria-hidden />}
+          </>
+        );
+        return card.to ? (
+          <Link key={card.id} to={card.to} className={`${styles.item} ${styles.interactive}`}>{content}</Link>
+        ) : (
+          <div key={card.id} className={styles.item}>{content}</div>
         );
       })}
-    </div>
+    </section>
   );
 }

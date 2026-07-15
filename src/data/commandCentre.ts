@@ -41,7 +41,9 @@ export interface SummaryCard {
   sub: string;
   tone: Tone;
   icon: 'action' | 'due' | 'returned' | 'review';
-  to: string;
+  to?: string;
+  /** True when the same total is already represented by the primary queue group. */
+  repeatsQueue?: boolean;
 }
 
 export interface ReadinessItem { label: string; count: number; tone: Tone }
@@ -75,10 +77,10 @@ const drafterData: CommandCentreData = {
   attentionCount: 7,
   contextDate: CONTEXT_DATE,
   summaryCards: [
-    { id: 'action', label: 'Requires My Action', value: 7, sub: '2 added today', tone: 'gold', icon: 'action', to: '/work?view=requires-action' },
-    { id: 'due', label: 'Due Within 48 Hours', value: 3, sub: '1 marked high priority', tone: 'amber', icon: 'due', to: '/work?view=due-soon' },
-    { id: 'returned', label: 'Returned for Revision', value: 1, sub: 'Blocking comment unresolved', tone: 'red', icon: 'returned', to: '/work?view=returned' },
-    { id: 'review', label: 'Awaiting My Review', value: 4, sub: 'Oldest waiting 2 days', tone: 'green', icon: 'review', to: '/work?view=awaiting-review' },
+    { id: 'action', label: 'Requires My Action', value: 7, sub: '2 added today', tone: 'gold', icon: 'action', to: '/work?status=requires-action', repeatsQueue: true },
+    { id: 'due', label: 'Due Within 48 Hours', value: 3, sub: '1 marked high priority', tone: 'amber', icon: 'due', to: '/work?status=due-48' },
+    { id: 'returned', label: 'Returned for Revision', value: 1, sub: 'Blocking comment unresolved', tone: 'red', icon: 'returned', to: '/work?status=returned' },
+    { id: 'review', label: 'Awaiting My Review', value: 4, sub: 'Oldest waiting 2 days', tone: 'green', icon: 'review', to: '/work?status=awaiting-review' },
   ],
   groups: [
     {
@@ -190,7 +192,6 @@ const drafterData: CommandCentreData = {
   attention: [
     { title: 'Clause 14 has a blocking review comment', sub: 'Digital Public Services Bill, 2026', tone: 'red', to: '/legislative/NA-BILL-2026-015?highlight=clause-14' },
     { title: 'Publication deadline is tomorrow', sub: 'Order Paper — Sitting No. 42', tone: 'amber', to: '/legislative/NA-OP-2026-042' },
-    { title: 'Citizen submission awaiting classification', sub: 'PPS-2026-00841', tone: 'gold', to: '/participation' },
   ],
   activity: [
     { time: '10:42', text: 'Version 4.0 submitted for review' },
@@ -210,10 +211,10 @@ const reviewerData: CommandCentreData = {
   ...drafterData,
   attentionCount: 5,
   summaryCards: [
-    { id: 'review', label: 'Awaiting My Review', value: 5, sub: '1 submitted today', tone: 'green', icon: 'review', to: '/work?view=awaiting-review' },
-    { id: 'blocking', label: 'Blocking Issues', value: 2, sub: 'Across 2 records', tone: 'red', icon: 'returned', to: '/work?view=blocking' },
-    { id: 'due', label: 'Due Within 48 Hours', value: 3, sub: '2 marked high priority', tone: 'amber', icon: 'due', to: '/work?view=due-soon' },
-    { id: 'approved', label: 'Recently Approved', value: 6, sub: 'This week', tone: 'gold', icon: 'action', to: '/work?view=recently-approved' },
+    { id: 'review', label: 'Awaiting My Review', value: 5, sub: '1 submitted today', tone: 'green', icon: 'review', to: '/work?status=awaiting-review', repeatsQueue: true },
+    { id: 'blocking', label: 'Blocking Issues', value: 2, sub: 'Across 2 records', tone: 'red', icon: 'returned', to: '/work?status=requires-action' },
+    { id: 'due', label: 'Due Within 48 Hours', value: 3, sub: '2 marked high priority', tone: 'amber', icon: 'due', to: '/work?status=due-48' },
+    { id: 'approved', label: 'Recently Approved', value: 6, sub: 'This week', tone: 'gold', icon: 'action', to: '/work?status=completed' },
   ],
   groups: [
     {
@@ -244,10 +245,10 @@ const dlpsData: CommandCentreData = {
   attentionCount: 6,
   contextDate: 'Directorate of Legislative and Procedural Services · Wednesday, 15 July 2026',
   summaryCards: [
-    { id: 'procedural', label: 'Awaiting Procedural Review', value: 3, sub: '1 due today', tone: 'gold', icon: 'action', to: '/work?view=procedural' },
-    { id: 'signature', label: 'Awaiting Signature', value: 2, sub: 'Sitting-critical', tone: 'amber', icon: 'due', to: '/work?view=signature' },
-    { id: 'checks', label: 'Publication Checks', value: 1, sub: '1 incomplete', tone: 'red', icon: 'returned', to: '/work?view=publication' },
-    { id: 'ready', label: 'Ready to Publish', value: 4, sub: 'Cleared today', tone: 'green', icon: 'review', to: '/work?view=ready-publish' },
+    { id: 'procedural', label: 'Awaiting Procedural Review', value: 3, sub: '1 due today', tone: 'gold', icon: 'action', to: '/work?status=requires-action', repeatsQueue: true },
+    { id: 'signature', label: 'Awaiting Signature', value: 2, sub: 'Sitting-critical', tone: 'amber', icon: 'due', to: '/work?status=waiting-on-others' },
+    { id: 'checks', label: 'Publication Checks', value: 1, sub: '1 incomplete', tone: 'red', icon: 'returned' },
+    { id: 'ready', label: 'Ready to Publish', value: 4, sub: 'Cleared today', tone: 'green', icon: 'review', to: '/work?status=completed' },
   ],
   groups: [
     {
@@ -277,10 +278,10 @@ const clerkData: CommandCentreData = {
   attentionCount: 8,
   contextDate: 'Office of the Clerk · Wednesday, 15 July 2026',
   summaryCards: [
-    { id: 'atrisk', label: 'At-Risk Business', value: 2, sub: 'May miss the next sitting', tone: 'red', icon: 'returned', to: '/analytics' },
-    { id: 'approvals', label: 'Pending Approvals', value: 3, sub: '1 awaiting authorisation', tone: 'gold', icon: 'action', to: '/work?view=approvals' },
-    { id: 'bottleneck', label: 'Bottleneck Stage', value: 5, sub: 'Legal Review — 5 items', tone: 'amber', icon: 'due', to: '/analytics' },
-    { id: 'compliance', label: 'Compliance Exceptions', value: 1, sub: 'Review this week', tone: 'green', icon: 'review', to: '/audit' },
+    { id: 'atrisk', label: 'At-Risk Business', value: 2, sub: 'May miss the next sitting', tone: 'red', icon: 'returned', to: '/work?status=due-48' },
+    { id: 'approvals', label: 'Pending Approvals', value: 3, sub: '1 awaiting authorisation', tone: 'gold', icon: 'action', to: '/work?status=requires-action', repeatsQueue: true },
+    { id: 'bottleneck', label: 'Bottleneck Stage', value: 5, sub: 'Legal Review — 5 items', tone: 'amber', icon: 'due', to: '/work?status=awaiting-review' },
+    { id: 'compliance', label: 'Compliance Exceptions', value: 1, sub: 'Review this week', tone: 'green', icon: 'review' },
   ],
   groups: [
     {

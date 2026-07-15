@@ -28,9 +28,6 @@
   padding: 7px 8px;
   border-radius: var(--r-button);
 }
-.readItem:hover {
-  background: var(--soft-grey);
-}
 .readDot {
   width: 10px;
   height: 10px;

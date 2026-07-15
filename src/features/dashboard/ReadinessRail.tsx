@@ -1,11 +1,9 @@
 import { Link } from 'react-router-dom';
-import { CalendarClock, TriangleAlert, Clock3, ChevronRight, ArrowRight } from 'lucide-react';
+import { CalendarClock, TriangleAlert, Clock3, ChevronRight } from 'lucide-react';
 import { Panel } from '@/components/ui';
 import { toneVars } from '@/components/ui/tone';
 import type { CommandCentreData } from '@/data/commandCentre';
 import styles from './ReadinessRail.module.css';
-
-const slug = (s: string) => s.toLowerCase().replace(/[^a-z]+/g, '-').replace(/^-|-$/g, '');
 
 export function ReadinessRail({ data }: { data: CommandCentreData }) {
   return (
@@ -17,11 +15,11 @@ export function ReadinessRail({ data }: { data: CommandCentreData }) {
         <ul className={styles.readList}>
           {data.readiness.items.map((item) => (
             <li key={item.label}>
-              <Link to={`/work?view=${slug(item.label)}`} className={styles.readItem}>
+              <div className={styles.readItem}>
                 <span className={styles.readDot} style={{ background: toneVars[item.tone].dot }} aria-hidden />
                 <span className={styles.readItemLabel}>{item.label}</span>
                 <span className={styles.readCount}>{item.count}</span>
-              </Link>
+              </div>
             </li>
           ))}
         </ul>
@@ -40,10 +38,6 @@ export function ReadinessRail({ data }: { data: CommandCentreData }) {
             />
           ))}
         </div>
-
-        <Link to="/analytics" className={styles.panelLink}>
-          View readiness <ArrowRight width={15} height={15} aria-hidden />
-        </Link>
       </Panel>
 
       <Panel title="Attention Required" icon={<TriangleAlert />}>
@@ -73,7 +67,7 @@ export function ReadinessRail({ data }: { data: CommandCentreData }) {
           ))}
         </ul>
         <Link to="/legislative/NA-BILL-2026-015?tab=activity" className={styles.panelLink}>
-          View all activity <ArrowRight width={15} height={15} aria-hidden />
+          Open activity history
         </Link>
       </Panel>
     </div>
