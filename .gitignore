@@ -7,3 +7,9 @@ dist-ssr
 !.vscode/extensions.json
 *.log
 npm-debug.log*
+
+# Internal planning & design docs — kept locally, not published to GitHub
+the_ask.MD
+*_design_brief.md
+PROGRESS.md
+/.internal/
