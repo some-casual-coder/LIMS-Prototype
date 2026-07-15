@@ -14,6 +14,10 @@ import {
 } from '@/data/searchData';
 import { allJobsSeed } from '@/data/ocrData';
 import { workflowTemplatesSeed } from '@/data/workflows';
+import {
+  billTasksSeed, stageGatesSeed, CURRENT_STAGE_ID, PBO_TASK_ID,
+  type BillTask, type StageGate,
+} from '@/data/billTasks';
 
 // Runtime demo state. The persona layer (role, offline) plus all mutable
 // legislative data live here, persisted to localStorage. A single reset
@@ -41,6 +45,11 @@ interface DemoState {
 
   // My Work items created at runtime by the instruction wizard (reset-safe).
   createdWorkItems: WorkItem[];
+
+  // Bill Tasks & Workflow Control (Priority 0 sanity sprint)
+  billTasks: BillTask[];
+  stageGates: StageGate[];
+  currentStageId: string;
 
   // Mutable legislative data
   records: LegislativeRecord[];
@@ -106,6 +115,15 @@ interface DemoState {
   publishWorkflow: (slug: string) => void;
   addWorkflowTemplate: (template: WorkflowTemplate) => void;
   addWorkItem: (item: WorkItem) => void;
+
+  // Bill task & stage-gate actions
+  completeBillTask: (id: string) => void;
+  reassignBillTask: (id: string, toId: string) => void;
+  requestBillTaskExtension: (id: string, days: number, reason: string) => void;
+  escalateBillTask: (id: string, toId: string) => void;
+  returnBillTask: (id: string) => void;
+  addBillTask: (task: BillTask) => void;
+  advanceBillStage: () => void;
 }
 
 // Roll a version label forward one minor step, e.g. "v3.2" -> "v3.3".
@@ -131,6 +149,9 @@ export const useDemoStore = create<DemoState>()(
       ocrJobs: structuredClone(allJobsSeed),
       workflowTemplates: structuredClone(workflowTemplatesSeed),
       createdWorkItems: [],
+      billTasks: structuredClone(billTasksSeed),
+      stageGates: structuredClone(stageGatesSeed),
+      currentStageId: CURRENT_STAGE_ID,
       ...initial,
 
       setRole: (role) => set({ currentRole: role }),
@@ -145,6 +166,9 @@ export const useDemoStore = create<DemoState>()(
         ocrJobs: structuredClone(allJobsSeed),
         workflowTemplates: structuredClone(workflowTemplatesSeed),
         createdWorkItems: [],
+        billTasks: structuredClone(billTasksSeed),
+        stageGates: structuredClone(stageGatesSeed),
+        currentStageId: CURRENT_STAGE_ID,
         ...buildInitialState(),
       }),
 
@@ -344,10 +368,75 @@ export const useDemoStore = create<DemoState>()(
         set((s) => (s.createdWorkItems.some((w) => w.recordId === item.recordId)
           ? {}
           : { createdWorkItems: [item, ...s.createdWorkItems] })),
+
+      completeBillTask: (id) =>
+        set((s) => {
+          const billTasks = s.billTasks.map((t) =>
+            t.id === id
+              ? { ...t, status: 'Completed' as const, group: 'completed' as const, overdue: false, escalated: false,
+                  history: [...t.history, { label: 'Task completed', at: 'Just now' }] }
+              : t);
+          // Completing the PBO dependency clears the Legal Review blocking gate.
+          const stageGates = id === PBO_TASK_ID
+            ? s.stageGates.map((g) => (g.id === 'legal-review'
+                ? {
+                    ...g,
+                    blocking: [],
+                    exit: g.exit.map((e) => (e.label.startsWith('PBO') ? { ...e, status: 'Met' as const } : e)),
+                    validation: g.validation.map((v) => (v.label.includes('Required documents') ? { ...v, status: 'Met' as const } : v)),
+                    mandatory: g.mandatory.map((m) => (m.label.includes('PBO') ? { ...m, done: m.total } : m)),
+                  }
+                : g))
+            : s.stageGates;
+          return { billTasks, stageGates };
+        }),
+
+      reassignBillTask: (id, toId) =>
+        set((s) => ({
+          billTasks: s.billTasks.map((t) => (t.id === id
+            ? { ...t, assigneeId: toId, escalated: false, history: [...t.history, { label: 'Task reassigned', at: 'Just now' }] } : t)),
+        })),
+
+      requestBillTaskExtension: (id, days, reason) =>
+        set((s) => ({
+          billTasks: s.billTasks.map((t) => {
+            if (t.id !== id) return t;
+            const d = new Date(t.dueDate);
+            d.setDate(d.getDate() + days);
+            const iso = d.toISOString().slice(0, 10);
+            const label = `${new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`;
+            return { ...t, dueDate: iso, dueLabel: label, overdue: false, status: t.status === 'Overdue' ? 'In Progress' : t.status,
+              extensionRequested: { days, reason }, history: [...t.history, { label: `Extension granted (${days} days)`, at: 'Just now' }] };
+          }),
+        })),
+
+      escalateBillTask: (id, toId) =>
+        set((s) => ({
+          billTasks: s.billTasks.map((t) => (t.id === id
+            ? { ...t, escalated: true, escalatedToId: toId, escalatedOn: 'Just now', history: [...t.history, { label: 'Task escalated', at: 'Just now' }] } : t)),
+        })),
+
+      returnBillTask: (id) =>
+        set((s) => ({
+          billTasks: s.billTasks.map((t) => (t.id === id
+            ? { ...t, status: 'Pending' as const, history: [...t.history, { label: 'Task returned', at: 'Just now' }] } : t)),
+        })),
+
+      addBillTask: (task) => set((s) => ({ billTasks: [task, ...s.billTasks] })),
+
+      advanceBillStage: () =>
+        set((s) => ({
+          currentStageId: 'procedural-review',
+          stageGates: s.stageGates.map((g) => {
+            if (g.id === 'legal-review') return { ...g, state: 'Completed' as const, dateLabel: 'Just now' };
+            if (g.id === 'procedural-review') return { ...g, state: 'In Progress' as const, dateLabel: 'In Progress' };
+            return g;
+          }),
+        })),
     }),
     {
       name: 'lims-national-assembly',
-      version: 7,
+      version: 8,
       // On a data-model change, discard stale persisted data and reseed. Prototype
       // personalisation (role/pins/searches) is intentionally reset with the data.
       migrate: () => ({
@@ -362,6 +451,9 @@ export const useDemoStore = create<DemoState>()(
         ocrJobs: structuredClone(allJobsSeed),
         workflowTemplates: structuredClone(workflowTemplatesSeed),
         createdWorkItems: [],
+        billTasks: structuredClone(billTasksSeed),
+        stageGates: structuredClone(stageGatesSeed),
+        currentStageId: CURRENT_STAGE_ID,
         ...buildInitialState(),
       }),
     },

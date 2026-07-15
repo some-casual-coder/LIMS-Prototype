@@ -115,7 +115,11 @@ export function BillWorkspace() {
               key={t}
               className={`${styles.tab} ${tab === t ? styles.tabActive : ''}`}
               aria-current={tab === t ? 'page' : undefined}
-              onClick={() => (t === 'Draft' ? navigate(`/legislative/${record.id}/draft`) : t === 'Workflow' ? setWorkflowOpen(true) : setTab(t))}
+              onClick={() => (
+                t === 'Draft' ? navigate(`/legislative/${record.id}/draft`)
+                  : t === 'Tasks' ? navigate(`/legislative/${record.id}/tasks`)
+                  : t === 'Workflow' ? navigate(`/legislative/${record.id}/workflow`)
+                  : setTab(t))}
             >
               {t}{badge != null && <span className={styles.tabBadge}>{badge}</span>}
             </button>
@@ -201,7 +205,7 @@ function OverviewTab({ record, versions, onOpenWorkflow }: { record: any; versio
               </li>
             ))}
           </ul>
-          <Link to={`/legislative/${record.id}?tab=Tasks`} className={styles.cardLink}>View full checklist <ArrowRight width={14} height={14} /></Link>
+          <Link to={`/legislative/${record.id}/tasks`} className={styles.cardLink}>View full checklist <ArrowRight width={14} height={14} /></Link>
         </Panel>
 
         {/* D. Recent versions */}

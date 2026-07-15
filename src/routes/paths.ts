@@ -12,6 +12,7 @@ export const paths = {
   record: (id: string = PRIMARY_RECORD_ID) => `/legislative/${id}`,
   recordDraft: (id: string = PRIMARY_RECORD_ID) => `/legislative/${id}/draft`,
   recordVersions: (id: string = PRIMARY_RECORD_ID) => `/legislative/${id}/versions`,
+  recordTasks: (id: string = PRIMARY_RECORD_ID) => `/legislative/${id}/tasks`,
   recordWorkflow: (id: string = PRIMARY_RECORD_ID) => `/legislative/${id}/workflow`,
   recordPublish: (id: string = PRIMARY_RECORD_ID) => `/legislative/${id}/publish`,
   search: '/search',
