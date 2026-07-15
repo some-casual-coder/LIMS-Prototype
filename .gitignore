@@ -14,3 +14,7 @@ the_ask.MD
 *_design_brief.md
 PROGRESS.md
 /.internal/
+
+# tsc composite emit for vite.config (should not be committed)
+vite.config.js
+vite.config.d.ts
