@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { MessageSquarePlus, Sparkles, Link2, MoreHorizontal, Check, X } from 'lucide-react';
+import { Popover } from '@/components/ui';
 import { clause14Draft, clauseTitle, type DraftPara, type Run } from '@/data/draftContent';
 import { primaryBillContent } from '@/data/billContent';
 import styles from './DocumentSurface.module.css';
@@ -7,7 +8,6 @@ import styles from './DocumentSurface.module.css';
 export type EditorMode = 'edit' | 'review' | 'preview';
 export type ChangeStatus = Record<string, 'pending' | 'accepted' | 'rejected'>;
 
-// Sentinel targets used by the structure navigator.
 export const LONG_TITLE = -1;
 export const PREAMBLE = -2;
 export const SCHEDULES = -3;
@@ -21,12 +21,13 @@ interface Props {
   onComment?: () => void;
   onSuggest?: () => void;
   onCrossRef?: () => void;
+  onToast?: (msg: string) => void;
   zoom?: number;
 }
 
-function renderRun(run: Run, mode: EditorMode, status: ChangeStatus, key: number) {
+function renderRun(run: Run, mode: EditorMode, status: ChangeStatus, key: number, onToast?: (m: string) => void) {
   const st = run.changeId ? status[run.changeId] ?? 'pending' : undefined;
-  if (run.ref) return <a key={key} className={styles.ref} href="#" onClick={(e) => e.preventDefault()}>{run.text}</a>;
+  if (run.ref) return <a key={key} className={styles.ref} href="#" onClick={(e) => { e.preventDefault(); onToast?.(`Opening “${run.text}” in a reference preview.`); }}>{run.text}</a>;
   if (run.type === 'ins') {
     if (mode === 'preview' || st === 'accepted') return <span key={key}>{run.text}</span>;
     if (st === 'rejected') return null;
@@ -40,21 +41,47 @@ function renderRun(run: Run, mode: EditorMode, status: ChangeStatus, key: number
   return <span key={key}>{run.text}</span>;
 }
 
-export function DocumentSurface({ mode, activeClause, changeStatus, onAccept, onReject, onComment, onSuggest, onCrossRef, zoom = 100 }: Props) {
+// Shared selection toolbar shown under any selected paragraph (edit mode).
+function FloatingToolbar({ onComment, onSuggest, onCrossRef, onToast, clauseNo }: {
+  onComment?: () => void; onSuggest?: () => void; onCrossRef?: () => void; onToast?: (m: string) => void; clauseNo: number;
+}) {
+  return (
+    <div className={styles.floating} role="toolbar" aria-label="Selection actions">
+      <button onClick={onComment}><MessageSquarePlus width={14} height={14} /> Comment</button>
+      <button onClick={onSuggest}><Sparkles width={14} height={14} /> Suggest wording</button>
+      <button onClick={onCrossRef}><Link2 width={14} height={14} /> Create cross-reference</button>
+      <Popover label="More selection actions" align="left" trigger={({ toggle, ref }) => (
+        <button ref={ref} className={styles.floatMore} aria-label="More actions" onClick={toggle}><MoreHorizontal width={14} height={14} /></button>
+      )}>
+        {(close) => (
+          <div className={styles.floatMenu} onClick={close}>
+            <button onClick={() => onToast?.('Define term — added to the interpretation clause.')}>Define term</button>
+            <button onClick={() => { navigator.clipboard?.writeText(`${location.origin}/#/legislative/NA-BILL-2026-015/draft#clause-${clauseNo}`); onToast?.('Clause link copied to clipboard.'); }}>Copy clause link</button>
+            <button onClick={() => onToast?.('Passage bookmarked.')}>Bookmark passage</button>
+          </div>
+        )}
+      </Popover>
+    </div>
+  );
+}
+
+export function DocumentSurface({ mode, activeClause, changeStatus, onAccept, onReject, onComment, onSuggest, onCrossRef, onToast, zoom = 100 }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { scrollRef.current?.scrollTo({ top: 0 }); setSelected(null); }, [activeClause]);
 
   const paraChangeIds = (p: DraftPara) => [...new Set(p.runs.map((r) => r.changeId).filter(Boolean))] as string[];
-
   const clean = primaryBillContent.clauses.find((c) => c.number === activeClause);
+  const toolbar = (
+    <FloatingToolbar onComment={onComment} onSuggest={onSuggest} onCrossRef={onCrossRef} onToast={onToast} clauseNo={activeClause} />
+  );
 
   return (
     <div className={styles.workspace} style={{ fontSize: `${zoom}%` }} ref={scrollRef}>
       <article className={styles.page} id={`clause-${activeClause}`}>
-        {activeClause === LONG_TITLE && (<><h2 className={styles.clauseHeading}>Long Title</h2><p className={styles.plainPara}>{primaryBillContent.longTitle}</p></>)}
-        {activeClause === PREAMBLE && (<><h2 className={styles.clauseHeading}>Preamble</h2><p className={styles.plainPara}>{primaryBillContent.preamble}</p></>)}
+        {activeClause === LONG_TITLE && (<><h2 className={styles.clauseHeading}>Long Title</h2><SelectablePlain id="lt" text={primaryBillContent.longTitle} mode={mode} selected={selected} onSelect={setSelected} toolbar={toolbar} /></>)}
+        {activeClause === PREAMBLE && (<><h2 className={styles.clauseHeading}>Preamble</h2><SelectablePlain id="pre" text={primaryBillContent.preamble} mode={mode} selected={selected} onSelect={setSelected} toolbar={toolbar} /></>)}
         {activeClause === SCHEDULES && (<><h2 className={styles.clauseHeading}>Schedules</h2><p className={styles.plainPara}>No schedules are currently attached to this Bill.</p></>)}
 
         {activeClause === 14 && (
@@ -70,16 +97,9 @@ export function DocumentSurface({ mode, activeClause, changeStatus, onAccept, on
                   <div className={styles.paraMain}>
                     <p className={`${styles.para} ${selected === p.id && mode === 'edit' ? styles.paraSelected : ''}`} onClick={() => mode === 'edit' && setSelected((s) => (s === p.id ? null : p.id))}>
                       {p.label && <span className={styles.label}>{p.label}</span>}
-                      {p.runs.map((r, i) => renderRun(r, mode, changeStatus, i))}
+                      {p.runs.map((r, i) => renderRun(r, mode, changeStatus, i, onToast))}
                     </p>
-                    {mode === 'edit' && selected === p.id && (
-                      <div className={styles.floating} role="toolbar" aria-label="Selection actions">
-                        <button onClick={onComment}><MessageSquarePlus width={14} height={14} /> Comment</button>
-                        <button onClick={onSuggest}><Sparkles width={14} height={14} /> Suggest wording</button>
-                        <button onClick={onCrossRef}><Link2 width={14} height={14} /> Create cross-reference</button>
-                        <button className={styles.floatMore} aria-label="More"><MoreHorizontal width={14} height={14} /></button>
-                      </div>
-                    )}
+                    {mode === 'edit' && selected === p.id && toolbar}
                   </div>
                   {showReview && (
                     <div className={styles.reviewActions}>
@@ -100,11 +120,27 @@ export function DocumentSurface({ mode, activeClause, changeStatus, onAccept, on
         {activeClause > 0 && activeClause !== 14 && clean && (
           <>
             <h2 className={styles.clauseHeading}>Clause {clean.number} — {clean.heading}</h2>
-            {clean.paragraphs.map((para, i) => <p key={i} className={styles.plainPara}>{para}</p>)}
+            {clean.paragraphs.map((para, i) => (
+              <SelectablePlain key={i} id={`c${activeClause}-${i}`} text={para} mode={mode} selected={selected} onSelect={setSelected} toolbar={toolbar} />
+            ))}
             {mode === 'edit' && <p className={styles.cleanNote}>This clause has no tracked changes in the current version.</p>}
           </>
         )}
       </article>
+    </div>
+  );
+}
+
+// A plain paragraph that is selectable (edit mode) and shows the floating toolbar.
+function SelectablePlain({ id, text, mode, selected, onSelect, toolbar }: {
+  id: string; text: string; mode: EditorMode; selected: string | null; onSelect: (id: string | null) => void; toolbar: React.ReactNode;
+}) {
+  return (
+    <div className={styles.paraMain}>
+      <p className={`${styles.plainPara} ${styles.para} ${selected === id && mode === 'edit' ? styles.paraSelected : ''}`} onClick={() => mode === 'edit' && onSelect(selected === id ? null : id)}>
+        {text}
+      </p>
+      {mode === 'edit' && selected === id && toolbar}
     </div>
   );
 }

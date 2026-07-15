@@ -185,8 +185,9 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
           onAccept={(cid) => setChange(cid, 'accepted')}
           onReject={(cid) => setChange(cid, 'rejected')}
           onComment={() => setSheet('comment')}
-          onSuggest={() => { setActiveClause(14); setPanelTab('AI Assistant'); }}
+          onSuggest={() => setPanelTab('AI Assistant')}
           onCrossRef={() => showToast('Cross-reference created for the selected passage.')}
+          onToast={showToast}
         />
         <ContextPanel
           tab={panelTab}
@@ -210,8 +211,8 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
         <span className={styles.zoom}>Ln 24, Col 37 · 100%</span>
       </div>
 
-      <CompareSheet open={sheet === 'compare'} onClose={() => setSheet('')} />
-      <SubmitSheet open={sheet === 'submit'} onClose={() => setSheet('')} recordId={id} />
+      <CompareSheet open={sheet === 'compare'} onClose={() => setSheet('')} onToast={showToast} />
+      <SubmitSheet open={sheet === 'submit'} onClose={() => setSheet('')} recordId={id} onSaveDraft={() => showToast('Working draft saved.')} />
       <AddCommentSheet open={sheet === 'comment'} onClose={() => setSheet('')} onAdded={() => showToast('Comment added to Clause 14.')} />
 
       {toast && <div className={styles.toast} role="status" aria-live="polite">{toast}</div>}

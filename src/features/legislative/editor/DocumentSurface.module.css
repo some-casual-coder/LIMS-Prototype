@@ -74,4 +74,8 @@
 .floating button { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border: none; background: transparent; border-radius: 7px; font-size: var(--fs-table); color: var(--text-strong); }
 .floating button:hover { background: var(--soft-grey); }
 .floating button svg { color: var(--text-muted); }
-.floatMore { width: 30px; padding: 0 !important; justify-content: center; }
+.floatMore { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: none; background: transparent; border-radius: 7px; color: var(--text-muted); }
+.floatMore:hover { background: var(--soft-grey); color: var(--text-strong); }
+.floatMenu { display: flex; flex-direction: column; gap: 1px; min-width: 160px; font-family: var(--font-ui); }
+.floatMenu button { padding: 9px 10px; border: none; background: transparent; border-radius: var(--r-button); font-size: var(--fs-table); color: var(--text-strong); text-align: left; }
+.floatMenu button:hover { background: var(--soft-grey); }

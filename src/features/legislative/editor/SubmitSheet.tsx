@@ -8,7 +8,7 @@ import styles from './editorSheets.module.css';
 
 const CHECKS = ['All blocking comments addressed', 'Structural validation passed', 'Cross-references verified', 'Revision note provided'];
 
-export function SubmitSheet({ open, onClose, recordId }: { open: boolean; onClose: () => void; recordId: string }) {
+export function SubmitSheet({ open, onClose, recordId, onSaveDraft }: { open: boolean; onClose: () => void; recordId: string; onSaveDraft?: () => void }) {
   const navigate = useNavigate();
   const addVersion = useDemoStore((s) => s.addVersion);
   const setStage = useDemoStore((s) => s.setStage);
@@ -37,7 +37,7 @@ export function SubmitSheet({ open, onClose, recordId }: { open: boolean; onClos
 
   return (
     <SideSheet open={open} onClose={onClose} size="lg" title="Submit Version 4.1 for Legal Review" subtitle="Digital Public Services Bill, 2026 · NA/BILL/2026/015"
-      footer={<div className={styles.footer}><Button variant="secondary" onClick={onClose}>Save Working Draft</Button><Button variant="primary" disabled={submitting} leftIcon={submitting ? <Loader2 width={16} height={16} className={styles.spin} /> : <Send width={15} height={15} />} onClick={submit}>{submitting ? 'Submitting…' : 'Submit for Review'}</Button></div>}>
+      footer={<div className={styles.footer}><Button variant="secondary" onClick={() => { onSaveDraft?.(); onClose(); }}>Save Working Draft</Button><Button variant="primary" disabled={submitting} leftIcon={submitting ? <Loader2 width={16} height={16} className={styles.spin} /> : <Send width={15} height={15} />} onClick={submit}>{submitting ? 'Submitting…' : 'Submit for Review'}</Button></div>}>
       <div className={styles.validPass}><CircleCheck width={16} height={16} /> Validation passed</div>
 
       <div className={styles.versionCard}>

@@ -12,11 +12,11 @@ const CHANGED_CLAUSES = [
   { n: 'Schedule 1 — Inclusion and accessibility', badge: 'M', count: '1 change', tone: 'mod' },
 ];
 
-export function CompareSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function CompareSheet({ open, onClose, onToast }: { open: boolean; onClose: () => void; onToast?: (m: string) => void }) {
   const [view, setView] = useState('Summary');
   return (
     <SideSheet open={open} onClose={onClose} size="xxl" title="Compare Versions" subtitle="Compare differences between document versions"
-      footer={<div className={styles.footer}><Button variant="secondary" leftIcon={<Download width={15} height={15} />}>Download comparison report</Button><Button variant="primary" onClick={onClose}>Close</Button></div>}>
+      footer={<div className={styles.footer}><Button variant="secondary" leftIcon={<Download width={15} height={15} />} onClick={() => onToast?.('Preparing the comparison report for download…')}>Download comparison report</Button><Button variant="primary" onClick={onClose}>Close</Button></div>}>
       <div className={styles.compareVersions}>
         <div className={styles.cmpV}><span className={styles.cmpVLabel}>Version 4.0</span><span className={styles.cmpVMeta}>Saved on 12 May, 09:12 AM</span></div>
         <span className={styles.cmpVs}>vs</span>
@@ -39,10 +39,12 @@ export function CompareSheet({ open, onClose }: { open: boolean; onClose: () => 
       <ul className={styles.cmpClauses}>
         {CHANGED_CLAUSES.map((c) => (
           <li key={c.n}>
-            <span className={`${styles.cmpBadge} ${styles['cmpBadge_' + c.tone]}`}>{c.badge}</span>
-            <span className={styles.cmpClauseName}>{c.n}</span>
-            {c.count && <span className={styles.cmpClauseCount}>{c.count}</span>}
-            <ChevronRight width={15} height={15} className={styles.cmpChev} />
+            <button className={styles.cmpClauseBtn} onClick={() => onToast?.(`Jumping to ${c.n} in the comparison.`)}>
+              <span className={`${styles.cmpBadge} ${styles['cmpBadge_' + c.tone]}`}>{c.badge}</span>
+              <span className={styles.cmpClauseName}>{c.n}</span>
+              {c.count && <span className={styles.cmpClauseCount}>{c.count}</span>}
+              <ChevronRight width={15} height={15} className={styles.cmpChev} />
+            </button>
           </li>
         ))}
       </ul>

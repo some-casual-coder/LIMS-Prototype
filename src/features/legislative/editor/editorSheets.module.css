@@ -50,8 +50,8 @@
 .cmpStat span { display: block; font-size: 24px; font-weight: var(--fw-bold); margin-bottom: 2px; }
 .csMetaN { color: var(--on-grey); }
 .cmpClauses { display: flex; flex-direction: column; gap: 6px; }
-.cmpClauses li { display: flex; align-items: center; gap: 11px; padding: 11px 12px; border: 1px solid var(--border); border-radius: var(--r-button); }
-.cmpClauses li:hover { background: var(--bg-doc); }
+.cmpClauseBtn { display: flex; align-items: center; gap: 11px; width: 100%; padding: 11px 12px; border: 1px solid var(--border); border-radius: var(--r-button); background: var(--bg-card); text-align: left; }
+.cmpClauseBtn:hover { background: var(--bg-doc); border-color: var(--border-strong); }
 .cmpBadge { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 6px; font-size: 11px; font-weight: var(--fw-bold); flex: none; }
 .cmpBadge_mod { background: var(--soft-gold); color: var(--on-gold); }
 .cmpBadge_add { background: var(--soft-green); color: var(--on-green); }
