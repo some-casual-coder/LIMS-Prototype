@@ -4,7 +4,7 @@ import { Presenter } from '@/components/presenter/Presenter';
 import { Login } from '@/features/auth/Login';
 import { CommandCentre } from '@/features/dashboard/CommandCentre';
 import { MyWork } from '@/features/work/MyWork';
-import { CreateInstruction } from '@/features/legislative/CreateInstruction';
+import { InstructionWizard } from '@/features/legislative/wizard/InstructionWizard';
 import { BillWorkspace } from '@/features/legislative/BillWorkspace';
 import { SearchPage } from '@/features/search/SearchPage';
 import { SavedSearchesPage } from '@/features/search/SavedSearchesPage';
@@ -56,7 +56,7 @@ export default function App() {
         <Route path="/workflows" element={<WorkflowCatalogue />} />
         <Route path="/workflows/compare" element={<WorkflowComparison />} />
         <Route path="/admin/workflows/:slug" element={<WorkflowTemplateDetail />} />
-        <Route path="/legislative/new" element={<CreateInstruction />} />
+        <Route path="/legislative/new" element={<InstructionWizard />} />
         <Route path="/legislative/:id" element={<BillWorkspace />} />
         <Route path="/legislative/:id/draft" element={<DraftingWorkspace key="draft" />} />
         <Route path="/legislative/:id/review" element={<DraftingWorkspace key="review" reviewRoute />} />

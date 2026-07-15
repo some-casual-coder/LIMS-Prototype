@@ -8,7 +8,7 @@ import type {
   WorkflowTemplate, WorkflowStageDef,
 } from '@/data/types';
 import { buildInitialState } from '@/data/seed';
-import { defaultPinned, defaultRecentlyOpened } from '@/data/myWork';
+import { defaultPinned, defaultRecentlyOpened, type WorkItem } from '@/data/myWork';
 import {
   savedSearchesSeed, recentSearchesSeed, researchCollectionsSeed,
 } from '@/data/searchData';
@@ -38,6 +38,9 @@ interface DemoState {
 
   // Workflow Catalogue & Configuration (Priority 0 sanity sprint)
   workflowTemplates: WorkflowTemplate[];
+
+  // My Work items created at runtime by the instruction wizard (reset-safe).
+  createdWorkItems: WorkItem[];
 
   // Mutable legislative data
   records: LegislativeRecord[];
@@ -102,6 +105,7 @@ interface DemoState {
   updateWorkflowStage: (slug: string, stageId: string, patch: Partial<WorkflowStageDef>) => void;
   publishWorkflow: (slug: string) => void;
   addWorkflowTemplate: (template: WorkflowTemplate) => void;
+  addWorkItem: (item: WorkItem) => void;
 }
 
 // Roll a version label forward one minor step, e.g. "v3.2" -> "v3.3".
@@ -126,6 +130,7 @@ export const useDemoStore = create<DemoState>()(
       accessRequests: [],
       ocrJobs: structuredClone(allJobsSeed),
       workflowTemplates: structuredClone(workflowTemplatesSeed),
+      createdWorkItems: [],
       ...initial,
 
       setRole: (role) => set({ currentRole: role }),
@@ -139,6 +144,7 @@ export const useDemoStore = create<DemoState>()(
         accessRequests: [],
         ocrJobs: structuredClone(allJobsSeed),
         workflowTemplates: structuredClone(workflowTemplatesSeed),
+        createdWorkItems: [],
         ...buildInitialState(),
       }),
 
@@ -334,10 +340,14 @@ export const useDemoStore = create<DemoState>()(
         set((s) => (s.workflowTemplates.some((w) => w.slug === template.slug)
           ? {}
           : { workflowTemplates: [template, ...s.workflowTemplates] })),
+      addWorkItem: (item) =>
+        set((s) => (s.createdWorkItems.some((w) => w.recordId === item.recordId)
+          ? {}
+          : { createdWorkItems: [item, ...s.createdWorkItems] })),
     }),
     {
       name: 'lims-national-assembly',
-      version: 6,
+      version: 7,
       // On a data-model change, discard stale persisted data and reseed. Prototype
       // personalisation (role/pins/searches) is intentionally reset with the data.
       migrate: () => ({
@@ -351,6 +361,7 @@ export const useDemoStore = create<DemoState>()(
         accessRequests: [],
         ocrJobs: structuredClone(allJobsSeed),
         workflowTemplates: structuredClone(workflowTemplatesSeed),
+        createdWorkItems: [],
         ...buildInitialState(),
       }),
     },

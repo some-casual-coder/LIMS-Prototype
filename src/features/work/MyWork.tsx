@@ -8,6 +8,7 @@ import {
 import { AppShell } from '@/components/shell';
 import { Button, Popover } from '@/components/ui';
 import { workItems, savedViews, moreSavedViews } from '@/data/myWork';
+import { useDemoStore } from '@/store/demoStore';
 import { WorkIndicators } from './WorkIndicators';
 import { WorkList } from './WorkList';
 import { BoardView } from './BoardView';
@@ -59,10 +60,14 @@ export function MyWork() {
   const openItem = (id: string) => setParams((p) => { p.set('item', id); return p; });
   const closeItem = () => setParams((p) => { p.delete('item'); return p; }, { replace: true });
 
-  const filtered = useMemo(() => sortItems(applyFilters(workItems, { search, status, filters }), sort), [search, status, filters, sort]);
+  // Runtime-created instructions (from the New Instruction wizard) surface here too.
+  const createdWork = useDemoStore((s) => s.createdWorkItems);
+  const allWork = useMemo(() => [...createdWork, ...workItems], [createdWork]);
+
+  const filtered = useMemo(() => sortItems(applyFilters(allWork, { search, status, filters }), sort), [allWork, search, status, filters, sort]);
   const groups = useMemo(() => groupItems(filtered, groupBy), [filtered, groupBy]);
   const activeFilters = filterCount(filters);
-  const quickItem = workItems.find((i) => i.recordId === quickItemId) || null;
+  const quickItem = allWork.find((i) => i.recordId === quickItemId) || null;
 
   function toggleSelect(id: string) {
     setSelected((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
