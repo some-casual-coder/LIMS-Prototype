@@ -34,6 +34,8 @@
 .checklistTitle { font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--text-strong); margin-bottom: 12px; }
 .checklist { display: flex; flex-direction: column; gap: 11px; }
 .checklist li { display: flex; align-items: center; gap: 9px; font-size: var(--fs-table); color: var(--text); }
+.emptyState { font-size: var(--fs-table); color: var(--text-muted); padding: 16px 0; }
+.ckGreen { color: var(--status-success); display: inline-flex; }
 .ckRed { color: var(--status-danger); display: inline-flex; }
 .ckAmber { color: var(--status-warning); display: inline-flex; }
 .ckGrey { color: var(--text-muted); display: inline-flex; }
@@ -57,6 +59,11 @@
 .aiFoot button:hover { color: var(--text-strong); }
 .aiConfirmed { display: flex; align-items: flex-start; gap: 9px; padding: 14px; background: var(--soft-green); color: var(--on-green); border-radius: var(--r-card); font-size: var(--fs-table); line-height: 1.5; margin-bottom: 14px; }
 .aiConfirmed svg { flex: none; margin-top: 1px; }
+.aiEmpty { border: 1px solid var(--border); border-radius: var(--r-card); padding: 14px; margin-bottom: 14px; }
+.aiEmptyTitle { font-size: var(--fs-table); color: var(--text-muted); margin-bottom: 12px; line-height: 1.5; }
+.aiActionsList { display: flex; flex-direction: column; gap: 4px; }
+.aiActionsList button { display: block; width: 100%; text-align: left; padding: 9px 10px; border: 1px solid var(--border); background: var(--bg-doc); border-radius: var(--r-button); font-size: var(--fs-table); color: var(--text-strong); }
+.aiActionsList button:hover { background: var(--soft-green); border-color: #b4d3bf; color: var(--green-800); }
 
 .warnCard { border: 1px solid #ecdfb4; background: #fdfaf0; border-radius: var(--r-card); padding: 13px; margin-bottom: 14px; }
 .warnHead { display: flex; align-items: center; gap: 7px; font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--on-amber); margin-bottom: 8px; }
@@ -99,8 +106,10 @@
 /* References */
 .refsNote { font-size: var(--fs-table); color: var(--text-muted); margin-bottom: 12px; }
 .refsList { display: flex; flex-direction: column; gap: 4px; }
-.refsList li { display: flex; align-items: center; gap: 11px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.refsList li { border-bottom: 1px solid var(--border); }
 .refsList li:last-child { border-bottom: none; }
+.refBtn { display: flex; align-items: center; gap: 11px; width: 100%; padding: 10px 4px; border: none; background: transparent; text-align: left; border-radius: var(--r-button); }
+.refBtn:hover { background: var(--soft-grey); }
 .refIcon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; background: var(--soft-gold); color: var(--gold-strong); flex: none; }
 .refTitle { display: block; font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--text-strong); }
 .refRel { display: block; font-size: var(--fs-meta); color: var(--text-muted); }

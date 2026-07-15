@@ -15,13 +15,20 @@ interface Props {
   tab: PanelTab;
   onTab: (t: PanelTab) => void;
   aiInserted: boolean;
+  aiDismissed: boolean;
   onInsertAi: (edited: boolean) => void;
+  onDismissAi: () => void;
+  resolvedComments: Set<string>;
+  onResolveComment: (id: string) => void;
+  onOpenClause: () => void;
+  onToast: (msg: string) => void;
   onGoWarning: () => void;
 }
 
 const TABS: PanelTab[] = ['Comments', 'AI Assistant', 'Validation', 'Metadata', 'References'];
 
-export function ContextPanel({ tab, onTab, aiInserted, onInsertAi, onGoWarning }: Props) {
+export function ContextPanel(p: Props) {
+  const { tab, onTab } = p;
   return (
     <aside className={styles.panel}>
       <nav className={styles.tabs} aria-label="Context panel">
@@ -33,28 +40,31 @@ export function ContextPanel({ tab, onTab, aiInserted, onInsertAi, onGoWarning }
       </nav>
 
       <div className={styles.body}>
-        {tab === 'Comments' && <CommentsTab />}
-        {tab === 'AI Assistant' && <AiTab aiInserted={aiInserted} onInsertAi={onInsertAi} onGoWarning={onGoWarning} />}
-        {tab === 'Validation' && <ValidationTab onGoWarning={onGoWarning} />}
+        {tab === 'Comments' && <CommentsTab resolved={p.resolvedComments} onResolve={p.onResolveComment} onOpenClause={p.onOpenClause} onToast={p.onToast} />}
+        {tab === 'AI Assistant' && <AiTab aiInserted={p.aiInserted} aiDismissed={p.aiDismissed} onInsertAi={p.onInsertAi} onDismissAi={p.onDismissAi} onGoWarning={p.onGoWarning} onToast={p.onToast} />}
+        {tab === 'Validation' && <ValidationTab onGoWarning={p.onGoWarning} onToast={p.onToast} />}
         {tab === 'Metadata' && <MetadataTab />}
-        {tab === 'References' && <ReferencesTab />}
+        {tab === 'References' && <ReferencesTab onToast={p.onToast} />}
       </div>
     </aside>
   );
 }
 
-function CommentsTab() {
+function CommentsTab({ resolved, onResolve, onOpenClause, onToast }: { resolved: Set<string>; onResolve: (id: string) => void; onOpenClause: () => void; onToast: (m: string) => void }) {
+  const open = editorComments.filter((c) => !resolved.has(c.id));
+  const hasBlockingOpen = open.some((c) => c.type === 'blocking');
   return (
     <div>
       <div className={styles.secHead}>
-        <div><h3>Comments</h3><p className={styles.secSub}>{editorComments.length} open · {resolvedCommentCount} resolved</p></div>
+        <div><h3>Comments</h3><p className={styles.secSub}>{open.length} open · {resolvedCommentCount + resolved.size} resolved</p></div>
         <div className={styles.secTools}>
-          <button className={styles.toolBtn} aria-label="Filter comments"><ListFilter width={15} height={15} /></button>
-          <button className={styles.toolBtn} aria-label="More"><MoreHorizontal width={16} height={16} /></button>
+          <button className={styles.toolBtn} aria-label="Filter comments" onClick={() => onToast('Filter: showing open comments.')}><ListFilter width={15} height={15} /></button>
+          <button className={styles.toolBtn} aria-label="Comment options" onClick={() => onToast('Comment options.')}><MoreHorizontal width={16} height={16} /></button>
         </div>
       </div>
 
-      {editorComments.map((c) => (
+      {open.length === 0 && <p className={styles.emptyState}>No open comments in this version.</p>}
+      {open.map((c) => (
         <div key={c.id} className={`${styles.comment} ${c.type === 'blocking' ? styles.commentBlocking : styles.commentDrafting}`}>
           <div className={styles.commentTop}>
             <StatusBadge tone={c.type === 'blocking' ? 'red' : 'gold'} size="sm" icon={c.type === 'blocking' ? <CircleAlert width={12} height={12} /> : <PencilLine width={12} height={12} />}>
@@ -69,9 +79,9 @@ function CommentsTab() {
           </div>
           <p className={styles.commentText}>{c.text}</p>
           <div className={styles.commentActions}>
-            <button><Reply width={13} height={13} /> Reply</button>
-            <button><Check width={13} height={13} /> Resolve</button>
-            <button><ExternalLink width={13} height={13} /> Open clause</button>
+            <button onClick={() => onToast(`Replying to ${c.by}…`)}><Reply width={13} height={13} /> Reply</button>
+            <button onClick={() => onResolve(c.id)}><Check width={13} height={13} /> Resolve</button>
+            <button onClick={onOpenClause}><ExternalLink width={13} height={13} /> Open clause</button>
           </div>
         </div>
       ))}
@@ -79,17 +89,17 @@ function CommentsTab() {
       <div className={styles.checklistCard}>
         <p className={styles.checklistTitle}>Required before submission</p>
         <ul className={styles.checklist}>
-          <li><span className={styles.ckRed}><CircleAlert width={15} height={15} /></span> Resolve blocking comments <span className={styles.ckNote}>1 open</span></li>
+          <li>{hasBlockingOpen ? <span className={styles.ckRed}><CircleAlert width={15} height={15} /></span> : <span className={styles.ckGreen}><CircleCheck width={15} height={15} /></span>} Resolve blocking comments <span className={styles.ckNote}>{hasBlockingOpen ? '1 open' : 'Done'}</span></li>
           <li><span className={styles.ckAmber}><TriangleAlert width={15} height={15} /></span> Pass validation <span className={styles.ckNote}>1 warning</span></li>
           <li><span className={styles.ckGrey}><Info width={15} height={15} /></span> Add revision note <span className={styles.ckNote}>Not added</span></li>
         </ul>
-        <button className={styles.link}>View all checklist items <ArrowRight width={13} height={13} /></button>
+        <button className={styles.link} onClick={() => onToast('Opening the full submission checklist.')}>View all checklist items <ArrowRight width={13} height={13} /></button>
       </div>
     </div>
   );
 }
 
-function AiTab({ aiInserted, onInsertAi, onGoWarning }: { aiInserted: boolean; onInsertAi: (e: boolean) => void; onGoWarning: () => void }) {
+function AiTab({ aiInserted, aiDismissed, onInsertAi, onDismissAi, onGoWarning, onToast }: { aiInserted: boolean; aiDismissed: boolean; onInsertAi: (e: boolean) => void; onDismissAi: () => void; onGoWarning: () => void; onToast: (m: string) => void }) {
   const s = clause14AiSuggestion;
   return (
     <div>
@@ -98,6 +108,15 @@ function AiTab({ aiInserted, onInsertAi, onGoWarning }: { aiInserted: boolean; o
       {aiInserted ? (
         <div className={styles.aiConfirmed}>
           <CircleCheck width={16} height={16} /> AI suggestion inserted after confirmation by Grace Wanjiku. The change is recorded in the activity log.
+        </div>
+      ) : aiDismissed ? (
+        <div className={styles.aiEmpty}>
+          <p className={styles.aiEmptyTitle}>Select a clause or passage to request legislative assistance.</p>
+          <ul className={styles.aiActionsList}>
+            {['Suggest clearer wording', 'Check consistency', 'Identify ambiguity', 'Summarise selected clause', 'Draft explanatory note'].map((a) => (
+              <li key={a}><button onClick={() => onToast(`AI: ${a} for Clause 14…`)}>{a}</button></li>
+            ))}
+          </ul>
         </div>
       ) : (
         <div className={styles.aiCard}>
@@ -112,8 +131,8 @@ function AiTab({ aiInserted, onInsertAi, onGoWarning }: { aiInserted: boolean; o
             <Button variant="secondary" size="sm" onClick={() => onInsertAi(false)}>Insert</Button>
           </div>
           <div className={styles.aiFoot}>
-            <button><Copy width={13} height={13} /> Copy suggestion</button>
-            <button><X width={13} height={13} /> Dismiss</button>
+            <button onClick={() => onToast('Suggestion copied to clipboard.')}><Copy width={13} height={13} /> Copy suggestion</button>
+            <button onClick={onDismissAi}><X width={13} height={13} /> Dismiss</button>
           </div>
         </div>
       )}
@@ -127,13 +146,13 @@ function AiTab({ aiInserted, onInsertAi, onGoWarning }: { aiInserted: boolean; o
       <div className={styles.relCard}>
         <div className={styles.relHead}><Landmark width={15} height={15} /> <span>Related legislation</span> <span className={styles.relCount}>{s.related.length} references</span></div>
         {s.related.map((r) => <p key={r} className={styles.relItem}><Landmark width={14} height={14} /> {r}</p>)}
-        <button className={styles.link}>View all references <ArrowRight width={13} height={13} /></button>
+        <button className={styles.link} onClick={() => onToast('Opening related legislation references.')}>View all references <ArrowRight width={13} height={13} /></button>
       </div>
     </div>
   );
 }
 
-function ValidationTab({ onGoWarning }: { onGoWarning: () => void }) {
+function ValidationTab({ onGoWarning, onToast }: { onGoWarning: () => void; onToast: (m: string) => void }) {
   const v = editorValidation;
   return (
     <div>
@@ -148,7 +167,7 @@ function ValidationTab({ onGoWarning }: { onGoWarning: () => void }) {
         <p>{v.warning}</p>
         <div className={styles.valActions}>
           <Button variant="secondary" size="sm" onClick={onGoWarning}>Go to Clause</Button>
-          <Button variant="tertiary" size="sm">Mark reviewed</Button>
+          <Button variant="tertiary" size="sm" onClick={() => onToast('Warning marked as reviewed.')}>Mark reviewed</Button>
         </div>
       </div>
       {v.categories.map((cat) => (
@@ -187,7 +206,7 @@ function MetadataTab() {
   );
 }
 
-function ReferencesTab() {
+function ReferencesTab({ onToast }: { onToast: (m: string) => void }) {
   const refs = [
     ['Public Service Delivery Act, 2019', 'Referenced Act'], ['Data Protection Act, 2019', 'Referenced Act'],
     ['Motion on Digital Accessibility in Public Institutions', 'Related motion'], ['Petition on Assisted Access to Digital Government Services', 'Public submission'],
@@ -199,7 +218,7 @@ function ReferencesTab() {
       <p className={styles.refsNote}>{definedTerms} defined terms · 4 external references linked.</p>
       <ul className={styles.refsList}>
         {refs.map(([t, r]) => (
-          <li key={t}><span className={styles.refIcon}><Landmark width={15} height={15} /></span><span><span className={styles.refTitle}>{t}</span><span className={styles.refRel}>{r}</span></span></li>
+          <li key={t}><button className={styles.refBtn} onClick={() => onToast(`Opening “${t}” in a preview panel.`)}><span className={styles.refIcon}><Landmark width={15} height={15} /></span><span><span className={styles.refTitle}>{t}</span><span className={styles.refRel}>{r}</span></span></button></li>
         ))}
       </ul>
     </div>

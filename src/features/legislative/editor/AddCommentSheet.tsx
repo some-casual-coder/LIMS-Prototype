@@ -4,7 +4,7 @@ import styles from './editorSheets.module.css';
 
 const TYPES = ['Legal issue', 'Drafting clarification', 'Procedural issue', 'Reference issue', 'General comment'];
 
-export function AddCommentSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function AddCommentSheet({ open, onClose, onAdded }: { open: boolean; onClose: () => void; onAdded?: () => void }) {
   const [text, setText] = useState('');
   const [type, setType] = useState('Drafting clarification');
   const [blocking, setBlocking] = useState(false);
@@ -12,7 +12,7 @@ export function AddCommentSheet({ open, onClose }: { open: boolean; onClose: () 
 
   function add() {
     setSaved(true);
-    window.setTimeout(() => { setSaved(false); setText(''); onClose(); }, 800);
+    window.setTimeout(() => { setSaved(false); setText(''); onClose(); onAdded?.(); }, 800);
   }
 
   return (

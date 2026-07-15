@@ -29,9 +29,22 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
   const [activeClause, setActiveClause] = useState(14);
   const [panelTab, setPanelTab] = useState<PanelTab>(params.get('tab') === 'metadata' ? 'Metadata' : mode === 'review' ? 'Comments' : 'Comments');
   const [aiInserted, setAiInserted] = useState(false);
+  const [aiDismissed, setAiDismissed] = useState(false);
+  const [resolvedComments, setResolvedComments] = useState<Set<string>>(new Set());
   const [changeStatus, setChangeStatus] = useState<ChangeStatus>({});
   const [sheet, setSheet] = useState<'' | 'compare' | 'submit' | 'comment'>('');
+  const [toast, setToast] = useState('');
   const currentRole = useDemoStore((s) => s.currentRole);
+
+  function showToast(msg: string) {
+    setToast(msg);
+    window.setTimeout(() => setToast((t) => (t === msg ? '' : t)), 2600);
+  }
+  function resolveComment(cid: string) {
+    setResolvedComments((s) => new Set(s).add(cid));
+    showToast(`Comment ${cid} resolved.`);
+  }
+  function openClause(n: number) { setActiveClause(n); showToast(`Jumped to Clause ${n}.`); }
 
   const effectiveMode: EditorMode = mode === 'edit' && !trackChanges ? 'preview' : mode;
   const reviewedCount = clause14Changes.filter((c) => changeStatus[c.id] && changeStatus[c.id] !== 'pending').length;
@@ -60,7 +73,18 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
           </nav>
           <div className={styles.titleRow}>
             <h1 className={styles.docTitle}>Digital Public Services Bill, 2026</h1>
-            <button className={styles.versionSel}>NA/BILL/2026/015 · Version {mode === 'review' ? '4.1' : '4.0'} <ChevronDown width={14} height={14} /></button>
+            <Popover label="Select version" align="left" trigger={({ toggle, ref }) => (
+              <button ref={ref} className={styles.versionSel} onClick={toggle}>NA/BILL/2026/015 · Version {mode === 'review' ? '4.1' : '4.0'} <ChevronDown width={14} height={14} /></button>
+            )}>
+              {(close) => (
+                <div className={styles.menu} onClick={close}>
+                  <button className={styles.menuItem} onClick={() => showToast('Viewing Version 4.0 — current working version.')}>Version 4.0 · Current working</button>
+                  <button className={styles.menuItem} onClick={() => showToast('Version 3.1 is superseded.')}>Version 3.1 · Superseded</button>
+                  <button className={styles.menuItem} onClick={() => showToast('Version 3.0 is the latest approved version.')}>Version 3.0 · Latest approved</button>
+                  <Link to={`/legislative/${id}/versions`} className={styles.menuItem}>View all versions →</Link>
+                </div>
+              )}
+            </Popover>
           </div>
         </div>
 
@@ -75,14 +99,14 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
         <div className={styles.tbRight}>
           {mode === 'review' ? (
             <>
-              <Button variant="secondary" leftIcon={<RotateCcw width={16} height={16} />}>Return for Revision</Button>
+              <Button variant="secondary" leftIcon={<RotateCcw width={16} height={16} />} onClick={() => showToast('Return for revision — opens the return workflow.')}>Return for Revision</Button>
               <Button variant="secondary" leftIcon={<GitCompare width={16} height={16} />} onClick={() => setSheet('compare')}>Compare</Button>
-              <Button variant="primary" leftIcon={<ShieldCheck width={16} height={16} />}>Approve Legal Review</Button>
+              <Button variant="primary" leftIcon={<ShieldCheck width={16} height={16} />} onClick={() => showToast('Legal review approved — routing to Procedural Review.')}>Approve Legal Review</Button>
             </>
           ) : (
             <>
-              <Button variant="secondary" leftIcon={<ShieldCheck width={16} height={16} />} onClick={() => setPanelTab('Validation')}>Validate</Button>
-              <Button variant="secondary" leftIcon={<Eye width={16} height={16} />}>Preview</Button>
+              <Button variant="secondary" leftIcon={<ShieldCheck width={16} height={16} />} onClick={() => { setPanelTab('Validation'); showToast('Validation complete — 14 passed, 1 warning, 0 errors.'); }}>Validate</Button>
+              <Button variant="secondary" leftIcon={<Eye width={16} height={16} />} onClick={() => { setTrackChanges(false); showToast('Preview — clean document with tracked changes hidden.'); }}>Preview</Button>
               <Button variant="primary" leftIcon={<Send width={15} height={15} />} onClick={() => setSheet('submit')}>Submit Revision</Button>
             </>
           )}
@@ -92,7 +116,7 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
       {/* Toolbar */}
       <div className={styles.toolbar}>
         <div className={styles.toolGroup}>
-          <button className={styles.tool} aria-label="Undo"><Undo2 width={16} height={16} /></button>
+          <button className={styles.tool} aria-label="Undo" onClick={() => showToast('Nothing to undo.')}><Undo2 width={16} height={16} /></button>
           <button className={styles.tool} aria-label="Redo" disabled><Redo2 width={16} height={16} /></button>
         </div>
         <span className={styles.toolSep} />
@@ -100,13 +124,13 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
           <Popover label="Insert" trigger={({ toggle, ref }) => (
             <button ref={ref} className={styles.toolText} onClick={toggle}><Plus width={15} height={15} /> Insert <ChevronDown width={13} height={13} /></button>
           )}>
-            {(close) => (<div className={styles.menu} onClick={close}>{INSERT_ITEMS.map((it) => <button key={it} className={styles.menuItem}>{it}</button>)}</div>)}
+            {(close) => (<div className={styles.menu} onClick={close}>{INSERT_ITEMS.map((it) => <button key={it} className={styles.menuItem} onClick={() => showToast(`Inserted a new ${it.toLowerCase()} in Clause ${activeClause}.`)}>{it}</button>)}</div>)}
           </Popover>
         )}
-        <button className={`${styles.toolText} ${trackChanges ? styles.toolActive : ''}`} onClick={() => setTrackChanges((t) => !t)} aria-pressed={trackChanges}><PenLine width={15} height={15} /> Track Changes</button>
+        <button className={`${styles.toolText} ${trackChanges ? styles.toolActive : ''}`} onClick={() => { setTrackChanges((t) => !t); showToast(trackChanges ? 'Tracked changes hidden.' : 'Tracked changes shown.'); }} aria-pressed={trackChanges}><PenLine width={15} height={15} /> Track Changes</button>
         <button className={styles.toolText} onClick={() => setPanelTab('Comments')}><MessageSquare width={15} height={15} /> Comments</button>
         <button className={styles.toolText} onClick={() => setSheet('compare')}><GitCompare width={15} height={15} /> Compare</button>
-        <button className={styles.toolText} onClick={() => setPanelTab('Validation')}><ShieldCheck width={15} height={15} /> Validate</button>
+        <button className={styles.toolText} onClick={() => { setPanelTab('Validation'); showToast('Validation complete — 14 passed, 1 warning, 0 errors.'); }}><ShieldCheck width={15} height={15} /> Validate</button>
         {mode !== 'review' && (
           <Popover label="AI Assist" trigger={({ toggle, ref }) => (
             <button ref={ref} className={styles.toolText} onClick={() => { setPanelTab('AI Assistant'); toggle(); }}><Sparkles width={15} height={15} /> AI Assist <ChevronDown width={13} height={13} /></button>
@@ -114,8 +138,29 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
             {(close) => (<div className={styles.menu} onClick={close}>{['Suggest clearer wording', 'Check consistency', 'Identify ambiguity', 'Compare related provisions', 'Summarise selected clause', 'Draft explanatory note'].map((it) => <button key={it} className={styles.menuItem} onClick={() => setPanelTab('AI Assistant')}>{it}</button>)}</div>)}
           </Popover>
         )}
-        <button className={styles.toolText}><Search width={15} height={15} /> Find</button>
-        <button className={styles.tool} style={{ marginLeft: 'auto' }} aria-label="More"><MoreHorizontal width={16} height={16} /></button>
+        <Popover label="Find" trigger={({ toggle, ref }) => (
+          <button ref={ref} className={styles.toolText} onClick={toggle}><Search width={15} height={15} /> Find</button>
+        )}>
+          {(close) => (
+            <form className={styles.findBar} onSubmit={(e) => { e.preventDefault(); const q = (e.currentTarget.elements.namedItem('q') as HTMLInputElement).value.trim(); close(); showToast(q ? `${q.length % 3 + 1} matches for “${q}” in Clause ${activeClause}.` : 'Enter a term to find.'); }}>
+              <input name="q" className={styles.findInput} placeholder="Find in document…" aria-label="Find in document" autoFocus />
+              <button type="submit" className={styles.findGo}>Find</button>
+            </form>
+          )}
+        </Popover>
+        <Popover label="More" align="right" trigger={({ toggle, ref }) => (
+          <button ref={ref} className={styles.tool} style={{ marginLeft: 'auto' }} onClick={toggle} aria-label="More"><MoreHorizontal width={16} height={16} /></button>
+        )}>
+          {(close) => (
+            <div className={styles.menu} onClick={close}>
+              <button className={styles.menuItem} onClick={() => setPanelTab('Metadata')}>Document metadata</button>
+              <button className={styles.menuItem} onClick={() => showToast('Numbering settings updated.')}>Numbering settings</button>
+              <button className={styles.menuItem} onClick={() => showToast('Keyboard: ⌘S Save · ⌘F Find · ⌘⇧C Comment.')}>Keyboard shortcuts</button>
+              <button className={styles.menuItem} onClick={() => { setPanelTab('References'); showToast('Accessibility outline: heading structure valid.'); }}>View accessibility outline</button>
+              <button className={styles.menuItem} onClick={() => showToast('Exporting a working copy…')}>Export working copy</button>
+            </div>
+          )}
+        </Popover>
       </div>
 
       {/* Change summary (review) */}
@@ -132,16 +177,30 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
 
       {/* Three columns */}
       <div className={styles.columns}>
-        <StructureNav active={activeClause} onSelect={setActiveClause} />
+        <StructureNav active={activeClause} onSelect={(n) => { setActiveClause(n); }} />
         <DocumentSurface
           mode={effectiveMode}
+          activeClause={activeClause}
           changeStatus={changeStatus}
           onAccept={(cid) => setChange(cid, 'accepted')}
           onReject={(cid) => setChange(cid, 'rejected')}
           onComment={() => setSheet('comment')}
-          onSuggest={() => setPanelTab('AI Assistant')}
+          onSuggest={() => { setActiveClause(14); setPanelTab('AI Assistant'); }}
+          onCrossRef={() => showToast('Cross-reference created for the selected passage.')}
         />
-        <ContextPanel tab={panelTab} onTab={setPanelTab} aiInserted={aiInserted} onInsertAi={insertAi} onGoWarning={() => { setActiveClause(14); setPanelTab('Validation'); }} />
+        <ContextPanel
+          tab={panelTab}
+          onTab={setPanelTab}
+          aiInserted={aiInserted}
+          aiDismissed={aiDismissed}
+          onInsertAi={insertAi}
+          onDismissAi={() => { setAiDismissed(true); showToast('Suggestion dismissed.'); }}
+          resolvedComments={resolvedComments}
+          onResolveComment={resolveComment}
+          onOpenClause={() => openClause(14)}
+          onToast={showToast}
+          onGoWarning={() => { setActiveClause(14); setPanelTab('Validation'); }}
+        />
       </div>
 
       {/* Status bar */}
@@ -153,7 +212,9 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
 
       <CompareSheet open={sheet === 'compare'} onClose={() => setSheet('')} />
       <SubmitSheet open={sheet === 'submit'} onClose={() => setSheet('')} recordId={id} />
-      <AddCommentSheet open={sheet === 'comment'} onClose={() => setSheet('')} />
+      <AddCommentSheet open={sheet === 'comment'} onClose={() => setSheet('')} onAdded={() => showToast('Comment added to Clause 14.')} />
+
+      {toast && <div className={styles.toast} role="status" aria-live="polite">{toast}</div>}
     </EditorShell>
   );
 }
