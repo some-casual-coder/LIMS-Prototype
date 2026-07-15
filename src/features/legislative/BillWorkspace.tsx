@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
 import {
   Lock, Flag, RotateCcw, ShieldCheck, ExternalLink, Info, MoreVertical, Eye, PenLine,
-  Check, CircleDot, TriangleAlert, CircleAlert, FileText, Globe, Code2, ArrowRight,
-  Calendar, Clock, UserRound, CircleCheck, CircleDashed, Users, ScrollText, Vote, MessageSquareText, FileBarChart,
+  Check, CircleDot, TriangleAlert, CircleAlert, FileText, Globe, Code2,
+  Calendar, Clock, UserRound, CircleCheck, CircleDashed, Users, ScrollText, Vote, MessageSquareText, FileBarChart, FileBraces,
 } from 'lucide-react';
 import { AppShell } from '@/components/shell';
 import { Panel, Button, StatusBadge, Avatar, Popover } from '@/components/ui';
@@ -16,11 +16,19 @@ import {
 import { WorkflowSheet } from './WorkflowSheet';
 import { PboAssessmentSheet, PboStatusCard } from './pbo/PboAssessmentSheet';
 import { TASKS_RECORD_ID } from '@/data/billTasks';
+import { paths } from '@/routes/paths';
 import styles from './BillWorkspace.module.css';
 
 const TABS = ['Overview', 'Draft', 'Tasks', 'Documents', 'Versions', 'Workflow', 'Participation', 'Activity'];
 const officerName = (id?: string) => officers.find((o) => o.id === id)?.name ?? '—';
 const officerInitials = (id?: string) => officers.find((o) => o.id === id)?.initials ?? '—';
+const billStructure = [
+  ['meta', 'Metadata', 'Complete'],
+  ['coverPage', 'Cover page', 'Available'],
+  ['preface', 'Preface and long title', 'Complete'],
+  ['preamble', 'Preamble and formula', 'Complete'],
+  ['body', 'Parts, clauses and schedules', 'In progress'],
+] as const;
 
 export function BillWorkspace() {
   const { id } = useParams();
@@ -55,7 +63,7 @@ export function BillWorkspace() {
   const openTasks = tasks.filter((t) => t.status !== 'Completed').length;
 
   return (
-    <AppShell breadcrumb={[{ label: 'Legislative Work', to: '/work' }, { label: 'Bills', to: '/work?type=Bill' }, { label: record.reference }]}>
+    <AppShell breadcrumb={[{ label: 'Legislative Work', to: '/work' }, { label: 'Bills', to: paths.bills }, { label: record.reference }]}>
       {/* Record identity header */}
       <header className={styles.head}>
         <div className={styles.headMain}>
@@ -70,7 +78,7 @@ export function BillWorkspace() {
           </div>
         </div>
         <div className={styles.headActions}>
-          <Button variant="primary" size="lg" to={`/legislative/${record.id}/draft?mode=revision`} rightIcon={<ArrowRight width={17} height={17} />}>Continue Revision</Button>
+          <Button variant="primary" size="lg" to={`/legislative/${record.id}/draft?mode=revision`}>Continue Revision</Button>
           <Button variant="secondary" size="lg" to={`/legislative/${record.id}/draft?mode=preview`} leftIcon={<Eye width={17} height={17} />}>Preview Document</Button>
           <Popover label="More actions" trigger={({ toggle, ref }) => (
             <button ref={ref} className={styles.moreBtn} onClick={toggle} aria-label="More actions"><MoreVertical width={18} height={18} /></button>
@@ -172,7 +180,7 @@ function OverviewTab({ record, versions, onOpenWorkflow, pboState, onOpenPbo }: 
             <li className={styles.issueAmber}><TriangleAlert width={14} height={14} /> 1 cross-reference warning</li>
           </ul>
           <div className={styles.actionButtons}>
-            <Button variant="primary" to={`/legislative/${record.id}/draft?mode=revision`} rightIcon={<ArrowRight width={16} height={16} />}>Continue Revision</Button>
+            <Button variant="primary" to={`/legislative/${record.id}/draft?mode=revision`}>Continue Revision</Button>
             <Button variant="secondary" to={`/legislative/${record.id}/draft?tab=comments`} leftIcon={<MessageSquareText width={16} height={16} />}>Review Comments</Button>
           </div>
         </section>
@@ -193,6 +201,20 @@ function OverviewTab({ record, versions, onOpenWorkflow, pboState, onOpenPbo }: 
               </div>
             </div>
           </div>
+          {record.isPrimary && (
+            <div className={styles.aknStructure}>
+              <div className={styles.aknHeading}>
+                <span><FileBraces width={17} height={17} /> Akoma Ntoso Bill structure</span>
+                <strong>6 of 8 sections prepared</strong>
+              </div>
+              <div className={styles.aknTicks} role="progressbar" aria-label="Six of eight Bill structure sections prepared" aria-valuemin={0} aria-valuemax={8} aria-valuenow={6}>
+                {Array.from({ length: 8 }, (_, index) => <i key={index} className={index < 6 ? styles.aknDone : ''} />)}
+              </div>
+              <ul className={styles.aknParts}>
+                {billStructure.map(([tag, label, status]) => <li key={tag}><code>&lt;{tag}&gt;</code><span>{label}</span><small>{status}</small></li>)}
+              </ul>
+            </div>
+          )}
           <p className={styles.outputsLabel}>Generated outputs <span>(from Version 4.0)</span></p>
           <div className={styles.outputs}>
             {generatedOutputs.map((o) => (
@@ -217,7 +239,7 @@ function OverviewTab({ record, versions, onOpenWorkflow, pboState, onOpenPbo }: 
               </li>
             ))}
           </ul>
-          <Link to={`/legislative/${record.id}/tasks`} className={styles.cardLink}>View full checklist <ArrowRight width={14} height={14} /></Link>
+          <Link to={`/legislative/${record.id}/tasks`} className={styles.cardLink}>View full checklist</Link>
         </Panel>
 
         {/* D. Recent versions */}
@@ -238,7 +260,7 @@ function OverviewTab({ record, versions, onOpenWorkflow, pboState, onOpenPbo }: 
               </li>
             ))}
           </ul>
-          <Link to={`/legislative/${record.id}/versions`} className={styles.cardLink}>View all versions <ArrowRight width={14} height={14} /></Link>
+          <Link to={`/legislative/${record.id}/versions`} className={styles.cardLink}>View all versions</Link>
         </Panel>
 
         {/* Related records */}
@@ -285,7 +307,7 @@ function OverviewTab({ record, versions, onOpenWorkflow, pboState, onOpenPbo }: 
               <span><span className={styles.personName}>{record.originatingOffice}</span><span className={styles.personRole}>Originating office</span></span>
             </li>
           </ul>
-          <button className={styles.railLink}>Manage people <ArrowRight width={13} height={13} /></button>
+          <button className={styles.railLink}>Manage people</button>
         </Panel>
 
         <Panel title="Key dates" padded>
@@ -301,7 +323,7 @@ function OverviewTab({ record, versions, onOpenWorkflow, pboState, onOpenPbo }: 
             <li className={styles.issueRed}><CircleAlert width={15} height={15} /> 1 blocking comment</li>
             <li className={styles.issueAmber}><TriangleAlert width={15} height={15} /> 1 cross-reference warning</li>
           </ul>
-          <button className={styles.railLink} onClick={onOpenWorkflow}>View all issues <ArrowRight width={13} height={13} /></button>
+          <button className={styles.railLink} onClick={onOpenWorkflow}>View all issues</button>
         </Panel>
 
         <Panel title="Access and classification" padded>
@@ -310,7 +332,7 @@ function OverviewTab({ record, versions, onOpenWorkflow, pboState, onOpenPbo }: 
             <div><dt>Visible to</dt><dd>{accessInfo.visibleTo}</dd></div>
             <div><dt>Public visibility</dt><dd>{accessInfo.publicVisibility}</dd></div>
           </dl>
-          <button className={styles.railLink}>View permissions <ArrowRight width={13} height={13} /></button>
+          <button className={styles.railLink}>View permissions</button>
         </Panel>
       </aside>
     </div>
@@ -351,7 +373,7 @@ function OtherTab({ tab, record, tasks, versions }: { tab: string; record: any; 
             <li key={v.id}><span className={styles.tabTaskTitle}>Version {v.version} — {v.label}</span><span className={styles.emptyLine}>{v.approvalState}</span></li>
           ))}
         </ul>
-        <Link to={`/legislative/${record.id}/versions`} className={styles.cardLink}>Open full version history <ArrowRight width={14} height={14} /></Link>
+        <Link to={`/legislative/${record.id}/versions`} className={styles.cardLink}>Open full version history</Link>
       </Panel>
     );
   }
@@ -359,7 +381,7 @@ function OtherTab({ tab, record, tasks, versions }: { tab: string; record: any; 
   return (
     <Panel padded>
       <p className={styles.emptyLine}>{tab === 'Documents' ? 'Canonical master and generated outputs are shown on the Overview tab.' : 'This section opens in its dedicated workspace.'}</p>
-      <Link to={tab === 'Participation' ? '/participation' : `/legislative/${record.id}`} className={styles.cardLink}>{tab === 'Participation' ? 'Open participation inbox' : 'Back to Overview'} <ArrowRight width={14} height={14} /></Link>
+      <Link to={tab === 'Participation' ? '/participation' : `/legislative/${record.id}`} className={styles.cardLink}>{tab === 'Participation' ? 'Open participation inbox' : 'Back to Overview'}</Link>
     </Panel>
   );
 }

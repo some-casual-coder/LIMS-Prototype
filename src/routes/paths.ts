@@ -4,6 +4,7 @@ import { PRIMARY_RECORD_ID } from '@/data/seed';
 export const paths = {
   login: '/login',
   dashboard: '/dashboard',
+  bills: '/bills',
   work: '/work',
   workflows: '/workflows',
   workflowsCompare: '/workflows/compare',

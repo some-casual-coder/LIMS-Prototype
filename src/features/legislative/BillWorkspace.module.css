@@ -78,6 +78,16 @@
 .docTitle { font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--text-strong); }
 .docMeta { font-size: var(--fs-meta); color: var(--text-muted); margin-top: 3px; line-height: 1.5; }
 .docActions { display: flex; gap: 8px; margin-top: 10px; }
+.aknStructure { margin-top: 14px; padding: 12px; border: 1px solid var(--border); border-radius: var(--r-button); background: var(--soft-grey); }
+.aknHeading { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: var(--fs-meta); color: var(--text-muted); }
+.aknHeading > span { display: inline-flex; align-items: center; gap: 6px; font-weight: var(--fw-semibold); color: var(--text-strong); }
+.aknHeading strong { font-size: 11px; color: var(--text); }
+.aknTicks { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; height: 10px; margin: 10px 0; }
+.aknTicks i { border-radius: 3px; background: #dde2de; }
+.aknTicks .aknDone:nth-child(1) { background: rgba(22,32,26,.35); }.aknTicks .aknDone:nth-child(2) { background: rgba(22,32,26,.45); }.aknTicks .aknDone:nth-child(3) { background: rgba(22,32,26,.56); }.aknTicks .aknDone:nth-child(4) { background: rgba(22,32,26,.68); }.aknTicks .aknDone:nth-child(5) { background: rgba(22,32,26,.82); }.aknTicks .aknDone:nth-child(6) { background: var(--ink); }
+.aknParts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px 14px; }
+.aknParts li { min-width: 0; display: grid; grid-template-columns: 74px minmax(0, 1fr) auto; align-items: center; gap: 6px; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 10px; }
+.aknParts code { color: var(--green-700); font-weight: var(--fw-bold); }.aknParts span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.aknParts small { color: var(--text-muted); white-space: nowrap; }
 .outputsLabel { font-size: var(--fs-meta); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: var(--fw-semibold); margin: 14px 0 10px; }
 .outputsLabel span { text-transform: none; letter-spacing: 0; font-weight: var(--fw-regular); }
 .outputs { display: flex; flex-direction: column; gap: 8px; }

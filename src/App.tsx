@@ -4,6 +4,7 @@ import { Presenter } from '@/components/presenter/Presenter';
 import { Login } from '@/features/auth/Login';
 import { CommandCentre } from '@/features/dashboard/CommandCentre';
 import { MyWork } from '@/features/work/MyWork';
+import { BillsDashboard } from '@/features/bills/BillsDashboard';
 import { InstructionWizard } from '@/features/legislative/wizard/InstructionWizard';
 import { BillWorkspace } from '@/features/legislative/BillWorkspace';
 import { SearchPage } from '@/features/search/SearchPage';
@@ -55,6 +56,7 @@ export default function App() {
 
         {/* Internal application */}
         <Route path="/dashboard" element={<CommandCentre />} />
+        <Route path="/bills" element={<BillsDashboard />} />
         <Route path="/work" element={<MyWork />} />
         <Route path="/workflows" element={<WorkflowCatalogue />} />
         <Route path="/workflows/compare" element={<WorkflowComparison />} />

@@ -57,7 +57,7 @@ export function BillTasksControl() {
 
   const breadcrumb: Crumb[] = [
     { label: 'Home', to: '/dashboard' }, { label: 'Legislation', to: '/work' },
-    { label: 'Bills', to: '/work?type=Bill' }, { label: record.reference, to: paths.record(record.id) }, { label: 'Tasks' },
+    { label: 'Bills', to: paths.bills }, { label: record.reference, to: paths.record(record.id) }, { label: 'Tasks' },
   ];
 
   return (

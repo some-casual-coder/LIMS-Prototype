@@ -9,16 +9,14 @@ import styles from './EditorShell.module.css';
 // maximise document space; the editor supplies its own compact header.
 export function EditorShell({ children }: { children: ReactNode }) {
   const currentRole = useDemoStore((s) => s.currentRole);
-  const notifications = useDemoStore((s) => s.notifications);
   const [collapsed, setCollapsed] = useState(true);
 
   if (!currentRole || currentRole === 'citizen') return <Navigate to="/login" replace />;
   const persona = allPersonas.find((p) => p.id === currentRole)!;
-  const unread = notifications.filter((n) => n.recipientId === currentRole && !n.read).length;
 
   return (
     <div className={styles.shell}>
-      <Sidebar collapsed={collapsed} onToggleCollapse={() => setCollapsed((c) => !c)} unreadCount={unread} persona={persona} />
+      <Sidebar collapsed={collapsed} onToggleCollapse={() => setCollapsed((c) => !c)} persona={persona} />
       <div className={styles.main}>{children}</div>
     </div>
   );
