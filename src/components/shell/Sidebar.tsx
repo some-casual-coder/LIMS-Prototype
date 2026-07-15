@@ -16,7 +16,7 @@ interface Props {
   persona: Persona;
 }
 
-function isActive(to: string, pathname: string, search: string): boolean {
+function isExact(to: string, pathname: string, search: string): boolean {
   const [path, query] = to.split('?');
   if (pathname !== path) return false;
   if (!query) return search === '' || search === '?';
@@ -26,12 +26,32 @@ function isActive(to: string, pathname: string, search: string): boolean {
   return true;
 }
 
+// The path-only nav item that is the longest prefix of the current path — used
+// to keep a section root (e.g. Repository) highlighted on its sub-routes when no
+// item matches exactly.
+function bestPrefix(pathname: string, tos: string[]): string | null {
+  let best: string | null = null;
+  for (const to of tos) {
+    if (to.includes('?')) continue;
+    if (pathname === to || pathname.startsWith(to + '/')) {
+      if (!best || to.length > best.length) best = to;
+    }
+  }
+  return best;
+}
+
 export function Sidebar({ collapsed, onToggleCollapse, unreadCount, persona }: Props) {
   const { pathname, search } = useLocation();
   const records = useDemoStore((s) => s.records);
   const pinned = useDemoStore((s) => s.pinned);
   const recentlyOpened = useDemoStore((s) => s.recentlyOpened);
   const byId = useMemo(() => Object.fromEntries(records.map((r) => [r.id, r])), [records]);
+
+  const allTos = useMemo(() => navGroups.flatMap((g) => g.items.map((i) => i.to)), []);
+  // If any item matches the URL exactly, only exact items highlight; otherwise
+  // fall back to the longest path prefix so section roots stay active.
+  const hasExact = navGroups.some((g) => g.items.some((i) => isExact(i.to, pathname, search)));
+  const prefixTo = hasExact ? null : bestPrefix(pathname, allTos);
 
   return (
     <nav className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''}`} aria-label="Primary">
@@ -54,7 +74,7 @@ export function Sidebar({ collapsed, onToggleCollapse, unreadCount, persona }: P
             {!collapsed && <p className={styles.groupLabel}>{group.label}</p>}
             <ul>
               {group.items.map((item) => {
-                const active = isActive(item.to, pathname, search);
+                const active = isExact(item.to, pathname, search) || item.to === prefixTo;
                 const showBadge = item.badgeKey === 'notifications' && unreadCount > 0;
                 return (
                   <li key={item.label}>

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import {
   LayoutGrid, ListChecks, Bell, Scale, Vote, MessageSquare, MessageSquareQuote,
   ScrollText, PenLine, ClipboardCheck, LayoutTemplate, Search, Archive, ScanLine,
-  Inbox, Megaphone, BarChart3, ShieldCheck,
+  Inbox, Megaphone, BarChart3, ShieldCheck, Library, Bookmark, FolderOpen, History,
 } from 'lucide-react';
 import type { RoleId } from '@/data/types';
 
@@ -52,9 +52,18 @@ export const navGroups: NavGroup[] = [
     ],
   },
   {
-    label: 'Documents & Knowledge',
+    label: 'Search & Knowledge',
     items: [
       { label: 'Search', to: '/search', icon: <Search {...ic} /> },
+      { label: 'Repository', to: '/repository', icon: <Library {...ic} /> },
+      { label: 'Saved Searches', to: '/search/saved', icon: <Bookmark {...ic} /> },
+      { label: 'Research Collections', to: '/research', icon: <FolderOpen {...ic} /> },
+      { label: 'Recent Research', to: '/search/recent', icon: <History {...ic} /> },
+    ],
+  },
+  {
+    label: 'Documents',
+    items: [
       { label: 'Document Archive', to: '/documents', icon: <Archive {...ic} /> },
       { label: 'OCR Import', to: '/documents/import', icon: <ScanLine {...ic} /> },
     ],

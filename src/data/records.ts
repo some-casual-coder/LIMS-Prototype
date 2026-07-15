@@ -346,6 +346,48 @@ export const otherRecords: LegislativeRecord[] = [
     lastUpdated: '2026-07-02T10:00:00+03:00', year: 2026, restricted: false, publicParticipation: 'Not applicable', submissionCount: 0,
     summary: 'Annual performance report on digital public services, laid before the House.',
   },
+  // ---- Enacted legislation referenced as drafting precedent ----
+  {
+    id: 'NA-BILL-2019-023', reference: 'NA/BILL/2019/023', title: 'Public Service Delivery Act, 2019',
+    shortTitle: 'Public Service Delivery Act', workflowType: 'Bill', stage: 'Published',
+    priority: 'Low', confidentiality: 'Public', directorate: 'Directorate of Legal Services',
+    originatingOffice: 'Ministry of Public Service', drafterId: 'counsel-barasa', reviewerId: 'dls-reviewer',
+    currentVersion: '1.0', currentVersionLabel: 'Published Version', dueDate: '2019-09-30', createdDate: '2019-03-01',
+    lastUpdated: '2019-10-01T09:00:00+03:00', year: 2019, restricted: false, publicParticipation: 'Closed', submissionCount: 63,
+    summary: 'Establishes standards for the fair, inclusive and accessible delivery of public services; frequently cited as drafting precedent for assisted-access provisions.',
+    citation: 'Act No. 23 of 2019', recordSource: 'Structured', formats: ['PDF', 'HTML', 'AKN XML'], sponsor: 'Ministry of Public Service',
+  },
+  // ---- Verified historical scans (Historical Archive) ----
+  {
+    id: 'NA-HIST-2010-CON-001', reference: 'HIST/2010/CON/001', title: 'Public Service (Access to Records) Regulations, 2010 — Original Gazette',
+    shortTitle: 'Access to Records Regulations 2010 (scan)', workflowType: 'Statutory Instrument', stage: 'Archived',
+    priority: 'Low', confidentiality: 'Public', directorate: 'Directorate of Legislative and Procedural Services',
+    originatingOffice: 'Government Printer', drafterId: 'dlps-officer', reviewerId: 'dlps-officer',
+    currentVersion: '1.0', currentVersionLabel: 'Published Version', dueDate: '2010-06-01', createdDate: '2010-05-15',
+    lastUpdated: '2026-06-10T10:00:00+03:00', year: 2010, restricted: false, publicParticipation: 'Not applicable', submissionCount: 0,
+    summary: 'Digitised gazette prescribing access-to-records procedures for public entities; verified against the original scanned pages.',
+    recordSource: 'Historical scan', ocrStatus: 'Verified', sourceArchive: 'National Archives', formats: ['PDF', 'Scan', 'OCR Text'],
+  },
+  {
+    id: 'NA-HIST-2012-ACC-003', reference: 'HIST/2012/ACC/003', title: 'Accessibility of Public Services Report, 2012 — Archived Paper',
+    shortTitle: 'Accessibility of Public Services Report 2012 (scan)', workflowType: 'Papers Laid', stage: 'Archived',
+    priority: 'Low', confidentiality: 'Public', directorate: 'Directorate of Legislative and Procedural Services',
+    originatingOffice: 'Departmental Committee', drafterId: 'dlps-officer', reviewerId: 'dlps-officer',
+    currentVersion: '1.0', currentVersionLabel: 'Published Version', dueDate: '2012-11-01', createdDate: '2012-10-20',
+    lastUpdated: '2026-05-28T10:00:00+03:00', year: 2012, restricted: false, publicParticipation: 'Not applicable', submissionCount: 0,
+    summary: 'Committee report on barriers to accessing public services; scanned from the archived paper record and text-verified.',
+    recordSource: 'Historical scan', ocrStatus: 'Verified', sourceArchive: 'National Assembly Records', formats: ['PDF', 'Scan', 'OCR Text'],
+  },
+  {
+    id: 'NA-HIST-2008-DIG-002', reference: 'HIST/2008/DIG/002', title: 'Report on Government Digital Access, 2008 — Archived Paper',
+    shortTitle: 'Government Digital Access Report 2008 (scan)', workflowType: 'Papers Laid', stage: 'Archived',
+    priority: 'Low', confidentiality: 'Public', directorate: 'Directorate of Legislative and Procedural Services',
+    originatingOffice: 'Ministry of Information', drafterId: 'dlps-officer', reviewerId: 'dlps-officer',
+    currentVersion: '1.0', currentVersionLabel: 'Published Version', dueDate: '2008-08-01', createdDate: '2008-07-15',
+    lastUpdated: '2026-07-08T10:00:00+03:00', year: 2008, restricted: false, publicParticipation: 'Not applicable', submissionCount: 0,
+    summary: 'Early report on government digital access; extracted text is awaiting human verification before it is treated as definitive.',
+    recordSource: 'Historical scan', ocrStatus: 'Awaiting verification', sourceArchive: 'National Archives', formats: ['Scan', 'OCR Text'],
+  },
 ];
 
 export const allRecordsSeed: LegislativeRecord[] = [primaryRecord, ...otherRecords];

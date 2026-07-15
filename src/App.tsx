@@ -7,6 +7,10 @@ import { MyWork } from '@/features/work/MyWork';
 import { CreateInstruction } from '@/features/legislative/CreateInstruction';
 import { BillWorkspace } from '@/features/legislative/BillWorkspace';
 import { SearchPage } from '@/features/search/SearchPage';
+import { SavedSearchesPage } from '@/features/search/SavedSearchesPage';
+import { RecentResearchPage } from '@/features/search/RecentResearchPage';
+import { ResearchCollectionsPage, ResearchCollectionPage } from '@/features/search/ResearchCollections';
+import { Repository } from '@/features/repository/Repository';
 import { NotificationsPage } from '@/features/notifications/NotificationsPage';
 import {
   DocumentArchivePage, OcrImportPage, ParticipationInboxPage, AnalyticsPage, AuditPage,
@@ -50,6 +54,12 @@ export default function App() {
         <Route path="/legislative/:id/workflow" element={<WorkflowPage />} />
         <Route path="/legislative/:id/publish" element={<PublishPage />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/search/saved" element={<SavedSearchesPage />} />
+        <Route path="/search/recent" element={<RecentResearchPage />} />
+        <Route path="/repository" element={<Repository />} />
+        <Route path="/repository/:collection" element={<Repository />} />
+        <Route path="/research" element={<ResearchCollectionsPage />} />
+        <Route path="/research/:collectionId" element={<ResearchCollectionPage />} />
         <Route path="/documents" element={<DocumentArchivePage />} />
         <Route path="/documents/import" element={<OcrImportPage />} />
         <Route path="/participation" element={<ParticipationInboxPage />} />

@@ -3,9 +3,13 @@ import { persist } from 'zustand/middleware';
 import type {
   RoleId, LegislativeRecord, Version, Task, AppNotification, Submission,
   AuditEvent, Comment, ValidationIssue, BillContent, WorkflowStage,
+  SavedSearch, RecentSearch, ResearchCollection, ResearchItem, AccessRequest,
 } from '@/data/types';
 import { buildInitialState } from '@/data/seed';
 import { defaultPinned, defaultRecentlyOpened } from '@/data/myWork';
+import {
+  savedSearchesSeed, recentSearchesSeed, researchCollectionsSeed,
+} from '@/data/searchData';
 
 // Runtime demo state. The persona layer (role, offline) plus all mutable
 // legislative data live here, persisted to localStorage. A single reset
@@ -18,6 +22,12 @@ interface DemoState {
   // My Work personalisation
   pinned: string[];
   recentlyOpened: string[];
+
+  // Search & Repository personalisation (Phase 4)
+  savedSearches: SavedSearch[];
+  recentSearches: RecentSearch[];
+  researchCollections: ResearchCollection[];
+  accessRequests: AccessRequest[];
 
   // Mutable legislative data
   records: LegislativeRecord[];
@@ -57,6 +67,16 @@ interface DemoState {
   addComment: (c: Comment) => void;
   resolveValidation: (id: string) => void;
   updateClauseText: (clauseNumber: number, paragraphs: string[]) => void;
+
+  // Search & Repository actions
+  addSavedSearch: (s: SavedSearch) => void;
+  removeSavedSearch: (id: string) => void;
+  logRecentSearch: (r: RecentSearch) => void;
+  toggleRecentPin: (id: string) => void;
+  removeRecentSearch: (id: string) => void;
+  createResearchCollection: (c: ResearchCollection) => void;
+  addToResearchCollection: (collectionId: string, item: ResearchItem) => void;
+  requestAccess: (req: AccessRequest) => void;
 }
 
 const initial = buildInitialState();
@@ -68,6 +88,10 @@ export const useDemoStore = create<DemoState>()(
       offline: false,
       pinned: [...defaultPinned],
       recentlyOpened: [...defaultRecentlyOpened],
+      savedSearches: structuredClone(savedSearchesSeed),
+      recentSearches: structuredClone(recentSearchesSeed),
+      researchCollections: structuredClone(researchCollectionsSeed),
+      accessRequests: [],
       ...initial,
 
       setRole: (role) => set({ currentRole: role }),
@@ -75,6 +99,10 @@ export const useDemoStore = create<DemoState>()(
       reset: () => set({
         currentRole: null, offline: false,
         pinned: [...defaultPinned], recentlyOpened: [...defaultRecentlyOpened],
+        savedSearches: structuredClone(savedSearchesSeed),
+        recentSearches: structuredClone(recentSearchesSeed),
+        researchCollections: structuredClone(researchCollectionsSeed),
+        accessRequests: [],
         ...buildInitialState(),
       }),
 
@@ -145,17 +173,45 @@ export const useDemoStore = create<DemoState>()(
             ),
           },
         })),
+
+      addSavedSearch: (saved) => set((s) => ({ savedSearches: [saved, ...s.savedSearches] })),
+      removeSavedSearch: (id) => set((s) => ({ savedSearches: s.savedSearches.filter((x) => x.id !== id) })),
+      logRecentSearch: (r) =>
+        set((s) => {
+          // Collapse repeat queries; keep the 12 most recent, preserving pins.
+          const withoutDup = s.recentSearches.filter(
+            (x) => !(x.query.toLowerCase() === r.query.toLowerCase() && x.ownerId === r.ownerId) || x.pinned,
+          );
+          return { recentSearches: [r, ...withoutDup].slice(0, 12) };
+        }),
+      toggleRecentPin: (id) =>
+        set((s) => ({
+          recentSearches: s.recentSearches.map((x) => (x.id === id ? { ...x, pinned: !x.pinned } : x)),
+        })),
+      removeRecentSearch: (id) => set((s) => ({ recentSearches: s.recentSearches.filter((x) => x.id !== id) })),
+      createResearchCollection: (c) => set((s) => ({ researchCollections: [c, ...s.researchCollections] })),
+      addToResearchCollection: (collectionId, item) =>
+        set((s) => ({
+          researchCollections: s.researchCollections.map((c) =>
+            c.id === collectionId ? { ...c, items: [...c.items, item] } : c,
+          ),
+        })),
+      requestAccess: (req) => set((s) => ({ accessRequests: [req, ...s.accessRequests] })),
     }),
     {
       name: 'lims-national-assembly',
-      version: 3,
+      version: 4,
       // On a data-model change, discard stale persisted data and reseed. Prototype
-      // personalisation (role/pins) is intentionally reset with the data.
+      // personalisation (role/pins/searches) is intentionally reset with the data.
       migrate: () => ({
         currentRole: null,
         offline: false,
         pinned: [...defaultPinned],
         recentlyOpened: [...defaultRecentlyOpened],
+        savedSearches: structuredClone(savedSearchesSeed),
+        recentSearches: structuredClone(recentSearchesSeed),
+        researchCollections: structuredClone(researchCollectionsSeed),
+        accessRequests: [],
         ...buildInitialState(),
       }),
     },

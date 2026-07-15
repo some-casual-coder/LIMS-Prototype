@@ -2,8 +2,8 @@ import { useEffect, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import styles from './SideSheet.module.css';
 
-type Size = 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
-const WIDTHS: Record<Size, number> = { sm: 420, md: 460, lg: 480, xl: 600, xxl: 720 };
+type Size = 'sm' | 'md' | 'lg' | 'xl' | 'wide' | 'xxl';
+const WIDTHS: Record<Size, number> = { sm: 420, md: 460, lg: 480, xl: 600, wide: 620, xxl: 720 };
 
 interface Props {
   open: boolean;

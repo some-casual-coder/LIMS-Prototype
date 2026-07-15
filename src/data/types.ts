@@ -96,7 +96,21 @@ export interface LegislativeRecord {
   submissionCount: number;
   summary: string; // plain-language / institutional summary
   isPrimary?: boolean;
+
+  // ---- Repository / search metadata (Phase 4) ----
+  // How the record entered the system. Absent = a structured legislative record.
+  recordSource?: 'Structured' | 'Uploaded' | 'Historical scan' | 'Public submission' | 'Generated output';
+  // For historical scans: OCR verification state and provenance.
+  ocrStatus?: 'Verified' | 'Awaiting verification';
+  sourceArchive?: string;
+  sponsor?: string;
+  // Explicit official-output formats; when absent they are derived from the stage.
+  formats?: OutputFormat[];
+  // A short institutional label used where a record is an enacted Act, gazette, etc.
+  citation?: string; // e.g. "Act No. 23 of 2019"
 }
+
+export type OutputFormat = 'PDF' | 'HTML' | 'AKN XML' | 'Accessible HTML' | 'Scan' | 'OCR Text';
 
 export interface Clause {
   number: number;
@@ -271,4 +285,121 @@ export interface ValidationIssue {
   message: string;
   resolved: boolean;
   resolvable: boolean;
+}
+
+// ---- Search & Legislative Repository (Phase 4) ----
+
+export type SearchMode = 'all' | 'exact' | 'meaning' | 'within';
+
+// How a passage matched the query — shown on every result so relevance is never
+// conveyed by colour alone.
+export type MatchType =
+  | 'Exact phrase'
+  | 'Title'
+  | 'Reference'
+  | 'Clause text'
+  | 'Meaning and context'
+  | 'Related record';
+
+// A single clause/passage-level search hit against a record.
+export interface Passage {
+  id: string;
+  recordId: string;
+  clauseNumber?: number;
+  clauseRef?: string; // "Clause 14 — Protection of vulnerable users"
+  matchType: MatchType;
+  excerpt: string; // plain text; matching phrases are wrapped at render time
+  highlights: string[]; // phrases to highlight within the excerpt
+  why: string; // "why this matched" explanation
+  relevance: number; // 0–100, deterministic
+}
+
+export interface GroundedEvidence {
+  label: string; // "Clause 14 — Protection of vulnerable users"
+  recordId: string;
+  clauseNumber?: number;
+  passageId?: string;
+}
+
+// A pre-authored, evidence-grounded answer for a question-style query.
+export interface GroundedAnswer {
+  paragraphs: string[];
+  evidence: GroundedEvidence[];
+  sourceCount: number;
+  clauseCount: number;
+}
+
+// A deterministic seeded query the prototype answers convincingly.
+export interface SeededQuery {
+  id: string;
+  keywords: string[]; // lowercased trigger terms
+  answer?: GroundedAnswer; // present only for question-style searches
+  passageIds: string[]; // ordered best-first
+}
+
+export interface RepositoryCollection {
+  id: string;
+  label: string;
+  icon: string; // lucide icon name
+  tone: 'green' | 'gold' | 'grey' | 'red' | 'amber' | 'blue';
+  count: string; // "12 active · 186 archived"
+  description: string;
+  restrictedCount?: number;
+  to: string;
+}
+
+export interface SavedSearch {
+  id: string;
+  name: string;
+  query: string;
+  mode: SearchMode;
+  filterSummary: string;
+  resultCount: number;
+  lastRun: string; // ISO
+  visibility: 'Only me' | 'Directorate' | 'Selected users';
+  notify: boolean;
+  ownerId: RoleId;
+}
+
+export interface RecentSearch {
+  id: string;
+  query: string;
+  mode: SearchMode;
+  viewedAt: string; // ISO
+  resultCount: number;
+  ownerId: RoleId;
+  pinned?: boolean;
+}
+
+export interface ResearchItem {
+  passageId?: string;
+  recordId: string;
+  clauseNumber?: number;
+  clauseRef?: string;
+  excerpt?: string;
+  versionLabel?: string;
+  note?: string;
+  addedAt: string;
+}
+
+export interface ResearchCollection {
+  id: string;
+  name: string;
+  description?: string;
+  ownerId: RoleId;
+  items: ResearchItem[];
+  createdAt: string;
+}
+
+export interface AccessRequest {
+  id: string;
+  recordId: string;
+  requesterId: RoleId;
+  accessLevel: string;
+  purpose: string;
+  duration: string;
+  approver: string;
+  note?: string;
+  status: 'Pending' | 'Approved' | 'Declined';
+  requestedAt: string;
 }
