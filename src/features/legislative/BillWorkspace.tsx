@@ -1,160 +1,354 @@
-import { useParams, useSearchParams } from 'react-router-dom';
-import { Lock, Calendar, UserRound, Clock, PenLine, FileSearch, ArrowRight, Check } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
+import {
+  Lock, Flag, RotateCcw, ShieldCheck, ExternalLink, Info, MoreVertical, Eye, PenLine,
+  Check, CircleDot, TriangleAlert, CircleAlert, FileText, Globe, Code2, ArrowRight,
+  Calendar, Clock, UserRound, CircleCheck, CircleDashed, Users, ScrollText, Vote, MessageSquareText, FileBarChart,
+} from 'lucide-react';
 import { AppShell } from '@/components/shell';
-import { Panel, Button, StatusBadge } from '@/components/ui';
-import { stageTone } from '@/components/ui/tone';
+import { Panel, Button, StatusBadge, Avatar, Popover } from '@/components/ui';
 import { useDemoStore } from '@/store/demoStore';
 import { officers } from '@/data/personas';
-import { primaryBillContent } from '@/data/billContent';
+import {
+  lifecycle, stageChecklist, generatedOutputs, relatedRecords, participationSummary,
+  accessInfo, keyDates, type StageState,
+} from '@/data/billWorkspace';
+import { WorkflowSheet } from './WorkflowSheet';
 import styles from './BillWorkspace.module.css';
 
-const RIBBON = ['Instruction', 'Drafting', 'Legal Review', 'Procedural Review', 'Signature', 'Publication'];
-
-function ribbonIndex(stage: string): number {
-  if (['Instruction Received', 'Intake and Assignment', 'Intake Verification'].includes(stage)) return 0;
-  if (stage === 'Drafting') return 1;
-  if (['Legal Review', 'Revision Requested', 'Legal Approval'].includes(stage)) return 2;
-  if (['Procedural Review', 'Awaiting Supporting Information', 'Approval'].includes(stage)) return 3;
-  if (['Awaiting Signature', 'Signed and Sealed'].includes(stage)) return 4;
-  return 5;
-}
-
+const TABS = ['Overview', 'Draft', 'Tasks', 'Documents', 'Versions', 'Workflow', 'Participation', 'Activity'];
 const officerName = (id?: string) => officers.find((o) => o.id === id)?.name ?? '—';
+const officerInitials = (id?: string) => officers.find((o) => o.id === id)?.initials ?? '—';
 
 export function BillWorkspace() {
   const { id } = useParams();
-  const [params] = useSearchParams();
+  const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
   const record = useDemoStore((s) => s.records.find((r) => r.id === id));
-  const highlight = params.get('highlight');
+  const allVersions = useDemoStore((s) => s.versions);
+  const allTasks = useDemoStore((s) => s.tasks);
+  const versions = useMemo(() => allVersions.filter((v) => v.recordId === id), [allVersions, id]);
+  const tasks = useMemo(() => allTasks.filter((t) => t.recordId === id), [allTasks, id]);
+  const markRecentlyOpened = useDemoStore((s) => s.markRecentlyOpened);
+  const [workflowOpen, setWorkflowOpen] = useState(false);
+
+  const tab = params.get('tab') || 'Overview';
+  const setTab = (t: string) => setParams((p) => { p.set('tab', t); return p; }, { replace: true });
+
+  useEffect(() => { if (id) markRecentlyOpened(id); }, [id, markRecentlyOpened]);
 
   if (!record) {
     return (
       <AppShell breadcrumb={[{ label: 'Home', to: '/dashboard' }, { label: 'Legislative record' }]}>
-        <Panel padded>
-          <p style={{ fontWeight: 600 }}>Record not found</p>
-          <p style={{ color: 'var(--text-muted)', marginTop: 6 }}>
-            This legislative record is not available. Return to the <a href="#/dashboard">Command Centre</a>.
-          </p>
-        </Panel>
+        <Panel padded><p style={{ fontWeight: 600 }}>Record not found</p></Panel>
       </AppShell>
     );
   }
 
-  const idx = ribbonIndex(record.stage);
-  const returned = record.stage === 'Revision Requested';
-  const isPrimary = record.isPrimary;
+  const openTasks = tasks.filter((t) => t.status !== 'Completed').length;
 
   return (
-    <AppShell breadcrumb={[{ label: 'Home', to: '/dashboard' }, { label: 'Legislative Work', to: '/work' }, { label: record.reference }]}>
-      {/* Record header */}
-      <div className={styles.header}>
+    <AppShell breadcrumb={[{ label: 'Legislative Work', to: '/work' }, { label: 'Bills', to: '/work?type=Bill' }, { label: record.reference }]}>
+      {/* Record identity header */}
+      <header className={styles.head}>
         <div className={styles.headMain}>
-          <div className={styles.badges}>
-            <span className={styles.typeChip}>{record.workflowType}</span>
-            <StatusBadge tone={stageTone[record.stage] ?? 'grey'}>{record.stage}</StatusBadge>
-            <span className={styles.version}>Version {record.currentVersion} · {record.currentVersionLabel}</span>
-          </div>
+          <p className={styles.typeLabel}>{record.workflowType.toUpperCase()}</p>
           <h1 className={styles.title}>{record.title}</h1>
-          <div className={styles.meta}>
-            <span>{record.reference}</span>
-            <span className={styles.dotSep}>·</span>
-            <span className={styles.classification}><Lock width={13} height={13} aria-hidden /> {record.confidentiality}</span>
-            <span className={styles.dotSep}>·</span>
-            <span>Owner: {officerName(record.drafterId)}</span>
+          <p className={styles.refLine}>{record.reference} · Version {record.currentVersion} · {record.currentVersionLabel}</p>
+          <p className={styles.metaLine}>{record.directorate} · {record.confidentiality}</p>
+          <div className={styles.pills}>
+            <StatusBadge tone="red" icon={<RotateCcw width={12} height={12} />}>Revision Requested</StatusBadge>
+            <StatusBadge tone="red" icon={<Flag width={12} height={12} />}>High Priority</StatusBadge>
+            <span className={styles.classPill}><Lock width={12} height={12} /> Internal</span>
           </div>
         </div>
         <div className={styles.headActions}>
-          {record.stage === 'Revision Requested' || record.stage === 'Drafting' ? (
-            <Button variant="primary" size="lg" to={`/legislative/${record.id}/draft`} leftIcon={<PenLine width={17} height={17} />}>
-              Continue drafting
-            </Button>
-          ) : (
-            <Button variant="primary" size="lg" to={`/legislative/${record.id}/draft?mode=review`} leftIcon={<FileSearch width={17} height={17} />}>
-              Review document
-            </Button>
-          )}
-          <Button variant="secondary" size="lg" to={`/legislative/${record.id}/versions`}>Versions</Button>
+          <Button variant="primary" size="lg" to={`/legislative/${record.id}/draft?mode=revision`} rightIcon={<ArrowRight width={17} height={17} />}>Continue Revision</Button>
+          <Button variant="secondary" size="lg" to={`/legislative/${record.id}/draft?mode=preview`} leftIcon={<Eye width={17} height={17} />}>Preview Document</Button>
+          <Popover label="More actions" trigger={({ toggle, ref }) => (
+            <button ref={ref} className={styles.moreBtn} onClick={toggle} aria-label="More actions"><MoreVertical width={18} height={18} /></button>
+          )}>
+            {(close) => (
+              <div className={styles.menu} onClick={close}>
+                {['Add collaborator', 'Add reminder', 'Export summary', 'Copy reference', 'View access permissions'].map((m) => (
+                  <button key={m} className={styles.menuItem} onClick={() => m === 'Copy reference' && navigator.clipboard?.writeText(record.reference)}>{m}</button>
+                ))}
+              </div>
+            )}
+          </Popover>
+        </div>
+      </header>
+
+      {/* Canonical-record strip */}
+      <div className={styles.canonical}>
+        <ShieldCheck width={18} height={18} className={styles.canonicalIcon} aria-hidden />
+        <p><b>Canonical legislative record</b> — Version 4.0 is the current working version. Version 3.0 remains the latest legally approved version.</p>
+        <div className={styles.canonicalActions}>
+          <Link to={`/legislative/${record.id}/versions`} className={styles.canonicalLink}>View approved version <ExternalLink width={13} height={13} /></Link>
+          <span className={styles.canonicalSep} />
+          <button className={styles.canonicalLink}><Info width={13} height={13} /> Learn about versions</button>
         </div>
       </div>
 
       {/* Lifecycle ribbon */}
       <ol className={styles.ribbon} aria-label="Legislative lifecycle">
-        {RIBBON.map((phase, i) => (
-          <li
-            key={phase}
-            className={`${styles.ribbonStep} ${i < idx ? styles.done : ''} ${i === idx ? styles.current : ''}`}
-            aria-current={i === idx ? 'step' : undefined}
-          >
-            <span className={styles.ribbonDot} aria-hidden>{i < idx ? <Check width={13} height={13} /> : i + 1}</span>
-            <span className={styles.ribbonLabel}>
-              {phase}
-              {i === idx && returned && <span className={styles.returnedTag}>Revision requested</span>}
-            </span>
+        {lifecycle.map((stage, i) => (
+          <li key={stage.id} className={styles.ribbonItem}>
+            {i > 0 && <span className={`${styles.ribbonLine} ${lifecycle[i].state === 'upcoming' ? styles.lineDashed : ''}`} aria-hidden />}
+            <button className={`${styles.stage} ${styles['stage_' + stage.state]}`} onClick={() => setWorkflowOpen(true)} aria-current={stage.state === 'returned' || stage.state === 'current' ? 'step' : undefined}>
+              <span className={styles.stageDot}>{stageIcon(stage.state, i)}</span>
+              <span className={styles.stageText}>
+                <span className={styles.stageName}>{stage.label}</span>
+                <span className={styles.stageDate}>{stage.date}</span>
+              </span>
+            </button>
           </li>
         ))}
       </ol>
 
-      {/* Overview */}
-      <div className={styles.grid}>
-        <div className={styles.left}>
-          <Panel title="Overview" padded>
-            <p className={styles.summary}>{record.summary}</p>
-            {isPrimary && (
-              <div className={`${styles.callout} ${highlight === 'clause-14' ? styles.calloutHi : ''}`}>
-                <strong>Next required action</strong>
-                <p>Resolve the blocking review comment on <b>Clause 14 — Protection of vulnerable users</b> raised by David Otieno, then create a corrected version and resubmit for legal review.</p>
-              </div>
-            )}
-            <h3 className={styles.subhead}>Completion checklist</h3>
-            <ul className={styles.checklist}>
-              {[
-                ['Draft structured and numbered', true],
-                ['Required metadata complete', true],
-                ['Clause 14 cross-reference confirmed', false],
-                ['Legal review approved', false],
-                ['Procedural review complete', false],
-              ].map(([label, done]) => (
-                <li key={label as string} className={done ? styles.checkDone : styles.checkPending}>
-                  <span className={styles.checkMark} aria-hidden>{done ? <Check width={13} height={13} /> : ''}</span>
-                  {label}
-                  <span className="sr-only">{done ? ' (complete)' : ' (pending)'}</span>
-                </li>
-              ))}
-            </ul>
-            {isPrimary && (
-              <p className={styles.structureNote}>
-                Structured record with {primaryBillContent.clauses.length} clauses. The full workspace tabs —
-                Tasks, Documents, Versions, Workflow, Public Participation and Activity &amp; Audit — open the
-                complete legislative history.
-              </p>
-            )}
-          </Panel>
-        </div>
+      {/* Tabs */}
+      <nav className={styles.tabs} aria-label="Workspace sections">
+        {TABS.map((t) => {
+          const badge = t === 'Tasks' ? openTasks : t === 'Documents' ? 12 : undefined;
+          return (
+            <button
+              key={t}
+              className={`${styles.tab} ${tab === t ? styles.tabActive : ''}`}
+              aria-current={tab === t ? 'page' : undefined}
+              onClick={() => (t === 'Draft' ? navigate(`/legislative/${record.id}/draft`) : t === 'Workflow' ? setWorkflowOpen(true) : setTab(t))}
+            >
+              {t}{badge != null && <span className={styles.tabBadge}>{badge}</span>}
+            </button>
+          );
+        })}
+      </nav>
 
-        <div className={styles.right}>
-          <Panel title="Responsible officers" padded>
-            <dl className={styles.dl}>
-              <div><dt><UserRound width={14} height={14} /> Drafter</dt><dd>{officerName(record.drafterId)}</dd></div>
-              <div><dt><UserRound width={14} height={14} /> Reviewer</dt><dd>{officerName(record.reviewerId)}</dd></div>
-              {record.proceduralOfficerId && <div><dt><UserRound width={14} height={14} /> Procedural</dt><dd>{officerName(record.proceduralOfficerId)}</dd></div>}
-            </dl>
-          </Panel>
-          <Panel title="Key dates" padded>
-            <dl className={styles.dl}>
-              <div><dt><Calendar width={14} height={14} /> Due</dt><dd>{record.dueDate}</dd></div>
-              <div><dt><Clock width={14} height={14} /> Last updated</dt><dd>{new Date(record.lastUpdated).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</dd></div>
-            </dl>
-          </Panel>
-          <Panel title="Related actions" padded>
-            <div className={styles.relatedLinks}>
-              <Button to={`/legislative/${record.id}/workflow`} variant="ghost">Workflow &amp; approvals <ArrowRight width={15} height={15} /></Button>
-              {record.publicParticipation !== 'Not applicable' && (
-                <Button to={`/public/bills/${record.id}`} variant="ghost">Public page preview <ArrowRight width={15} height={15} /></Button>
-              )}
-            </div>
-          </Panel>
-        </div>
-      </div>
+      {tab === 'Overview' ? (
+        <OverviewTab record={record} versions={versions} onOpenWorkflow={() => setWorkflowOpen(true)} />
+      ) : (
+        <OtherTab tab={tab} record={record} tasks={tasks} versions={versions} />
+      )}
+
+      <WorkflowSheet open={workflowOpen} onClose={() => setWorkflowOpen(false)} recordId={record.id} />
     </AppShell>
   );
 }
+
+function stageIcon(state: StageState, i: number) {
+  if (state === 'completed') return <Check width={15} height={15} />;
+  if (state === 'returned') return <RotateCcw width={15} height={15} />;
+  if (state === 'current') return <CircleDot width={15} height={15} />;
+  return <span className={styles.stageNum}>{i + 1}</span>;
+}
+
+function OverviewTab({ record, versions, onOpenWorkflow }: { record: any; versions: any[]; onOpenWorkflow: () => void }) {
+  const recentVersions = [...versions].reverse().slice(0, 3);
+  const done = stageChecklist.filter((c) => c.status === 'completed').length;
+
+  return (
+    <div className={styles.overview}>
+      <div className={styles.mainCol}>
+        {/* A. Action required */}
+        <section className={styles.actionCard}>
+          <div className={styles.actionHead}><TriangleAlert width={18} height={18} /> <h2>Action required</h2></div>
+          <p className={styles.actionBody}>Resolve the blocking comment on Clause 14 and submit a corrected version for legal review.</p>
+          <ul className={styles.actionMeta}>
+            <li className={styles.urgent}><Clock width={14} height={14} /> Due today at 4:00 PM</li>
+            <li><UserRound width={14} height={14} /> Assigned to Grace Wanjiku</li>
+            <li className={styles.issueRed}><CircleAlert width={14} height={14} /> 1 blocking comment</li>
+            <li className={styles.issueAmber}><TriangleAlert width={14} height={14} /> 1 cross-reference warning</li>
+          </ul>
+          <div className={styles.actionButtons}>
+            <Button variant="primary" to={`/legislative/${record.id}/draft?mode=revision`} rightIcon={<ArrowRight width={16} height={16} />}>Continue Revision</Button>
+            <Button variant="secondary" to={`/legislative/${record.id}/draft?tab=comments`} leftIcon={<MessageSquareText width={16} height={16} />}>Review Comments</Button>
+          </div>
+        </section>
+
+        {/* B. Current document */}
+        <Panel title="Current document" padded>
+          <div className={styles.docMaster}>
+            <span className={styles.docIcon}><FileText width={22} height={22} /></span>
+            <div className={styles.docInfo}>
+              <p className={styles.docTitle}>Structured legislative master</p>
+              <p className={styles.docMeta}>Version {record.currentVersion} · Last saved today at 10:42 AM · Edited by Grace Wanjiku</p>
+              <div className={styles.docActions}>
+                <Button variant="secondary" size="sm" to={`/legislative/${record.id}/draft`} leftIcon={<PenLine width={14} height={14} />}>Open Editor</Button>
+                <Button variant="tertiary" size="sm" to={`/legislative/${record.id}/draft?tab=metadata`} leftIcon={<Info width={14} height={14} />}>View Metadata</Button>
+              </div>
+            </div>
+          </div>
+          <p className={styles.outputsLabel}>Generated outputs <span>(from Version 4.0)</span></p>
+          <div className={styles.outputs}>
+            {generatedOutputs.map((o) => (
+              <button key={o.format} className={styles.output}>
+                <span className={styles.outputIcon} data-fmt={o.format}>{o.format === 'PDF' ? <FileText width={16} height={16} /> : o.format === 'HTML' ? <Globe width={16} height={16} /> : <Code2 width={16} height={16} />}</span>
+                <span className={styles.outputText}><span className={styles.outputName}>{o.label}</span><span className={styles.outputNote}>{o.generatedAt}</span></span>
+              </button>
+            ))}
+          </div>
+          <p className={styles.outputDisclaimer}>Generated previews are not an official publication.</p>
+        </Panel>
+
+        {/* C. Current-stage checklist */}
+        <Panel title="Current-stage checklist" padded actions={<span className={styles.checklistCount}>{done} of {stageChecklist.length} complete</span>}>
+          <div className={styles.progressTrack}><div className={styles.progressFill} style={{ width: `${(done / stageChecklist.length) * 100}%` }} /></div>
+          <ul className={styles.checklist}>
+            {stageChecklist.map((c) => (
+              <li key={c.label} className={styles['ck_' + c.status]}>
+                <span className={styles.ckIcon}>{checklistIcon(c.status)}</span>
+                <span className={styles.ckLabel}>{c.label}</span>
+                <span className={styles.ckStatus}>{statusLabel(c.status)}</span>
+              </li>
+            ))}
+          </ul>
+          <Link to={`/legislative/${record.id}?tab=Tasks`} className={styles.cardLink}>View full checklist <ArrowRight width={14} height={14} /></Link>
+        </Panel>
+
+        {/* D. Recent versions */}
+        <Panel title="Recent versions" padded>
+          <ul className={styles.versions}>
+            {recentVersions.map((v) => (
+              <li key={v.id} className={v.version === record.currentVersion ? styles.versionCurrent : ''}>
+                <div className={styles.versionInfo}>
+                  <span className={styles.versionTop}>
+                    <span className={styles.versionNum}>Version {v.version}</span>
+                    {v.version === record.currentVersion && <span className={styles.tagWorking}>Current working version</span>}
+                    {v.approvalState === 'Approved' && <span className={styles.tagApproved}>Latest approved version</span>}
+                    {v.approvalState === 'Superseded' && <span className={styles.tagSuperseded}>Superseded</span>}
+                  </span>
+                  <span className={styles.versionMeta}>{v.label} · {new Date(v.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} · {officerName(v.createdById)}</span>
+                </div>
+                <Button variant="tertiary" size="sm" to={`/legislative/${record.id}/versions`}>Compare</Button>
+              </li>
+            ))}
+          </ul>
+          <Link to={`/legislative/${record.id}/versions`} className={styles.cardLink}>View all versions <ArrowRight width={14} height={14} /></Link>
+        </Panel>
+
+        {/* Related records */}
+        <Panel title="Related legislative information" padded>
+          <ul className={styles.related}>
+            {relatedRecords.map((r) => (
+              <li key={r.title}>
+                <span className={styles.relIcon}>{relIcon(r.kind)}</span>
+                <span className={styles.relText}><span className={styles.relTitle}>{r.title}</span><span className={styles.relRelation}>{r.relation}</span></span>
+                {r.to ? <Button variant="tertiary" size="sm" to={r.to}>Open record</Button> : <button className={styles.relOpen}>Open record</button>}
+              </li>
+            ))}
+          </ul>
+        </Panel>
+
+        {/* Public participation summary */}
+        <Panel title="Public participation" padded>
+          <dl className={styles.ppList}>
+            <div><dt>Consultation status</dt><dd><StatusBadge tone="gold" size="sm">{participationSummary.status}</StatusBadge></dd></div>
+            <div><dt>Opening date</dt><dd>{participationSummary.opening}</dd></div>
+            <div><dt>Closing date</dt><dd>{participationSummary.closing}</dd></div>
+            <div><dt>Submissions received</dt><dd>{participationSummary.received}</dd></div>
+            <div><dt>Public page</dt><dd>{participationSummary.publicPage}</dd></div>
+          </dl>
+          <div className={styles.ppActions}>
+            <Button variant="secondary" size="sm" to={`/public/bills/${record.id}`}>Preview Public Page</Button>
+            <Button variant="tertiary" size="sm" to="/participation">Manage Participation</Button>
+          </div>
+        </Panel>
+      </div>
+
+      {/* Context rail */}
+      <aside className={styles.rail}>
+        <Panel title="Ownership and people" padded>
+          <ul className={styles.people}>
+            {[['Drafter', record.drafterId], ['Legal reviewer', record.reviewerId], ['Procedural reviewer', record.proceduralOfficerId]].map(([role, pid]) => pid && (
+              <li key={role as string}>
+                <Avatar initials={officerInitials(pid as string)} name={officerName(pid as string)} size={32} tone="neutral" />
+                <span><span className={styles.personName}>{officerName(pid as string)}</span><span className={styles.personRole}>{role}</span></span>
+              </li>
+            ))}
+            <li>
+              <span className={styles.origIcon}><Users width={16} height={16} /></span>
+              <span><span className={styles.personName}>{record.originatingOffice}</span><span className={styles.personRole}>Originating office</span></span>
+            </li>
+          </ul>
+          <button className={styles.railLink}>Manage people <ArrowRight width={13} height={13} /></button>
+        </Panel>
+
+        <Panel title="Key dates" padded>
+          <dl className={styles.dates}>
+            {keyDates.map((d) => (
+              <div key={d.label}><dt><Calendar width={13} height={13} /> {d.label}</dt><dd className={d.urgent ? styles.dateUrgent : ''}>{d.value}</dd></div>
+            ))}
+          </dl>
+        </Panel>
+
+        <Panel title="Blocking issues" padded>
+          <ul className={styles.blocking}>
+            <li className={styles.issueRed}><CircleAlert width={15} height={15} /> 1 blocking comment</li>
+            <li className={styles.issueAmber}><TriangleAlert width={15} height={15} /> 1 cross-reference warning</li>
+          </ul>
+          <button className={styles.railLink} onClick={onOpenWorkflow}>View all issues <ArrowRight width={13} height={13} /></button>
+        </Panel>
+
+        <Panel title="Access and classification" padded>
+          <dl className={styles.access}>
+            <div><dt>Classification</dt><dd><span className={styles.classPill}><Lock width={11} height={11} /> {accessInfo.classification}</span></dd></div>
+            <div><dt>Visible to</dt><dd>{accessInfo.visibleTo}</dd></div>
+            <div><dt>Public visibility</dt><dd>{accessInfo.publicVisibility}</dd></div>
+          </dl>
+          <button className={styles.railLink}>View permissions <ArrowRight width={13} height={13} /></button>
+        </Panel>
+      </aside>
+    </div>
+  );
+}
+
+function OtherTab({ tab, record, tasks, versions }: { tab: string; record: any; tasks: any[]; versions: any[] }) {
+  const allAudit = useDemoStore((s) => s.auditEvents);
+  const auditEvents = useMemo(() => allAudit.filter((e) => e.recordId === record.id), [allAudit, record.id]);
+  if (tab === 'Tasks') {
+    return (
+      <Panel padded>
+        <ul className={styles.tabTasks}>
+          {tasks.map((t) => (
+            <li key={t.id}><span className={styles.tabTaskTitle}>{t.title}</span><StatusBadge tone={t.status === 'Completed' ? 'green' : t.status === 'Blocked' ? 'red' : 'gold'} size="sm">{t.status}</StatusBadge></li>
+          ))}
+          {tasks.length === 0 && <li className={styles.emptyLine}>No open tasks for this record.</li>}
+        </ul>
+      </Panel>
+    );
+  }
+  if (tab === 'Activity') {
+    return (
+      <Panel padded>
+        <ul className={styles.timeline}>
+          {auditEvents.slice(0, 12).map((e) => (
+            <li key={e.id}><span className={styles.tlDot} /><span className={styles.tlText}><b>{e.description}</b><span className={styles.tlMeta}>{new Date(e.timestamp).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })} · {e.actorRole}</span></span></li>
+          ))}
+        </ul>
+      </Panel>
+    );
+  }
+  if (tab === 'Versions') {
+    return (
+      <Panel padded>
+        <ul className={styles.tabTasks}>
+          {[...versions].reverse().map((v) => (
+            <li key={v.id}><span className={styles.tabTaskTitle}>Version {v.version} — {v.label}</span><span className={styles.emptyLine}>{v.approvalState}</span></li>
+          ))}
+        </ul>
+        <Link to={`/legislative/${record.id}/versions`} className={styles.cardLink}>Open full version history <ArrowRight width={14} height={14} /></Link>
+      </Panel>
+    );
+  }
+  // Documents / Participation fall back to concise panels
+  return (
+    <Panel padded>
+      <p className={styles.emptyLine}>{tab === 'Documents' ? 'Canonical master and generated outputs are shown on the Overview tab.' : 'This section opens in its dedicated workspace.'}</p>
+      <Link to={tab === 'Participation' ? '/participation' : `/legislative/${record.id}`} className={styles.cardLink}>{tab === 'Participation' ? 'Open participation inbox' : 'Back to Overview'} <ArrowRight width={14} height={14} /></Link>
+    </Panel>
+  );
+}
+
+const checklistIcon = (s: string) =>
+  s === 'completed' ? <CircleCheck width={17} height={17} /> : s === 'in-progress' ? <CircleDot width={17} height={17} /> : s === 'blocked' ? <CircleAlert width={17} height={17} /> : <CircleDashed width={17} height={17} />;
+const statusLabel = (s: string) => (s === 'completed' ? 'Completed' : s === 'in-progress' ? 'In progress' : s === 'blocked' ? 'Blocked' : 'Pending');
+const relIcon = (k: string) => (k === 'act' ? <ScrollText width={16} height={16} /> : k === 'business' ? <Vote width={16} height={16} /> : k === 'submission' ? <MessageSquareText width={16} height={16} /> : <FileBarChart width={16} height={16} />);

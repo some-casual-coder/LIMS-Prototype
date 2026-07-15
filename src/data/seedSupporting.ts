@@ -5,7 +5,9 @@ import type {
 
 const PRIMARY = 'NA-BILL-2026-015';
 
-// 4–6 versions of the primary Bill. No version is ever deletable.
+// Versions of the primary Bill. No version is ever deletable. v4.0 is the
+// current working version; v3.0 remains the latest legally approved version.
+// v4.1 is created dynamically when Grace submits her correction (mockApi).
 export const versionsSeed: Version[] = [
   {
     id: 'v-015-1', recordId: PRIMARY, version: '1.0', label: 'Initial Draft', status: 'Initial Draft',
@@ -15,32 +17,27 @@ export const versionsSeed: Version[] = [
   },
   {
     id: 'v-015-2', recordId: PRIMARY, version: '2.0', label: 'Internal Review Draft', status: 'Internal Review Draft',
-    createdById: 'dls-drafter', createdAt: '2026-06-04T14:40:00+03:00',
+    createdById: 'dls-drafter', createdAt: '2026-06-24T14:40:00+03:00',
     reason: 'Incorporated internal drafting review comments on Clauses 4–9.',
     approvalState: 'Superseded', recordIdentifier: 'REC-015-0002', outputs: ['HTML'],
   },
   {
-    id: 'v-015-3', recordId: PRIMARY, version: '3.0', label: 'Revised Draft', status: 'Revised Draft',
-    createdById: 'dls-drafter', createdAt: '2026-06-24T11:05:00+03:00',
-    reason: 'Restructured vulnerable-user protections and added assisted access provisions.',
-    approvalState: 'Superseded', recordIdentifier: 'REC-015-0003', outputs: ['HTML', 'PDF'],
+    id: 'v-015-3', recordId: PRIMARY, version: '3.0', label: 'Approved Internal Draft', status: 'Approved Legal Version',
+    createdById: 'dls-reviewer', createdAt: '2026-07-10T11:20:00+03:00',
+    reason: 'Approved internal draft following legal review.',
+    approvalState: 'Approved', recordIdentifier: 'REC-015-0003', outputs: ['HTML', 'PDF'], isOfficial: true,
+  },
+  {
+    id: 'v-015-31', recordId: PRIMARY, version: '3.1', label: 'Internal Review Correction', status: 'Legal Review Draft',
+    createdById: 'dls-reviewer', createdAt: '2026-07-14T15:15:00+03:00',
+    reason: 'Correction to numbering and cross-references after internal review.',
+    approvalState: 'Superseded', recordIdentifier: 'REC-015-0004', outputs: ['HTML'],
   },
   {
     id: 'v-015-4', recordId: PRIMARY, version: '4.0', label: 'Legal Review Draft', status: 'Legal Review Draft',
-    createdById: 'dls-drafter', createdAt: '2026-07-14T10:42:00+03:00',
-    reason: 'Submitted for legal review with revised Clause 14 and cross-references.',
-    approvalState: 'Submitted', recordIdentifier: 'REC-015-0004', outputs: ['HTML', 'PDF'], isOfficial: false,
-  },
-  {
-    id: 'v-015-41', recordId: PRIMARY, version: '4.1', label: 'Clause 14 Correction', status: 'Correction',
-    createdById: 'dls-drafter', createdAt: '2026-07-15T00:00:00+03:00',
-    reason: 'Correction to the Clause 14 cross-reference raised in legal review.',
-    approvalState: 'Draft', recordIdentifier: 'REC-015-0005', outputs: [],
-  },
-  {
-    id: 'v-015-5', recordId: PRIMARY, version: '5.0', label: 'Approved Legal Version', status: 'Approved Legal Version',
-    createdById: 'dls-reviewer', createdAt: '2026-07-15T00:00:00+03:00',
-    reason: 'Not yet approved.', approvalState: 'Not yet available', recordIdentifier: 'REC-015-0006', outputs: [],
+    createdById: 'dls-drafter', createdAt: '2026-07-15T10:42:00+03:00',
+    reason: 'Current working version — revising Clause 14 following legal review comments.',
+    approvalState: 'Draft', recordIdentifier: 'REC-015-0005', outputs: ['HTML', 'PDF'], isOfficial: false,
   },
 ];
 

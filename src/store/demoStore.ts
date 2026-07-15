@@ -148,7 +148,16 @@ export const useDemoStore = create<DemoState>()(
     }),
     {
       name: 'lims-national-assembly',
-      version: 1,
+      version: 3,
+      // On a data-model change, discard stale persisted data and reseed. Prototype
+      // personalisation (role/pins) is intentionally reset with the data.
+      migrate: () => ({
+        currentRole: null,
+        offline: false,
+        pinned: [...defaultPinned],
+        recentlyOpened: [...defaultRecentlyOpened],
+        ...buildInitialState(),
+      }),
     },
   ),
 );
