@@ -5,6 +5,7 @@ import type {
   AuditEvent, Comment, ValidationIssue, BillContent, WorkflowStage,
   SavedSearch, RecentSearch, ResearchCollection, ResearchItem, AccessRequest,
   OcrJob, OcrCorrection, OcrPageState, OcrIssueStatus,
+  WorkflowTemplate, WorkflowStageDef,
 } from '@/data/types';
 import { buildInitialState } from '@/data/seed';
 import { defaultPinned, defaultRecentlyOpened } from '@/data/myWork';
@@ -12,6 +13,7 @@ import {
   savedSearchesSeed, recentSearchesSeed, researchCollectionsSeed,
 } from '@/data/searchData';
 import { allJobsSeed } from '@/data/ocrData';
+import { workflowTemplatesSeed } from '@/data/workflows';
 
 // Runtime demo state. The persona layer (role, offline) plus all mutable
 // legislative data live here, persisted to localStorage. A single reset
@@ -33,6 +35,9 @@ interface DemoState {
 
   // OCR & Historical Records (Phase 5)
   ocrJobs: OcrJob[];
+
+  // Workflow Catalogue & Configuration (Priority 0 sanity sprint)
+  workflowTemplates: WorkflowTemplate[];
 
   // Mutable legislative data
   records: LegislativeRecord[];
@@ -92,6 +97,18 @@ interface DemoState {
   confirmOcrMeta: (jobId: string, field: string) => void;
   toggleOcrChecklist: (jobId: string, itemId: string) => void;
   addRecord: (record: LegislativeRecord) => void;
+
+  // Workflow configuration actions
+  updateWorkflowStage: (slug: string, stageId: string, patch: Partial<WorkflowStageDef>) => void;
+  publishWorkflow: (slug: string) => void;
+  addWorkflowTemplate: (template: WorkflowTemplate) => void;
+}
+
+// Roll a version label forward one minor step, e.g. "v3.2" -> "v3.3".
+function bumpVersion(v: string): string {
+  const m = v.match(/^v?(\d+)\.(\d+)$/);
+  if (!m) return v;
+  return `v${m[1]}.${Number(m[2]) + 1}`;
 }
 
 const initial = buildInitialState();
@@ -108,6 +125,7 @@ export const useDemoStore = create<DemoState>()(
       researchCollections: structuredClone(researchCollectionsSeed),
       accessRequests: [],
       ocrJobs: structuredClone(allJobsSeed),
+      workflowTemplates: structuredClone(workflowTemplatesSeed),
       ...initial,
 
       setRole: (role) => set({ currentRole: role }),
@@ -120,6 +138,7 @@ export const useDemoStore = create<DemoState>()(
         researchCollections: structuredClone(researchCollectionsSeed),
         accessRequests: [],
         ocrJobs: structuredClone(allJobsSeed),
+        workflowTemplates: structuredClone(workflowTemplatesSeed),
         ...buildInitialState(),
       }),
 
@@ -279,10 +298,46 @@ export const useDemoStore = create<DemoState>()(
         })),
       addRecord: (record) =>
         set((s) => (s.records.some((r) => r.id === record.id) ? {} : { records: [record, ...s.records] })),
+
+      updateWorkflowStage: (slug, stageId, patch) =>
+        set((s) => ({
+          workflowTemplates: s.workflowTemplates.map((w) => {
+            if (w.slug !== slug) return w;
+            const stages = w.stages.map((st) => (st.id === stageId ? { ...st, ...patch } : st));
+            // Editing a published workflow does not silently alter active records —
+            // it marks unpublished changes that a later Publish rolls into a new version.
+            return {
+              ...w,
+              stages,
+              hasUnpublishedChanges: w.publishState === 'Published' ? true : w.hasUnpublishedChanges,
+              lastUpdated: new Date().toISOString().slice(0, 10),
+            };
+          }),
+        })),
+
+      publishWorkflow: (slug) =>
+        set((s) => ({
+          workflowTemplates: s.workflowTemplates.map((w) =>
+            w.slug === slug
+              ? {
+                  ...w,
+                  publishState: 'Published',
+                  configStatus: 'Complete',
+                  hasUnpublishedChanges: false,
+                  version: w.hasUnpublishedChanges || w.publishState === 'Draft' ? bumpVersion(w.version) : w.version,
+                  lastUpdated: new Date().toISOString().slice(0, 10),
+                }
+              : w,
+          ),
+        })),
+      addWorkflowTemplate: (template) =>
+        set((s) => (s.workflowTemplates.some((w) => w.slug === template.slug)
+          ? {}
+          : { workflowTemplates: [template, ...s.workflowTemplates] })),
     }),
     {
       name: 'lims-national-assembly',
-      version: 5,
+      version: 6,
       // On a data-model change, discard stale persisted data and reseed. Prototype
       // personalisation (role/pins/searches) is intentionally reset with the data.
       migrate: () => ({
@@ -295,6 +350,7 @@ export const useDemoStore = create<DemoState>()(
         researchCollections: structuredClone(researchCollectionsSeed),
         accessRequests: [],
         ocrJobs: structuredClone(allJobsSeed),
+        workflowTemplates: structuredClone(workflowTemplatesSeed),
         ...buildInitialState(),
       }),
     },

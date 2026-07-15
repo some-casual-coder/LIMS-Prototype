@@ -239,7 +239,8 @@ export type AuditActionType =
   | 'Publication'
   | 'Access'
   | 'Submission'
-  | 'Stage Change';
+  | 'Stage Change'
+  | 'Workflow';
 
 export interface AuditEvent {
   id: string;
@@ -532,4 +533,94 @@ export interface OcrJob {
   // Flags used by exception-state demos.
   suspectedMissingPage?: number;
   suspectedDuplicateOf?: string;
+}
+
+// ---- Workflow Catalogue & Configuration (Priority 0 sanity sprint) ----
+
+// Reuse the pastel tone vocabulary from the design system. "blue" is repurposed
+// to neutral charcoal — never an actual blue (standing palette override).
+export type WorkflowTone = 'green' | 'gold' | 'grey' | 'red' | 'amber' | 'blue';
+
+// Whether the configuration is live (published) or still being edited (draft).
+export type WorkflowPublishState = 'Published' | 'Draft';
+
+// A coarse health/configuration signal shown on the catalogue.
+export type WorkflowConfigStatus = 'Active' | 'Complete' | 'Needs Review' | 'Draft';
+
+// One configurable stage inside a workflow template. Every field maps to a real
+// control in the Template Detail screen and the Edit Workflow Stage side sheet.
+export interface WorkflowStageDef {
+  id: string; // 'legal-review'
+  name: string; // 'Legal Review'
+  icon: string; // lucide icon name resolved at render time
+  tone: WorkflowTone; // pastel tone for the stage card
+  description: string; // one line, shown on cards that carry descriptions
+  owner: string; // 'Legal Reviewer'
+  sla: number; // service-level target
+  slaUnit: 'Days' | 'Hours';
+  requiredApproval: string; // 'Required' · 'Director, DLPS' · 'None'
+  escalationTrigger: string; // 'After 48 hours'
+  allowRework: boolean;
+  autoAdvance: boolean;
+  active: boolean;
+  // The eight configuration facets rendered as cards / tabs.
+  entryConditions: string[];
+  exitConditions: string[];
+  roles: string[];
+  tasks: string[];
+  documents: string[];
+  notifications: string[];
+  escalations: string[]; // "Overdue review > 48 hours → Escalate to Director, DLS"
+  auditEvents: string[];
+  outputs: string[]; // required-output chips
+}
+
+// A quick-preview notification shown in the catalogue side sheet.
+export interface WorkflowPreviewNote {
+  category: 'Review' | 'Deadline' | 'Approval' | 'System';
+  title: string;
+  body: string;
+  at: string; // display label, e.g. "Today, 10:42 AM"
+}
+
+// A single workflow instance in the comparison matrix.
+export interface WorkflowComparisonFacet {
+  directorate: string;
+  version: string;
+  status: WorkflowPublishState;
+  stages: number;
+  activeRecords: number;
+  approvals: number;
+  pboDependency: string; // "Often (assessment required)" · "Not required" · …
+  keyDocuments: string[];
+  duration: string; // "Weeks to months"
+}
+
+// A configured legislative workflow template. All ten required legislative types
+// appear in the catalogue; Bills / Order Paper / Supply carry full stage configs.
+export interface WorkflowTemplate {
+  type: WorkflowType;
+  slug: string; // 'bills' — used in /admin/workflows/:slug
+  name: string; // 'Bills Workflow'
+  workflowId: string; // 'WF-BILLS-001'
+  description: string;
+  directorate: string; // full directorate name
+  directorateAbbrev: string; // 'DLS' · 'DLPS' · 'DLS / DLPS'
+  version: string; // 'v3.2'
+  publishState: WorkflowPublishState;
+  configStatus: WorkflowConfigStatus;
+  activeRecords: number;
+  lastUpdated: string; // ISO date
+  lastUpdatedBy: string; // display name
+  adminId: string; // officer id of the responsible administrator
+  illustrative: boolean; // show the SOP-confirmation notice
+  stages: WorkflowStageDef[];
+  approvalsCount: number;
+  outputs: OutputFormat[];
+  rolesSummary: string[]; // role chips for the quick preview
+  previewNotes: WorkflowPreviewNote[];
+  comparison: WorkflowComparisonFacet; // row used by the comparison matrix
+  // Set true once a published workflow is edited — publishing clears it and
+  // rolls the version forward (never overwrites active records silently).
+  hasUnpublishedChanges?: boolean;
 }

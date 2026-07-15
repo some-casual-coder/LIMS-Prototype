@@ -22,6 +22,9 @@ import {
 } from '@/features/common/previewRoutes';
 import { DraftingWorkspace } from '@/features/legislative/editor/DraftingWorkspace';
 import { PublicHome, PublicBill, PublicParticipate, PublicTrack } from '@/features/public/PublicPortal';
+import { WorkflowCatalogue } from '@/features/workflows/WorkflowCatalogue';
+import { WorkflowTemplateDetail } from '@/features/workflows/WorkflowTemplateDetail';
+import { WorkflowComparison } from '@/features/workflows/WorkflowComparison';
 
 function RootRedirect() {
   const role = useDemoStore((s) => s.currentRole);
@@ -50,6 +53,9 @@ export default function App() {
         {/* Internal application */}
         <Route path="/dashboard" element={<CommandCentre />} />
         <Route path="/work" element={<MyWork />} />
+        <Route path="/workflows" element={<WorkflowCatalogue />} />
+        <Route path="/workflows/compare" element={<WorkflowComparison />} />
+        <Route path="/admin/workflows/:slug" element={<WorkflowTemplateDetail />} />
         <Route path="/legislative/new" element={<CreateInstruction />} />
         <Route path="/legislative/:id" element={<BillWorkspace />} />
         <Route path="/legislative/:id/draft" element={<DraftingWorkspace key="draft" />} />

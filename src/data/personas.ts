@@ -95,6 +95,19 @@ export const officers: Officer[] = [
   { id: 'archivist-edwin', name: 'Edwin Kamau', roleTitle: 'Archivist', directorate: 'Parliamentary Records Service', initials: 'EK' },
   { id: 'records-wanjiru', name: 'Ruth Wanjiku', roleTitle: 'Records Officer', directorate: 'Parliamentary Records Service', initials: 'RW' },
   { id: 'citizen', name: 'James Mwangi', roleTitle: 'Member of the public', directorate: 'Public', initials: 'JM' },
+
+  // Workflow administrators — responsible for configuring each legislative
+  // workflow template (Workflow Catalogue). All synthetic, distinct people.
+  { id: 'wf-admin-njeri', name: 'Grace Njeri', roleTitle: 'Workflow Administrator', directorate: 'Directorate of Legal Services', initials: 'GN' },
+  { id: 'wf-admin-mwangi-s', name: 'Sarah Mwangi', roleTitle: 'Workflow Administrator', directorate: 'Directorate of Legislative and Procedural Services', initials: 'SM' },
+  { id: 'wf-admin-chebet', name: 'Mary Chebet', roleTitle: 'Workflow Administrator', directorate: 'Directorate of Legislative and Procedural Services', initials: 'MC' },
+  { id: 'wf-admin-chelangat', name: 'Faith Chelangat', roleTitle: 'Workflow Administrator', directorate: 'Directorate of Legislative and Procedural Services', initials: 'FC' },
+  { id: 'wf-admin-otieno-l', name: 'Lilian Otieno', roleTitle: 'Workflow Administrator', directorate: 'Directorate of Legislative and Procedural Services', initials: 'LO' },
+  { id: 'wf-admin-wambui', name: 'Esther Wambui', roleTitle: 'Workflow Administrator', directorate: 'Directorate of Legal Services', initials: 'EW' },
+  { id: 'wf-admin-ndiritu', name: 'Brian Ndiritu', roleTitle: 'Workflow Administrator', directorate: 'Directorate of Legal Services', initials: 'BN' },
+  { id: 'wf-admin-mutua-c', name: 'Caroline Mutua', roleTitle: 'Workflow Administrator', directorate: 'Directorate of Legal Services', initials: 'CM' },
+  { id: 'wf-admin-odhiambo', name: 'Patrick Odhiambo', roleTitle: 'Workflow Administrator', directorate: 'Directorate of Legal Services', initials: 'PO' },
+  { id: 'wf-admin-auma', name: 'Beatrice Auma', roleTitle: 'Workflow Administrator', directorate: 'Directorate of Legislative and Procedural Services', initials: 'BA' },
 ];
 
 export const allPersonas = [...personas, citizenPersona];

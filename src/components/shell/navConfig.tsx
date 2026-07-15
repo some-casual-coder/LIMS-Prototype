@@ -3,6 +3,7 @@ import {
   LayoutGrid, ListChecks, Bell, Scale, Vote, MessageSquare, MessageSquareQuote,
   ScrollText, PenLine, ClipboardCheck, LayoutTemplate, Search, Archive, ScanLine,
   Inbox, Megaphone, BarChart3, ShieldCheck, Library, Bookmark, FolderOpen, History,
+  Workflow,
 } from 'lucide-react';
 import type { RoleId } from '@/data/types';
 
@@ -49,6 +50,12 @@ export const navGroups: NavGroup[] = [
       { label: 'My Drafts', to: '/work?view=my-drafts', icon: <PenLine {...ic} /> },
       { label: 'Review Queue', to: '/work?view=review-queue', icon: <ClipboardCheck {...ic} /> },
       { label: 'Templates', to: '/documents?view=templates', icon: <LayoutTemplate {...ic} /> },
+    ],
+  },
+  {
+    label: 'Workflow Management',
+    items: [
+      { label: 'Workflow Catalogue', to: '/workflows', icon: <Workflow {...ic} /> },
     ],
   },
   {

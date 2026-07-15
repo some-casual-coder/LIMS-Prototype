@@ -1,0 +1,27 @@
+.tableCard { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-panel); overflow: hidden; margin-bottom: var(--sp-5); }
+.table { width: 100%; border-collapse: collapse; font-size: var(--fs-table); }
+.table td, .table th { padding: 15px 18px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+.table tbody tr:last-child td, .table tbody tr:last-child th { border-bottom: none; }
+
+.rowHead { font-weight: var(--fw-semibold); color: var(--text); width: 200px; background: #FbFcFb; }
+thead .rowHead { color: var(--text-muted); font-size: var(--fs-meta); }
+
+.colHead { text-align: center !important; }
+.colIcon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; margin: 0 auto 8px; }
+.colName { display: block; font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--text-strong); text-align: center; }
+
+.cell { color: var(--text); }
+.docList { list-style: none; display: grid; gap: 5px; }
+.docList li { position: relative; padding-left: 14px; line-height: 1.4; }
+.docList li::before { content: ''; position: absolute; left: 2px; top: 7px; width: 4px; height: 4px; border-radius: 50%; background: var(--border-strong); }
+
+.disclaimer { display: flex; align-items: center; gap: 10px; padding: 13px 16px; background: var(--soft-amber); border: 1px solid var(--status-warning); border-radius: var(--r-card); font-size: var(--fs-body); color: var(--on-amber); margin-bottom: var(--sp-5); }
+.disclaimer svg { color: var(--status-warning); flex-shrink: 0; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: flex-end; }
+
+@media (max-width: 900px) {
+  .tableCard { overflow-x: auto; }
+  .table { min-width: 640px; }
+  .actions { justify-content: stretch; }
+}
