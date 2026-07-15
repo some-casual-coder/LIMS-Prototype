@@ -94,7 +94,7 @@ export function CommandCentre() {
   const totalVisible = groups.reduce((n, g) => n + g.rows.length, 0);
 
   return (
-    <AppShell breadcrumb={[{ label: 'Home', to: '/dashboard' }, { label: 'Command Centre' }]}>
+    <AppShell breadcrumb={[{ label: 'Command Centre' }]}>
       <div className={styles.intro}>
         <div>
           <p className={styles.welcome}>{greeting()}, {firstName}</p>

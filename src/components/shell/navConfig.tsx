@@ -1,9 +1,7 @@
 import type { ReactNode } from 'react';
 import {
   LayoutGrid, ListChecks, Bell, Scale, Vote, MessageSquare, MessageSquareQuote,
-  ScrollText, PenLine, ClipboardCheck, LayoutTemplate, Search, Archive, ScanLine,
-  Inbox, Megaphone, BarChart3, ShieldCheck, Library, Bookmark, FolderOpen, History,
-  Workflow,
+  ScrollText, PenLine, ClipboardCheck, Search, ScanLine, Library, Workflow,
 } from 'lucide-react';
 import type { RoleId } from '@/data/types';
 
@@ -24,6 +22,8 @@ export interface NavGroup {
 }
 
 const ic = { width: 18, height: 18, strokeWidth: 1.9 } as const;
+const legislativeRoles: RoleId[] = ['dls-drafter', 'dls-reviewer', 'dlps-officer', 'clerk'];
+const draftingRoles: RoleId[] = ['dls-drafter', 'dls-reviewer', 'dlps-officer'];
 
 export const navGroups: NavGroup[] = [
   {
@@ -36,6 +36,7 @@ export const navGroups: NavGroup[] = [
   },
   {
     label: 'Legislative Work',
+    roles: legislativeRoles,
     items: [
       { label: 'Bills', to: '/work?type=Bill', icon: <Scale {...ic} /> },
       { label: 'Motions', to: '/work?type=Motion', icon: <Vote {...ic} /> },
@@ -46,47 +47,25 @@ export const navGroups: NavGroup[] = [
   },
   {
     label: 'Drafting',
+    roles: draftingRoles,
     items: [
-      { label: 'My Drafts', to: '/work?view=my-drafts', icon: <PenLine {...ic} /> },
-      { label: 'Review Queue', to: '/work?view=review-queue', icon: <ClipboardCheck {...ic} /> },
-      { label: 'Templates', to: '/documents?view=templates', icon: <LayoutTemplate {...ic} /> },
+      { label: 'My Drafts', to: '/work?status=in-progress', icon: <PenLine {...ic} /> },
+      { label: 'Review Queue', to: '/work?status=awaiting-review', icon: <ClipboardCheck {...ic} /> },
     ],
   },
   {
-    label: 'Workflow Management',
+    label: 'Workflow',
+    roles: ['clerk', 'ict-admin'],
     items: [
       { label: 'Workflow Catalogue', to: '/workflows', icon: <Workflow {...ic} /> },
     ],
   },
   {
-    label: 'Search & Knowledge',
+    label: 'Knowledge',
     items: [
       { label: 'Search', to: '/search', icon: <Search {...ic} /> },
       { label: 'Repository', to: '/repository', icon: <Library {...ic} /> },
       { label: 'OCR & Historical Records', to: '/archive/ocr', icon: <ScanLine {...ic} /> },
-      { label: 'Saved Searches', to: '/search/saved', icon: <Bookmark {...ic} /> },
-      { label: 'Research Collections', to: '/research', icon: <FolderOpen {...ic} /> },
-      { label: 'Recent Research', to: '/search/recent', icon: <History {...ic} /> },
-    ],
-  },
-  {
-    label: 'Documents',
-    items: [
-      { label: 'Document Archive', to: '/documents', icon: <Archive {...ic} /> },
-    ],
-  },
-  {
-    label: 'Public Participation',
-    items: [
-      { label: 'Submission Inbox', to: '/participation', icon: <Inbox {...ic} /> },
-      { label: 'Active Consultations', to: '/participation?view=active', icon: <Megaphone {...ic} /> },
-    ],
-  },
-  {
-    label: 'Oversight',
-    items: [
-      { label: 'Analytics', to: '/analytics', icon: <BarChart3 {...ic} /> },
-      { label: 'Audit & Compliance', to: '/audit', icon: <ShieldCheck {...ic} /> },
     ],
   },
 ];

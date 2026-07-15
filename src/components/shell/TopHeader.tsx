@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, Fragment } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronRight, Bell, HelpCircle, ShieldCheck, WifiOff, ChevronDown, LogOut, UserRound } from 'lucide-react';
+import { ChevronRight, Bell, HelpCircle, ShieldCheck, WifiOff, ChevronDown, LogOut } from 'lucide-react';
 import { GlobalSearch } from './GlobalSearch';
 import { Avatar, IconButton } from '@/components/ui';
 import { dirAbbrev } from '@/lib/format';
@@ -77,7 +77,7 @@ export function TopHeader({ breadcrumb, persona, unreadCount }: Props) {
 
         <div className={styles.profileWrap} ref={menuRef}>
           <button className={styles.profile} onClick={() => setMenuOpen((o) => !o)} aria-haspopup="menu" aria-expanded={menuOpen}>
-            <Avatar initials={persona.initials} name={persona.name} size={34} />
+            <Avatar initials={persona.initials} size={34} decorative />
             <span className={styles.profileText}>
               <span className={styles.profileName}>{persona.name}</span>
               <span className={styles.profileRole}>
@@ -88,9 +88,6 @@ export function TopHeader({ breadcrumb, persona, unreadCount }: Props) {
           </button>
           {menuOpen && (
             <div className={styles.menu} role="menu">
-              <Link to="/help" className={styles.menuItem} role="menuitem" onClick={() => setMenuOpen(false)}>
-                <UserRound width={16} height={16} aria-hidden /> View profile
-              </Link>
               <button className={styles.menuItem} role="menuitem" onClick={signOut}>
                 <LogOut width={16} height={16} aria-hidden /> Sign out
               </button>

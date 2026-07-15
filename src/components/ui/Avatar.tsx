@@ -5,17 +5,19 @@ interface Props {
   name?: string;
   size?: number;
   tone?: 'green' | 'gold' | 'neutral';
+  decorative?: boolean;
 }
 
 // Initials avatar — deterministic, no external images, always has an accessible name.
-export function Avatar({ initials, name, size = 32, tone = 'green' }: Props) {
+export function Avatar({ initials, name, size = 32, tone = 'green', decorative = false }: Props) {
   return (
     <span
       className={`${styles.avatar} ${styles[tone]}`}
       style={{ width: size, height: size, fontSize: Math.round(size * 0.4) }}
-      role="img"
-      aria-label={name || initials}
-      title={name}
+      role={decorative ? undefined : 'img'}
+      aria-label={decorative ? undefined : (name || initials)}
+      aria-hidden={decorative || undefined}
+      title={decorative ? undefined : name}
     >
       {initials}
     </span>
