@@ -45,6 +45,7 @@
 .noBlock { display: inline-flex; align-items: center; gap: 7px; font-size: var(--fs-body); color: var(--on-green); }
 .openTaskLink { display: inline-flex; align-items: center; gap: 5px; margin-top: 12px; background: none; border: none; color: var(--green-700); font-size: var(--fs-meta); font-weight: var(--fw-semibold); cursor: pointer; padding: 0; text-decoration: none; }
 .openTaskLink:hover { text-decoration: underline; }
+.blockLinks { display: flex; gap: 18px; flex-wrap: wrap; }
 
 /* ---- Advance bar ---- */
 .advanceBar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 20px; background: var(--soft-gold); border: 1px solid var(--gold); border-radius: var(--r-card); flex-wrap: wrap; }

@@ -18,6 +18,9 @@ import {
   billTasksSeed, stageGatesSeed, CURRENT_STAGE_ID, PBO_TASK_ID,
   type BillTask, type StageGate,
 } from '@/data/billTasks';
+import {
+  pboSeed, PBO_GATEWAY_REF, PBO_FIN_NOTE, PBO_RESPONSE_SUMMARY, type PboAssessment,
+} from '@/data/pbo';
 
 // Runtime demo state. The persona layer (role, offline) plus all mutable
 // legislative data live here, persisted to localStorage. A single reset
@@ -50,6 +53,9 @@ interface DemoState {
   billTasks: BillTask[];
   stageGates: StageGate[];
   currentStageId: string;
+
+  // PBO Assessment Integration (Priority 0 sanity sprint)
+  pbo: PboAssessment;
 
   // Mutable legislative data
   records: LegislativeRecord[];
@@ -124,6 +130,14 @@ interface DemoState {
   returnBillTask: (id: string) => void;
   addBillTask: (task: BillTask) => void;
   advanceBillStage: () => void;
+
+  // PBO assessment actions
+  sendPboRequest: () => void;
+  receivePboResponse: () => void;
+  markPboSatisfied: () => void;
+  failPboGateway: () => void;
+  retryPboRequest: () => void;
+  preparePboManualTransfer: () => void;
 }
 
 // Roll a version label forward one minor step, e.g. "v3.2" -> "v3.3".
@@ -131,6 +145,14 @@ function bumpVersion(v: string): string {
   const m = v.match(/^v?(\d+)\.(\d+)$/);
   if (!m) return v;
   return `v${m[1]}.${Number(m[2]) + 1}`;
+}
+
+// Append a history entry to the blocking PBO task as its request/response
+// state changes, so the task's Activity trail reflects the PBO exchange.
+function appendPboHistory(tasks: BillTask[], label: string): BillTask[] {
+  return tasks.map((t) =>
+    t.id === PBO_TASK_ID ? { ...t, history: [...t.history, { label, at: 'Just now' }] } : t,
+  );
 }
 
 const initial = buildInitialState();
@@ -152,6 +174,7 @@ export const useDemoStore = create<DemoState>()(
       billTasks: structuredClone(billTasksSeed),
       stageGates: structuredClone(stageGatesSeed),
       currentStageId: CURRENT_STAGE_ID,
+      pbo: structuredClone(pboSeed),
       ...initial,
 
       setRole: (role) => set({ currentRole: role }),
@@ -169,6 +192,7 @@ export const useDemoStore = create<DemoState>()(
         billTasks: structuredClone(billTasksSeed),
         stageGates: structuredClone(stageGatesSeed),
         currentStageId: CURRENT_STAGE_ID,
+        pbo: structuredClone(pboSeed),
         ...buildInitialState(),
       }),
 
@@ -433,10 +457,87 @@ export const useDemoStore = create<DemoState>()(
             return g;
           }),
         })),
+
+      // ---- PBO assessment ---------------------------------------------------
+      sendPboRequest: () =>
+        set((s) => ({
+          pbo: {
+            ...s.pbo, state: 'sent', gatewayRef: PBO_GATEWAY_REF, requestSentAt: 'Just now',
+            deliveryStatus: 'Delivered', expectedResponse: '08 Aug 2026', errorCode: undefined,
+            timeline: [
+              { label: 'Package prepared', at: 'Just now', done: true },
+              { label: 'Request queued', at: 'Just now', done: true },
+              { label: 'Gateway accepted', at: 'Just now', done: true },
+              { label: 'Delivered to PBO', at: 'Just now', done: true },
+              { label: 'Awaiting assessment', done: false },
+            ],
+          },
+          billTasks: appendPboHistory(s.billTasks, 'PBO request sent to Parliamentary Budget Office'),
+        })),
+
+      receivePboResponse: () =>
+        set((s) => ({
+          pbo: {
+            ...s.pbo, state: 'received', responseAt: 'Just now', finNote: PBO_FIN_NOTE, finNoteSize: '1.2 MB',
+            responseSummary: PBO_RESPONSE_SUMMARY, validation: 'Validated',
+            linkedRecordRef: `PBO Assessment #${PBO_GATEWAY_REF}`,
+            timeline: s.pbo.timeline.map((t) => (t.done ? t : { ...t, at: 'Just now', done: true })),
+          },
+          billTasks: appendPboHistory(s.billTasks, 'PBO financial-impact note received'),
+        })),
+
+      // Satisfying the requirement completes the PBO task and clears the Legal
+      // Review gate — the same transition as completeBillTask(PBO_TASK_ID).
+      markPboSatisfied: () =>
+        set((s) => ({
+          pbo: { ...s.pbo, state: 'satisfied', validation: 'Validated' },
+          billTasks: s.billTasks.map((t) =>
+            t.id === PBO_TASK_ID
+              ? { ...t, status: 'Completed' as const, group: 'completed' as const, overdue: false, escalated: false,
+                  history: [...t.history, { label: 'PBO requirement satisfied — task completed', at: 'Just now' }] }
+              : t),
+          stageGates: s.stageGates.map((g) => (g.id === 'legal-review'
+            ? {
+                ...g,
+                blocking: [],
+                exit: g.exit.map((e) => (e.label.startsWith('PBO') ? { ...e, status: 'Met' as const } : e)),
+                validation: g.validation.map((v) => (v.label.includes('Required documents') ? { ...v, status: 'Met' as const } : v)),
+                mandatory: g.mandatory.map((m) => (m.label.includes('PBO') ? { ...m, done: m.total } : m)),
+              }
+            : g)),
+        })),
+
+      failPboGateway: () =>
+        set((s) => ({
+          pbo: { ...s.pbo, state: 'failed', lastAttemptAt: 'Just now', errorCode: 'GW-503', retryCount: (s.pbo.retryCount ?? 0) + 1 },
+          billTasks: appendPboHistory(s.billTasks, 'PBO gateway unavailable — request safely queued'),
+        })),
+
+      retryPboRequest: () =>
+        set((s) => ({
+          pbo: {
+            ...s.pbo, state: 'sent', gatewayRef: PBO_GATEWAY_REF, requestSentAt: 'Just now',
+            deliveryStatus: 'Delivered', expectedResponse: '08 Aug 2026', errorCode: undefined,
+            timeline: [
+              { label: 'Package prepared', at: 'Just now', done: true },
+              { label: 'Request re-queued', at: 'Just now', done: true },
+              { label: 'Gateway accepted', at: 'Just now', done: true },
+              { label: 'Delivered to PBO', at: 'Just now', done: true },
+              { label: 'Awaiting assessment', done: false },
+            ],
+          },
+          billTasks: appendPboHistory(s.billTasks, 'PBO request retried and delivered'),
+        })),
+
+      preparePboManualTransfer: () =>
+        set((s) => ({
+          pbo: { ...s.pbo, state: 'manual-transfer', manifestRef: `MTX-${PBO_GATEWAY_REF}` },
+          billTasks: appendPboHistory(s.billTasks, 'Secure manual-transfer package prepared for PBO'),
+        })),
     }),
     {
       name: 'lims-national-assembly',
-      version: 8,
+      version: 9,
       // On a data-model change, discard stale persisted data and reseed. Prototype
       // personalisation (role/pins/searches) is intentionally reset with the data.
       migrate: () => ({
@@ -454,6 +555,7 @@ export const useDemoStore = create<DemoState>()(
         billTasks: structuredClone(billTasksSeed),
         stageGates: structuredClone(stageGatesSeed),
         currentStageId: CURRENT_STAGE_ID,
+        pbo: structuredClone(pboSeed),
         ...buildInitialState(),
       }),
     },

@@ -13,6 +13,7 @@ import { paths } from '@/routes/paths';
 import { StageIcon } from '@/features/workflows/workflowShared';
 import { TASKS_RECORD_ID, PBO_TASK_ID, type StageGate } from '@/data/billTasks';
 import { BillControlHeader, ReqStatusPill, officerName } from './taskShared';
+import { PboAssessmentSheet } from '../pbo/PboAssessmentSheet';
 import styles from './BillWorkflowControl.module.css';
 
 export function BillWorkflowControl() {
@@ -37,7 +38,9 @@ export function BillWorkflowControl() {
     [stage],
   );
   const sheetOpen = params.get('sheet') === 'stage-requirements';
+  const pboSheetOpen = params.get('sheet') === 'pbo-assessment';
   const setParam = (k: string, v: string | null) => setParams((p) => { if (v === null) p.delete(k); else p.set(k, v); return p; });
+  const openPbo = () => setParam('sheet', 'pbo-assessment');
 
   function advance() {
     if (!canAdvance || !nextStage) return;
@@ -102,7 +105,7 @@ export function BillWorkflowControl() {
         <MandatoryCard mandatory={stage.mandatory} />
         <ReqCard title="Approvals" icon={<ShieldCheck width={16} height={16} />} rows={stage.approvals} />
         <ReqCard title="Validation" icon={<CircleCheck width={16} height={16} />} rows={stage.validation} />
-        <BlockingCard stage={stage} recordId={record.id} />
+        <BlockingCard stage={stage} recordId={record.id} onOpenPbo={openPbo} />
       </div>
 
       {/* Advance bar */}
@@ -125,9 +128,11 @@ export function BillWorkflowControl() {
           stage={stage} nextStageName={nextStage?.name ?? '—'} canAdvance={canAdvance}
           onOpenTask={() => setParam('sheet', null)}
           onAdvance={advance} onClose={() => setParam('sheet', null)}
+          onOpenPbo={openPbo}
           recordId={record.id}
         />
       )}
+      {pboSheetOpen && <PboAssessmentSheet onClose={() => setParam('sheet', null)} />}
       <ToastHost />
     </AppShell>
   );
@@ -174,7 +179,7 @@ function MandatoryCard({ mandatory }: { mandatory: StageGate['mandatory'] }) {
   );
 }
 
-function BlockingCard({ stage, recordId }: { stage: StageGate; recordId: string }) {
+function BlockingCard({ stage, recordId, onOpenPbo }: { stage: StageGate; recordId: string; onOpenPbo: () => void }) {
   return (
     <div className={`${styles.gateCard} ${stage.blocking.length ? styles.gateCardBlocking : ''}`}>
       <div className={styles.gateCardHead}><span className={styles.gateCardTitle}><TriangleAlert width={16} height={16} /> Blocking Dependencies</span><span className={styles.gateCol}>Status</span></div>
@@ -193,15 +198,20 @@ function BlockingCard({ stage, recordId }: { stage: StageGate; recordId: string 
       ) : (
         <p className={styles.noBlock}><CircleCheck width={15} height={15} /> No blocking dependencies remain.</p>
       )}
-      {stage.blocking.length > 0 && <Link className={styles.openTaskLink} to={`${paths.recordTasks(recordId)}?task=${PBO_TASK_ID}`}>Open blocking task <ExternalLink width={12} height={12} /></Link>}
+      {stage.blocking.length > 0 && (
+        <div className={styles.blockLinks}>
+          <button className={styles.openTaskLink} onClick={onOpenPbo}>Open PBO Assessment <ExternalLink width={12} height={12} /></button>
+          <Link className={styles.openTaskLink} to={`${paths.recordTasks(recordId)}?task=${PBO_TASK_ID}`}>Open blocking task <ExternalLink width={12} height={12} /></Link>
+        </div>
+      )}
     </div>
   );
 }
 
 // ---- Stage Requirements side sheet ----------------------------------------
-function StageRequirementsSheet({ stage, nextStageName, canAdvance, onAdvance, onClose, recordId }: {
+function StageRequirementsSheet({ stage, nextStageName, canAdvance, onAdvance, onClose, onOpenPbo, recordId }: {
   stage: StageGate; nextStageName: string; canAdvance: boolean; onOpenTask: () => void;
-  onAdvance: () => void; onClose: () => void; recordId: string;
+  onAdvance: () => void; onClose: () => void; onOpenPbo: () => void; recordId: string;
 }) {
   return (
     <SideSheet open onClose={onClose} size="md" title="Stage Requirements"
@@ -242,7 +252,10 @@ function StageRequirementsSheet({ stage, nextStageName, canAdvance, onAdvance, o
                 <div><dt>Due</dt><dd className={styles.overdueText}>{b.due} (Overdue by {b.overdueDays} days)</dd></div>
                 <div><dt>Status</dt><dd>{b.status}</dd></div>
               </dl>
-              <Button size="sm" variant="secondary" to={`${paths.recordTasks(recordId)}?task=${PBO_TASK_ID}`}>Open Task</Button>
+              <div className={styles.blockLinks}>
+                <Button size="sm" variant="primary" onClick={onOpenPbo}>Open PBO Assessment</Button>
+                <Button size="sm" variant="secondary" to={`${paths.recordTasks(recordId)}?task=${PBO_TASK_ID}`}>Open Task</Button>
+              </div>
             </div>
           ))}
         </div>

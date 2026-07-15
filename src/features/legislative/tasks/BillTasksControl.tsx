@@ -12,6 +12,7 @@ import { paths } from '@/routes/paths';
 import { TASKS_RECORD_ID, type BillTask } from '@/data/billTasks';
 import { BillControlHeader, officerName, officerInitials, TaskStatusPill } from './taskShared';
 import { TaskDetailSheet, AddTaskSheet } from './taskSheets';
+import { PboAssessmentSheet } from '../pbo/PboAssessmentSheet';
 import styles from './BillTasksControl.module.css';
 
 const PAGE_TABS = ['Tasks', 'Stage Details', 'Documents', 'Comments', 'History'];
@@ -39,6 +40,7 @@ export function BillTasksControl() {
   const openTask = tasks.find((t) => t.id === openTaskId) ?? null;
   const sheet = params.get('sheet');
   const setParam = (k: string, v: string | null) => setParams((p) => { if (v === null) p.delete(k); else p.set(k, v); return p; });
+  const openPbo = () => setParams((p) => { p.delete('task'); p.set('sheet', 'pbo-assessment'); return p; });
 
   const counts = useMemo(() => ({
     completed: tasks.filter((t) => t.status === 'Completed').length,
@@ -153,8 +155,9 @@ export function BillTasksControl() {
         </div>
       )}
 
-      {openTask && <TaskDetailSheet task={openTask} roleId={roleId} onClose={() => setParam('task', null)} onToast={showToast} />}
+      {openTask && <TaskDetailSheet task={openTask} roleId={roleId} onClose={() => setParam('task', null)} onToast={showToast} onOpenPbo={openPbo} />}
       {sheet === 'add-task' && <AddTaskSheet onClose={() => setParam('sheet', null)} onToast={showToast} />}
+      {sheet === 'pbo-assessment' && <PboAssessmentSheet onClose={() => setParam('sheet', null)} />}
       <ToastHost />
     </AppShell>
   );

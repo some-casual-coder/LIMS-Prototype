@@ -1,0 +1,182 @@
+/* PBO Assessment side sheet + status card. Emblem palette only — the brief's
+   "soft blue" in-progress states use the neutral charcoal tone. */
+
+/* ---- Banner ---- */
+.banner {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: var(--r-card);
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+.bannerIcon { flex: none; margin-top: 1px; }
+.bannerTitle { font-weight: var(--fw-semibold); font-size: 14px; color: var(--text-strong); }
+.bannerSub { font-size: var(--fs-meta); color: var(--text-muted); margin-top: 2px; }
+.banner_amber { background: var(--soft-amber); border-color: #F0DBBB; }
+.banner_amber .bannerIcon { color: var(--on-amber); }
+.banner_blue { background: var(--soft-blue); border-color: var(--border-strong); }
+.banner_blue .bannerIcon { color: var(--on-blue); }
+.banner_green { background: var(--soft-green); border-color: #C9E6D5; }
+.banner_green .bannerIcon { color: var(--on-green); }
+.banner_red { background: var(--soft-red); border-color: #F1CCD2; }
+.banner_red .bannerIcon { color: var(--on-red); }
+
+/* ---- Section labels ---- */
+.sectionLabel {
+  font-size: 11px;
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 20px 0 8px;
+}
+
+/* ---- Request status row ---- */
+.statusRow { display: flex; gap: 10px; align-items: flex-start; }
+.mutedIcon { color: var(--text-muted); flex: none; margin-top: 1px; }
+.statusStrong { font-weight: var(--fw-semibold); color: var(--text-strong); font-size: 14px; }
+.statusSub { font-size: var(--fs-meta); color: var(--text-muted); margin-top: 1px; }
+
+/* ---- Documents ---- */
+.docList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.docRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 2px;
+  border-bottom: 1px solid var(--border);
+  font-size: var(--fs-body);
+}
+.docRow:last-child { border-bottom: none; }
+.docIcon { color: var(--text-muted); flex: none; display: inline-flex; }
+.docName { color: var(--text); display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.docVersion {
+  font-size: 11px; color: var(--text-muted); background: var(--soft-grey);
+  border-radius: var(--r-pill); padding: 1px 7px; font-weight: var(--fw-medium);
+}
+.docMeta { font-size: var(--fs-meta); color: var(--text-muted); white-space: nowrap; }
+
+/* ---- People ---- */
+.personRow, .pboOfficer { display: flex; align-items: center; gap: 10px; }
+.personName { font-weight: var(--fw-semibold); color: var(--text-strong); font-size: 14px; }
+.personRole { font-size: var(--fs-meta); color: var(--text-muted); }
+
+/* ---- Due date ---- */
+.dueRow {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-top: 16px; padding: 10px 12px; background: var(--bg-app);
+  border: 1px solid var(--border); border-radius: var(--r-badge);
+}
+.dueLabel { font-size: var(--fs-meta); color: var(--text-muted); }
+.dueValue { font-weight: var(--fw-semibold); color: var(--text-strong); font-size: 14px; }
+.dueIn { font-weight: var(--fw-regular); color: var(--text-muted); }
+
+.notes { font-size: var(--fs-body); color: var(--text); line-height: 1.55; margin: 0; }
+
+/* ---- Meta list (dl) ---- */
+.metaList { margin: 0; display: flex; flex-direction: column; }
+.metaList > div {
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  padding: 9px 2px; border-bottom: 1px solid var(--border);
+}
+.metaList > div:last-child { border-bottom: none; }
+.metaList dt { font-size: var(--fs-meta); color: var(--text-muted); flex: none; }
+.metaList dd {
+  margin: 0; font-size: var(--fs-body); color: var(--text-strong); font-weight: var(--fw-medium);
+  text-align: right; display: flex; align-items: center; gap: 8px; justify-content: flex-end;
+}
+.refValue { font-variant-numeric: tabular-nums; }
+.copyBtn {
+  border: none; background: transparent; color: var(--text-muted); cursor: pointer;
+  padding: 2px; border-radius: 5px; display: inline-flex;
+}
+.copyBtn:hover { color: var(--text-strong); background: var(--soft-grey); }
+
+.restricted {
+  display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: var(--fw-semibold);
+  color: var(--on-red); background: var(--soft-red); border-radius: var(--r-pill); padding: 2px 8px;
+}
+
+.fileLink {
+  border: none; background: transparent; padding: 0; cursor: pointer; color: var(--on-green);
+  font-weight: var(--fw-semibold); font-size: var(--fs-body); display: inline-flex; align-items: center; gap: 5px;
+}
+.fileLink:hover { text-decoration: underline; }
+.fileMeta { font-size: var(--fs-meta); color: var(--text-muted); font-weight: var(--fw-regular); }
+.linkedRef { color: var(--text-strong); display: inline-flex; align-items: center; gap: 5px; }
+
+/* ---- Timeline ---- */
+.timeline { list-style: none; margin: 0; padding: 0; }
+.timeline li { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: var(--fs-body); }
+.tlDot { flex: none; display: inline-flex; }
+.tlDone .tlDot { color: var(--status-success); }
+.tlPending .tlDot { color: var(--text-muted); }
+.tlLabel { flex: 1; color: var(--text); }
+.tlPending .tlLabel { color: var(--text-muted); }
+.tlAt { font-size: var(--fs-meta); color: var(--text-muted); }
+
+/* ---- Inline action rows ---- */
+.inlineActions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+
+/* ---- Summary / notes blocks ---- */
+.summaryText { font-size: var(--fs-body); color: var(--text); line-height: 1.6; margin: 0; }
+.illustrativeNote { font-size: var(--fs-meta); color: var(--text-muted); font-style: italic; margin: 6px 0 0; }
+
+.nextSteps, .reassure {
+  margin-top: 18px; padding: 12px 14px; background: var(--bg-app);
+  border: 1px solid var(--border); border-radius: var(--r-card);
+}
+.nextSteps p, .reassure p { margin: 4px 0 0; font-size: var(--fs-body); color: var(--text); line-height: 1.5; }
+.nextTitle { font-weight: var(--fw-semibold); color: var(--text-strong); font-size: 13px; }
+
+.clearedNote {
+  display: flex; gap: 10px; align-items: flex-start; margin-top: 16px;
+  padding: 12px 14px; background: var(--soft-green); border: 1px solid #C9E6D5; border-radius: var(--r-card);
+}
+.clearedNote svg { color: var(--on-green); flex: none; margin-top: 1px; }
+.clearedNote p { margin: 0; font-size: var(--fs-body); color: var(--text); line-height: 1.5; }
+
+.auditNotice {
+  display: flex; align-items: center; gap: 6px; margin-top: 18px;
+  font-size: var(--fs-meta); color: var(--text-muted);
+}
+.auditNotice svg { flex: none; }
+
+.reviewHead { font-size: 16px; font-weight: var(--fw-semibold); color: var(--text-strong); margin: 4px 0 6px; }
+.reviewIntro { font-size: var(--fs-body); color: var(--text-muted); margin: 0 0 8px; line-height: 1.5; }
+
+/* ---- Footer ---- */
+.footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; }
+.auditLink {
+  display: inline-flex; align-items: center; gap: 5px; font-size: var(--fs-meta);
+  color: var(--text-muted); text-decoration: none; font-weight: var(--fw-medium);
+}
+.auditLink:hover { color: var(--text-strong); text-decoration: underline; }
+
+/* ---- PBO status card (Bill Workspace overview) ---- */
+.statusCard {
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  padding: 14px 16px;
+  background: var(--bg-card);
+}
+.statusCard_amber { background: var(--soft-amber); border-color: #F0DBBB; }
+.statusCard_blue { background: var(--soft-blue); border-color: var(--border-strong); }
+.statusCard_green { background: var(--soft-green); border-color: #C9E6D5; }
+.statusCard_red { background: var(--soft-red); border-color: #F1CCD2; }
+.statusCardHead { display: flex; align-items: center; gap: 9px; }
+.statusCardIcon { flex: none; display: inline-flex; }
+.statusCard_amber .statusCardIcon { color: var(--on-amber); }
+.statusCard_blue .statusCardIcon { color: var(--on-blue); }
+.statusCard_green .statusCardIcon { color: var(--on-green); }
+.statusCard_red .statusCardIcon { color: var(--on-red); }
+.statusCardTitle { font-size: 14px; font-weight: var(--fw-semibold); color: var(--text-strong); margin: 0; }
+.statusCardBody { font-size: var(--fs-meta); color: var(--text); margin: 6px 0 10px; line-height: 1.5; }
+.statusCardLink {
+  border: none; background: transparent; padding: 0; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 5px; font-weight: var(--fw-semibold);
+  font-size: 13px; color: var(--ink);
+}
+.statusCardLink:hover { text-decoration: underline; }

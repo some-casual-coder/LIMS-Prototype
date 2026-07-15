@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, RotateCcw, WifiOff, Wifi, ArrowRight } from 'lucide-react';
+import { X, RotateCcw, WifiOff, Wifi, ArrowRight, Landmark, TriangleAlert } from 'lucide-react';
 import { useDemoStore } from '@/store/demoStore';
 import { allPersonas } from '@/data/personas';
+import { paths } from '@/routes/paths';
 import styles from './Presenter.module.css';
 
 const HERO_LINKS = [
@@ -23,6 +24,8 @@ export function Presenter() {
   const toggleOffline = useDemoStore((s) => s.toggleOffline);
   const offline = useDemoStore((s) => s.offline);
   const currentRole = useDemoStore((s) => s.currentRole);
+  const receivePboResponse = useDemoStore((s) => s.receivePboResponse);
+  const failPboGateway = useDemoStore((s) => s.failPboGateway);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -52,6 +55,13 @@ export function Presenter() {
     reset();
     setOpen(false);
     navigate('/login');
+  }
+
+  function simulatePbo(kind: 'response' | 'failure') {
+    if (kind === 'response') receivePboResponse();
+    else failPboGateway();
+    navigate(paths.recordPbo());
+    setOpen(false);
   }
 
   return (
@@ -87,6 +97,16 @@ export function Presenter() {
                   {l.label} <ArrowRight width={13} height={13} />
                 </button>
               ))}
+            </div>
+
+            <p className={styles.groupLabel}>Simulate</p>
+            <div className={styles.jumpGrid}>
+              <button className={styles.jump} onClick={() => simulatePbo('response')}>
+                <Landmark width={13} height={13} /> PBO response received
+              </button>
+              <button className={styles.jump} onClick={() => simulatePbo('failure')}>
+                <TriangleAlert width={13} height={13} /> PBO gateway failure
+              </button>
             </div>
 
             <div className={styles.footer}>

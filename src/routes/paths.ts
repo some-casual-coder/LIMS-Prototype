@@ -14,6 +14,7 @@ export const paths = {
   recordVersions: (id: string = PRIMARY_RECORD_ID) => `/legislative/${id}/versions`,
   recordTasks: (id: string = PRIMARY_RECORD_ID) => `/legislative/${id}/tasks`,
   recordWorkflow: (id: string = PRIMARY_RECORD_ID) => `/legislative/${id}/workflow`,
+  recordPbo: (id: string = PRIMARY_RECORD_ID) => `/legislative/${id}?sheet=pbo-assessment`,
   recordPublish: (id: string = PRIMARY_RECORD_ID) => `/legislative/${id}/publish`,
   search: '/search',
   searchQuery: (q: string, mode?: string) => `/search?q=${encodeURIComponent(q)}${mode && mode !== 'all' ? `&mode=${mode}` : ''}`,

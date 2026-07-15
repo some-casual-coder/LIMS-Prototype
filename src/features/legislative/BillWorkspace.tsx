@@ -14,6 +14,8 @@ import {
   accessInfo, keyDates, type StageState,
 } from '@/data/billWorkspace';
 import { WorkflowSheet } from './WorkflowSheet';
+import { PboAssessmentSheet, PboStatusCard } from './pbo/PboAssessmentSheet';
+import { TASKS_RECORD_ID } from '@/data/billTasks';
 import styles from './BillWorkspace.module.css';
 
 const TABS = ['Overview', 'Draft', 'Tasks', 'Documents', 'Versions', 'Workflow', 'Participation', 'Activity'];
@@ -30,10 +32,15 @@ export function BillWorkspace() {
   const versions = useMemo(() => allVersions.filter((v) => v.recordId === id), [allVersions, id]);
   const tasks = useMemo(() => allTasks.filter((t) => t.recordId === id), [allTasks, id]);
   const markRecentlyOpened = useDemoStore((s) => s.markRecentlyOpened);
+  const pboState = useDemoStore((s) => s.pbo.state);
   const [workflowOpen, setWorkflowOpen] = useState(false);
 
   const tab = params.get('tab') || 'Overview';
   const setTab = (t: string) => setParams((p) => { p.set('tab', t); return p; }, { replace: true });
+  const isPrimary = id === TASKS_RECORD_ID;
+  const pboSheetOpen = isPrimary && params.get('sheet') === 'pbo-assessment';
+  const openPbo = () => setParams((p) => { p.set('sheet', 'pbo-assessment'); return p; });
+  const closePbo = () => setParams((p) => { p.delete('sheet'); return p; });
 
   useEffect(() => { if (id) markRecentlyOpened(id); }, [id, markRecentlyOpened]);
 
@@ -128,12 +135,14 @@ export function BillWorkspace() {
       </nav>
 
       {tab === 'Overview' ? (
-        <OverviewTab record={record} versions={versions} onOpenWorkflow={() => setWorkflowOpen(true)} />
+        <OverviewTab record={record} versions={versions} onOpenWorkflow={() => setWorkflowOpen(true)}
+          pboState={isPrimary ? pboState : undefined} onOpenPbo={openPbo} />
       ) : (
         <OtherTab tab={tab} record={record} tasks={tasks} versions={versions} />
       )}
 
       <WorkflowSheet open={workflowOpen} onClose={() => setWorkflowOpen(false)} recordId={record.id} />
+      {pboSheetOpen && <PboAssessmentSheet onClose={closePbo} />}
     </AppShell>
   );
 }
@@ -145,7 +154,7 @@ function stageIcon(state: StageState, i: number) {
   return <span className={styles.stageNum}>{i + 1}</span>;
 }
 
-function OverviewTab({ record, versions, onOpenWorkflow }: { record: any; versions: any[]; onOpenWorkflow: () => void }) {
+function OverviewTab({ record, versions, onOpenWorkflow, pboState, onOpenPbo }: { record: any; versions: any[]; onOpenWorkflow: () => void; pboState?: import('@/data/pbo').PboState; onOpenPbo: () => void }) {
   const recentVersions = [...versions].reverse().slice(0, 3);
   const done = stageChecklist.filter((c) => c.status === 'completed').length;
 
@@ -167,6 +176,9 @@ function OverviewTab({ record, versions, onOpenWorkflow }: { record: any; versio
             <Button variant="secondary" to={`/legislative/${record.id}/draft?tab=comments`} leftIcon={<MessageSquareText width={16} height={16} />}>Review Comments</Button>
           </div>
         </section>
+
+        {/* PBO dependency card */}
+        {pboState && <PboStatusCard state={pboState} onOpen={onOpenPbo} />}
 
         {/* B. Current document */}
         <Panel title="Current document" padded>

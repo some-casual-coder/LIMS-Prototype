@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import {
   CheckCircle2, UserCog, GitBranch, Clock3, TriangleAlert, Undo2, ExternalLink,
-  Bell, CircleCheck, CircleDot, ArrowLeft,
+  Bell, CircleCheck, CircleDot, ArrowLeft, Landmark,
 } from 'lucide-react';
 import { SideSheet, Button, StatusBadge, Avatar } from '@/components/ui';
 import { useDemoStore } from '@/store/demoStore';
 import { recordAudit, notify } from '@/mocks/mockApi';
-import { TASKS_RECORD_ID, type BillTask } from '@/data/billTasks';
+import { TASKS_RECORD_ID, PBO_TASK_ID, type BillTask } from '@/data/billTasks';
 import { officerName, officerRole, officerInitials, TaskStatusPill } from './taskShared';
 import styles from './BillTasksControl.module.css';
 
@@ -15,9 +15,10 @@ const ESCALATE_OPTIONS = ['dls-reviewer', 'clerk'];
 
 type ActionMode = null | 'reassign' | 'extend' | 'escalate' | 'return' | 'dependency';
 
-export function TaskDetailSheet({ task, roleId, onClose, onToast }: {
-  task: BillTask; roleId: string | null; onClose: () => void; onToast: (m: string) => void;
+export function TaskDetailSheet({ task, roleId, onClose, onToast, onOpenPbo }: {
+  task: BillTask; roleId: string | null; onClose: () => void; onToast: (m: string) => void; onOpenPbo?: () => void;
 }) {
+  const isPbo = task.id === PBO_TASK_ID;
   const completeBillTask = useDemoStore((s) => s.completeBillTask);
   const reassignBillTask = useDemoStore((s) => s.reassignBillTask);
   const requestBillTaskExtension = useDemoStore((s) => s.requestBillTaskExtension);
@@ -64,6 +65,12 @@ export function TaskDetailSheet({ task, roleId, onClose, onToast }: {
         </div>
         <div className={styles.taskId}>Task ID: TASK-2026-014-{task.id.slice(0, 4).toUpperCase()}</div>
       </div>
+
+      {isPbo && onOpenPbo && (
+        <div style={{ marginBottom: 14 }}>
+          <Button variant="secondary" block leftIcon={<Landmark width={16} height={16} />} onClick={onOpenPbo}>Open PBO Assessment</Button>
+        </div>
+      )}
 
       <div className={styles.sheetTabs} role="tablist">
         <button role="tab" aria-selected={tab === 'details'} className={`${styles.sheetTab} ${tab === 'details' ? styles.sheetTabOn : ''}`} onClick={() => setTab('details')}>Details</button>
