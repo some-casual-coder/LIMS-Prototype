@@ -117,6 +117,36 @@ export const clause14Changes: TrackChange[] = [
 // Whole-document change summary (curated totals across all clauses).
 export const changeSummary = { additions: 8, deletions: 3, modified: 4, metadata: 2, totalClauses: 37, reviewedClause: 14 };
 
+// Editor comments panel (Clause 14).
+export interface EditorComment {
+  id: string;
+  type: 'blocking' | 'drafting' | 'procedural' | 'reference' | 'general';
+  clause: string;
+  by: string;
+  role: string;
+  ago: string;
+  text: string;
+}
+
+export const editorComments: EditorComment[] = [
+  { id: 'C-104', type: 'blocking', clause: 'Clause 14(3)(c)', by: 'David Otieno', role: 'Legal Counsel · DLS', ago: '36 minutes ago', text: 'Clarify whether assisted access must remain available where a digital identity check fails.' },
+  { id: 'C-103', type: 'drafting', clause: 'Clause 14(3)(a)', by: 'Naomi Wambui', role: 'Principal Legislative Drafter', ago: '1 hour ago', text: 'Cross-reference updated from section 5 to section 6. Please confirm if this is the correct target provision.' },
+];
+export const resolvedCommentCount = 4;
+
+// Validation for the editor panel.
+export const editorValidation = {
+  passed: 14,
+  warnings: 1,
+  errors: 0,
+  warning: 'Clause 14 refers to subsection 6(4), which does not exist.',
+  categories: [
+    { name: 'Structure', items: ['Clause numbering valid', 'Heading hierarchy valid', 'Required sections present'] },
+    { name: 'References', items: ['Cross-reference in Clause 14 requires review', 'Referenced legislation resolved', 'Defined terms introduced before use'] },
+    { name: 'Metadata', items: ['Sponsor set', 'Directorate set', 'Version note required'] },
+  ],
+};
+
 // AI suggestion for Clause 14 (advisory; the safe Insert / Edit-before-inserting flow).
 export const clause14AiSuggestion = {
   original: 'including through human assistance, where identity verification fails, is not successful, or cannot be completed;',

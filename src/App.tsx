@@ -10,8 +10,9 @@ import { SearchPage } from '@/features/search/SearchPage';
 import { NotificationsPage } from '@/features/notifications/NotificationsPage';
 import {
   DocumentArchivePage, OcrImportPage, ParticipationInboxPage, AnalyticsPage, AuditPage,
-  HelpPage, DraftingEditorPage, VersionsPage, WorkflowPage, PublishPage,
+  HelpPage, VersionsPage, WorkflowPage, PublishPage,
 } from '@/features/common/previewRoutes';
+import { DraftingWorkspace } from '@/features/legislative/editor/DraftingWorkspace';
 import { PublicHome, PublicBill, PublicParticipate, PublicTrack } from '@/features/public/PublicPortal';
 
 function RootRedirect() {
@@ -43,7 +44,8 @@ export default function App() {
         <Route path="/work" element={<MyWork />} />
         <Route path="/legislative/new" element={<CreateInstruction />} />
         <Route path="/legislative/:id" element={<BillWorkspace />} />
-        <Route path="/legislative/:id/draft" element={<DraftingEditorPage />} />
+        <Route path="/legislative/:id/draft" element={<DraftingWorkspace key="draft" />} />
+        <Route path="/legislative/:id/review" element={<DraftingWorkspace key="review" reviewRoute />} />
         <Route path="/legislative/:id/versions" element={<VersionsPage />} />
         <Route path="/legislative/:id/workflow" element={<WorkflowPage />} />
         <Route path="/legislative/:id/publish" element={<PublishPage />} />

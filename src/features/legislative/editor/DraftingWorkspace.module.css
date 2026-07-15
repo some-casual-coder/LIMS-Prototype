@@ -1,0 +1,69 @@
+/* Top bar */
+.topbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 10px 20px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+}
+.tbLeft { min-width: 0; flex: 1; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-meta); font-weight: var(--fw-semibold); color: var(--green-700); }
+.back:hover { text-decoration: underline; }
+.crumb { display: flex; align-items: center; gap: 5px; font-size: var(--fs-meta); color: var(--text-muted); margin-top: 3px; }
+.crumb svg { color: var(--border-strong); }
+.crumbCurrent { color: var(--text); font-weight: var(--fw-medium); }
+.titleRow { display: flex; align-items: center; gap: 12px; margin-top: 4px; flex-wrap: wrap; }
+.docTitle { font-size: 18px; font-weight: var(--fw-semibold); color: var(--text-strong); letter-spacing: -0.01em; }
+.versionSel { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border: 1px solid var(--border-strong); background: var(--bg-card); border-radius: var(--r-button); font-size: var(--fs-meta); font-weight: var(--fw-medium); color: var(--text); }
+.versionSel:hover { background: var(--soft-grey); }
+
+.tbCenter { flex: none; }
+.statusCard { display: flex; align-items: center; gap: 10px; padding: 8px 16px; background: var(--bg-doc); border: 1px solid var(--border); border-radius: var(--r-card); }
+.savedIcon { color: var(--status-success); }
+.statusIcon { color: var(--gold-strong); }
+.statusTitle { font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--text-strong); }
+.statusSub { font-size: var(--fs-meta); color: var(--text-muted); }
+
+.tbRight { flex: 1; display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+
+/* Toolbar */
+.toolbar { flex: none; display: flex; align-items: center; gap: 4px; padding: 6px 16px; background: var(--bg-card); border-bottom: 1px solid var(--border); overflow-x: auto; }
+.toolGroup { display: inline-flex; gap: 2px; }
+.tool { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: none; background: transparent; border-radius: 7px; color: var(--text); }
+.tool:hover:not(:disabled) { background: var(--soft-grey); }
+.tool:disabled { color: var(--border-strong); }
+.toolSep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+.toolText { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border: none; background: transparent; border-radius: 7px; font-size: var(--fs-table); color: var(--text); white-space: nowrap; }
+.toolText:hover { background: var(--soft-grey); }
+.toolText svg { color: var(--text-muted); }
+.toolActive { background: var(--soft-green); color: var(--green-800); }
+.toolActive svg { color: var(--green-700); }
+.menu { display: flex; flex-direction: column; gap: 1px; min-width: 180px; }
+.menuItem { padding: 8px 10px; border: none; background: transparent; border-radius: var(--r-button); font-size: var(--fs-table); color: var(--text-strong); text-align: left; }
+.menuItem:hover { background: var(--soft-grey); }
+
+/* Change summary (review) */
+.changeSummary { flex: none; display: flex; align-items: center; gap: 22px; padding: 10px 20px; background: var(--bg-doc); border-bottom: 1px solid var(--border); overflow-x: auto; }
+.csLabel { font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--text-strong); }
+.csStat { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-table); color: var(--text-muted); white-space: nowrap; }
+.csStat b { font-size: var(--fs-body); }
+.csAdd { color: var(--status-success); }
+.csDel { color: var(--status-danger); }
+.csMod { color: var(--status-warning); }
+.csMeta { color: var(--on-grey); }
+.csReviewed { margin-left: auto; font-size: var(--fs-meta); color: var(--text-muted); white-space: nowrap; }
+
+/* Columns */
+.columns { flex: 1; display: flex; min-height: 0; overflow: hidden; }
+
+/* Status bar */
+.statusbar { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 7px 20px; background: var(--bg-card); border-top: 1px solid var(--border); font-size: var(--fs-meta); color: var(--text-muted); }
+.legend { display: inline-flex; align-items: center; gap: 8px; }
+.legIns, .legDel { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: -3px; }
+.legIns { background: #1c7a45; }
+.legDel { background: #b42134; }
+.zoom { font-variant-numeric: tabular-nums; }
+.spin { animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
