@@ -1,9 +1,11 @@
+import { useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { HelpCircle, PanelLeftClose, PanelLeftOpen, Circle } from 'lucide-react';
+import { HelpCircle, PanelLeftClose, PanelLeftOpen, Circle, Pin, FileText, Clock } from 'lucide-react';
 import { navGroups } from './navConfig';
 import { LogoMark } from './LogoMark';
 import { Avatar } from '@/components/ui';
 import { dirAbbrev } from '@/lib/format';
+import { useDemoStore } from '@/store/demoStore';
 import type { Persona } from '@/data/types';
 import styles from './Sidebar.module.css';
 
@@ -26,6 +28,10 @@ function isActive(to: string, pathname: string, search: string): boolean {
 
 export function Sidebar({ collapsed, onToggleCollapse, unreadCount, persona }: Props) {
   const { pathname, search } = useLocation();
+  const records = useDemoStore((s) => s.records);
+  const pinned = useDemoStore((s) => s.pinned);
+  const recentlyOpened = useDemoStore((s) => s.recentlyOpened);
+  const byId = useMemo(() => Object.fromEntries(records.map((r) => [r.id, r])), [records]);
 
   return (
     <nav className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''}`} aria-label="Primary">
@@ -73,6 +79,39 @@ export function Sidebar({ collapsed, onToggleCollapse, unreadCount, persona }: P
             </ul>
           </div>
         ))}
+
+        {!collapsed && pinned.length > 0 && (
+          <div className={styles.group}>
+            <p className={styles.groupLabel}><Pin width={12} height={12} /> Pinned Work</p>
+            <ul>
+              {pinned.map((id) => byId[id] && (
+                <li key={id}>
+                  <Link to={`/legislative/${id}`} className={styles.recordItem} title={byId[id].title}>
+                    <FileText width={15} height={15} className={styles.recordIcon} />
+                    <span className={styles.recordLabel}>{byId[id].shortTitle}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <Link to="/work?view=list" className={styles.viewAll}>View all pinned</Link>
+          </div>
+        )}
+
+        {!collapsed && recentlyOpened.length > 0 && (
+          <div className={styles.group}>
+            <p className={styles.groupLabel}><Clock width={12} height={12} /> Recently Opened</p>
+            <ul>
+              {recentlyOpened.map((id) => byId[id] && (
+                <li key={id}>
+                  <Link to={`/legislative/${id}`} className={styles.recordItem} title={byId[id].title}>
+                    <FileText width={15} height={15} className={styles.recordIcon} />
+                    <span className={styles.recordLabel}>{byId[id].shortTitle}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       <div className={styles.bottom}>

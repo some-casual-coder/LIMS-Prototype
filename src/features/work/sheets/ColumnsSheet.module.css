@@ -1,0 +1,20 @@
+.groupTitle { font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--text-strong); margin: 18px 0 10px; }
+.groupTitle:first-child { margin-top: 0; }
+
+.density { display: flex; gap: 6px; padding: 3px; background: var(--soft-grey); border: 1px solid var(--border); border-radius: var(--r-button); }
+.densityBtn { flex: 1; height: 34px; border: none; background: transparent; border-radius: 7px; font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--text-muted); }
+.densityActive { background: var(--bg-card); color: var(--green-800); box-shadow: var(--shadow-sm); }
+
+.list { display: flex; flex-direction: column; gap: 2px; }
+.item, .fixed {
+  display: flex; align-items: center; gap: 8px; padding: 8px 8px; border-radius: var(--r-button);
+}
+.item:hover { background: var(--soft-grey); }
+.grip { color: var(--border-strong); cursor: grab; flex: none; }
+.itemLabel { display: flex; align-items: center; gap: 10px; font-size: var(--fs-table); color: var(--text); flex: 1; }
+.itemLabel input { width: 15px; height: 15px; accent-color: var(--green-700); }
+.fixed { color: var(--text-muted); font-size: var(--fs-table); }
+.fixed span:nth-child(2) { flex: 1; }
+.fixedTag { font-size: 11px; font-weight: var(--fw-semibold); color: var(--text-muted); background: var(--soft-grey); padding: 2px 8px; border-radius: var(--r-pill); }
+
+.footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; }

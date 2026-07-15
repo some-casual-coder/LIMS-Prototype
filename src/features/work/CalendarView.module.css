@@ -1,0 +1,88 @@
+.wrap {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-panel);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.modes { display: inline-flex; gap: 2px; padding: 3px; background: var(--soft-grey); border: 1px solid var(--border); border-radius: var(--r-button); }
+.modeBtn { height: 30px; padding: 0 14px; border: none; background: transparent; border-radius: 6px; font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--text-muted); }
+.modeActive { background: var(--bg-card); color: var(--green-800); box-shadow: var(--shadow-sm); }
+.nav { display: inline-flex; align-items: center; gap: 8px; }
+.today { height: 32px; padding: 0 14px; border: 1px solid var(--border-strong); background: var(--bg-card); border-radius: var(--r-button); font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--text-strong); }
+.today:hover { background: var(--soft-grey); }
+.navArrow { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 1px solid var(--border-strong); background: var(--bg-card); border-radius: var(--r-button); color: var(--text-muted); }
+.navArrow:disabled { opacity: 0.5; cursor: not-allowed; }
+.range { font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--text-strong); min-width: 130px; text-align: center; }
+
+/* Week grid */
+.weekWrap { overflow-x: auto; }
+.weekHead { display: grid; grid-template-columns: 64px repeat(7, minmax(120px, 1fr)); border-bottom: 1px solid var(--border); }
+.gutterHead { border-right: 1px solid var(--border); }
+.dayHead { padding: 8px 10px; display: flex; align-items: center; gap: 8px; border-right: 1px solid var(--border); }
+.dayLabel { font-size: var(--fs-meta); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.dayDate { font-size: 16px; font-weight: var(--fw-semibold); color: var(--text-strong); }
+.dayDateToday {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 27px; height: 27px; border-radius: 50%; background: var(--green-700); color: #fff; font-size: 14px;
+}
+
+/* All-day strip */
+.allDay { display: grid; grid-template-columns: 64px repeat(7, minmax(120px, 1fr)); border-bottom: 1px solid var(--border); min-height: 30px; }
+.allDayLabel { font-size: 10.5px; color: var(--text-muted); padding: 8px; border-right: 1px solid var(--border); text-align: right; }
+.allDayCell { border-right: 1px solid var(--border); }
+
+.weekBody { display: grid; grid-template-columns: 64px repeat(7, minmax(120px, 1fr)); }
+.gutter { border-right: 1px solid var(--border); }
+.hourRow { position: relative; border-bottom: 1px solid transparent; }
+.hourLabel { position: absolute; top: -7px; right: 8px; font-size: 11px; color: var(--text-muted); }
+.dayCol { position: relative; border-right: 1px solid var(--border); }
+.dayColToday { background: rgba(232, 244, 236, 0.35); }
+.gridLine { position: absolute; left: 0; right: 0; border-top: 1px solid var(--border); }
+
+.event {
+  position: absolute; left: 5px; right: 5px;
+  border: 1px solid rgba(23, 33, 27, 0.07);
+  border-radius: 5px;
+  padding: 4px 8px; text-align: left; overflow: hidden; display: flex; flex-direction: column; gap: 1px;
+}
+.event:disabled { cursor: default; }
+.event:not(:disabled):hover { filter: brightness(0.98); box-shadow: var(--shadow-sm); }
+.eventTime { font-size: 10.5px; opacity: 0.8; font-weight: var(--fw-medium); }
+.eventTitle { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: var(--fw-semibold); line-height: 1.25; }
+
+/* Agenda */
+.agenda { padding: 12px 16px; }
+.agendaDay { margin-bottom: 18px; }
+.agendaDate { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+.agendaWeekday { font-size: var(--fs-meta); color: var(--text-muted); text-transform: uppercase; }
+.agendaNum { font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--text-strong); }
+.agendaList { display: flex; flex-direction: column; gap: 6px; }
+.agendaItem { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--r-button); background: var(--bg-card); text-align: left; }
+.agendaItem:not(:disabled):hover { background: #f8fbf8; }
+.agendaBar { width: 3px; align-self: stretch; border-radius: 2px; flex: none; }
+.agendaIcon { display: inline-flex; }
+.agendaText { display: flex; flex-direction: column; }
+.agendaTitle { font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--text-strong); }
+.agendaMeta { font-size: var(--fs-meta); color: var(--text-muted); }
+
+/* Month */
+.month { padding: 12px 16px 16px; }
+.monthHead { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 6px; }
+.monthHead span { font-size: var(--fs-meta); color: var(--text-muted); text-transform: uppercase; text-align: center; }
+.monthGrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.monthCell { min-height: 84px; border: 1px solid var(--border); border-radius: 10px; padding: 6px; background: var(--bg-doc); display: flex; flex-direction: column; gap: 3px; }
+.monthToday { border-color: var(--green-700); background: var(--soft-green); }
+.monthNum { font-size: var(--fs-meta); font-weight: var(--fw-semibold); color: var(--text-strong); }
+.monthEvent { font-size: 10.5px; font-weight: var(--fw-semibold); padding: 2px 6px; border-radius: 6px; border: none; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.monthEvent:disabled { cursor: default; }

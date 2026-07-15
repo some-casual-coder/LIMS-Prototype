@@ -1,0 +1,57 @@
+.headBtn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border: none; background: transparent; border-radius: var(--r-button); color: var(--text-muted);
+}
+.headBtn:hover { background: var(--soft-grey); color: var(--text-strong); }
+.headBtn[aria-pressed='true'] { color: var(--gold-strong); }
+
+.menu { display: flex; flex-direction: column; gap: 1px; min-width: 170px; }
+.menuItem { padding: 9px 10px; border: none; background: transparent; border-radius: var(--r-button); font-size: var(--fs-table); color: var(--text-strong); text-align: left; }
+.menuItem:hover { background: var(--soft-grey); }
+
+.pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.classPill {
+  display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: var(--r-pill);
+  background: var(--soft-grey); color: var(--text); font-size: var(--fs-meta); font-weight: var(--fw-semibold);
+}
+.due { display: inline-flex; align-items: center; gap: 7px; margin-top: 12px; font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--text); }
+.dueUrgent { color: var(--on-red); }
+.due svg { color: var(--text-muted); }
+.dueUrgent svg { color: var(--on-red); }
+
+.section { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); }
+.section:first-of-type { border-top: none; }
+.sectionTitle { font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--text-strong); margin-bottom: 12px; }
+
+.reqAction { font-size: var(--fs-body); color: var(--text); line-height: 1.55; }
+
+.workflow { display: flex; flex-direction: column; gap: 14px; }
+.workflow li { display: flex; gap: 11px; }
+.workflow li div { display: flex; flex-direction: column; }
+.wfLabel { font-size: var(--fs-meta); color: var(--text-muted); }
+.wfValue { font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--text-strong); }
+.wfSub { font-size: var(--fs-meta); color: var(--text-muted); margin-top: 1px; }
+.wfDone svg { color: var(--status-success); }
+.wfCurrent svg { color: var(--status-danger); }
+.wfNext svg { color: var(--border-strong); }
+
+.respList { display: flex; flex-direction: column; gap: 10px; }
+.respList > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.respList dt { font-size: var(--fs-table); color: var(--text-muted); }
+.respList dd { font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--text-strong); text-align: right; }
+.progressRow { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+.progressLabel { font-size: var(--fs-table); color: var(--text-muted); flex: none; }
+.progressTrack { flex: 1; height: 8px; background: var(--soft-grey); border-radius: 999px; overflow: hidden; }
+.progressFill { height: 100%; background: var(--green-700); border-radius: 999px; }
+.progressText { font-size: var(--fs-meta); color: var(--text-muted); margin-top: 6px; text-align: right; }
+
+.issues { display: flex; flex-direction: column; gap: 8px; }
+.issues li { display: flex; align-items: center; gap: 9px; padding: 10px 12px; border-radius: var(--r-button); font-size: var(--fs-table); font-weight: var(--fw-medium); }
+.issueError { background: var(--soft-red); color: var(--on-red); }
+.issueWarn { background: var(--soft-amber); color: var(--on-amber); }
+
+.people { display: flex; flex-direction: column; gap: 12px; }
+.person { display: flex; align-items: center; gap: 11px; }
+.person > span { display: flex; flex-direction: column; }
+.personName { font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--text-strong); }
+.personRole { font-size: var(--fs-meta); color: var(--text-muted); }

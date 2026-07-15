@@ -1,0 +1,13 @@
+.intro { font-size: var(--fs-body); color: var(--text); line-height: 1.55; }
+.checklistTitle { font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--text-strong); margin: 20px 0 12px; }
+.checklist { display: flex; flex-direction: column; gap: 10px; }
+.checklist li { display: flex; align-items: center; gap: 10px; font-size: var(--fs-table); }
+.done { color: var(--text); }
+.done svg { color: var(--status-success); }
+.pending { color: var(--text-muted); }
+.pending svg { color: var(--border-strong); }
+.blocked {
+  display: flex; align-items: center; gap: 9px; margin-top: 18px; padding: 12px 14px;
+  background: var(--soft-red); color: var(--on-red); border-radius: var(--r-button); font-size: var(--fs-table); font-weight: var(--fw-medium);
+}
+.footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; }

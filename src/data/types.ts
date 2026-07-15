@@ -11,7 +11,8 @@ export type WorkflowType =
   | 'Votes and Proceedings'
   | 'Papers Laid'
   | 'Statutory Instrument'
-  | 'Supply';
+  | 'Supply'
+  | 'Report';
 
 // The illustrative configured workflow stage machine.
 export type WorkflowStage =

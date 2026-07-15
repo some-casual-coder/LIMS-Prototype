@@ -5,4 +5,5 @@ export { Avatar } from './Avatar';
 export { StatusBadge } from './StatusBadge';
 export { SegmentedControl } from './SegmentedControl';
 export { Popover } from './Popover';
+export { SideSheet } from './SideSheet';
 export { toneVars, priorityTone, stageTone, type Tone } from './tone';

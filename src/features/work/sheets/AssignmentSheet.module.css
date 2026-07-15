@@ -1,0 +1,32 @@
+.permission {
+  display: flex; align-items: flex-start; gap: 9px; padding: 12px 14px;
+  background: var(--soft-amber); color: var(--on-amber); border-radius: var(--r-button);
+  font-size: var(--fs-table); font-weight: var(--fw-medium); line-height: 1.45; margin-bottom: 18px;
+}
+.permission svg { flex: none; margin-top: 1px; }
+
+.h3 { font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--text-strong); margin: 18px 0 10px; }
+.person { display: flex; align-items: center; gap: 11px; padding: 8px 0; }
+.person > span { display: flex; flex-direction: column; }
+.name { font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--text-strong); }
+.role { font-size: var(--fs-meta); color: var(--text-muted); }
+
+.search {
+  display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px;
+  border: 1px solid var(--border-strong); border-radius: var(--r-button); background: var(--bg-card);
+}
+.search svg { color: var(--text-muted); }
+.search input { border: none; outline: none; background: transparent; font-size: var(--fs-table); width: 100%; color: var(--text-strong); }
+
+.results { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; }
+.resultItem { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px; border: none; background: transparent; border-radius: var(--r-button); text-align: left; }
+.resultItem:hover { background: var(--soft-grey); }
+
+.field { display: flex; flex-direction: column; gap: 6px; margin: 18px 0 14px; }
+.label { font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--text-strong); }
+.textarea { border: 1px solid var(--border-strong); border-radius: var(--r-input); padding: 9px 12px; font-family: inherit; font-size: var(--fs-body); resize: vertical; line-height: 1.5; color: var(--text-strong); }
+.textarea:focus { outline: none; border-color: var(--green-700); box-shadow: 0 0 0 3px rgba(11,107,58,0.12); }
+.toggle { display: flex; align-items: center; gap: 10px; font-size: var(--fs-table); color: var(--text); }
+.toggle input { width: 16px; height: 16px; accent-color: var(--green-700); }
+
+.footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; }

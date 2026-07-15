@@ -5,6 +5,7 @@ import type {
   AuditEvent, Comment, ValidationIssue, BillContent, WorkflowStage,
 } from '@/data/types';
 import { buildInitialState } from '@/data/seed';
+import { defaultPinned, defaultRecentlyOpened } from '@/data/myWork';
 
 // Runtime demo state. The persona layer (role, offline) plus all mutable
 // legislative data live here, persisted to localStorage. A single reset
@@ -13,6 +14,10 @@ interface DemoState {
   // Session / presenter state
   currentRole: RoleId | null;
   offline: boolean;
+
+  // My Work personalisation
+  pinned: string[];
+  recentlyOpened: string[];
 
   // Mutable legislative data
   records: LegislativeRecord[];
@@ -29,6 +34,9 @@ interface DemoState {
   setRole: (role: RoleId | null) => void;
   toggleOffline: () => void;
   reset: () => void;
+
+  togglePin: (recordId: string) => void;
+  markRecentlyOpened: (recordId: string) => void;
 
   updateRecord: (id: string, patch: Partial<LegislativeRecord>) => void;
   setStage: (recordId: string, stage: WorkflowStage) => void;
@@ -58,11 +66,28 @@ export const useDemoStore = create<DemoState>()(
     (set) => ({
       currentRole: null,
       offline: false,
+      pinned: [...defaultPinned],
+      recentlyOpened: [...defaultRecentlyOpened],
       ...initial,
 
       setRole: (role) => set({ currentRole: role }),
       toggleOffline: () => set((s) => ({ offline: !s.offline })),
-      reset: () => set({ currentRole: null, offline: false, ...buildInitialState() }),
+      reset: () => set({
+        currentRole: null, offline: false,
+        pinned: [...defaultPinned], recentlyOpened: [...defaultRecentlyOpened],
+        ...buildInitialState(),
+      }),
+
+      togglePin: (recordId) =>
+        set((s) => ({
+          pinned: s.pinned.includes(recordId)
+            ? s.pinned.filter((id) => id !== recordId)
+            : [recordId, ...s.pinned].slice(0, 5),
+        })),
+      markRecentlyOpened: (recordId) =>
+        set((s) => ({
+          recentlyOpened: [recordId, ...s.recentlyOpened.filter((id) => id !== recordId)].slice(0, 4),
+        })),
 
       updateRecord: (id, patch) =>
         set((s) => ({
