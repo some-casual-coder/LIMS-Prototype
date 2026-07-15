@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, Fragment } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronRight, Bell, HelpCircle, ShieldCheck, WifiOff, ChevronDown, LogOut } from 'lucide-react';
+import { ChevronRight, Bell, ChevronDown, LogOut, Menu } from 'lucide-react';
 import { GlobalSearch } from './GlobalSearch';
 import { Avatar, IconButton } from '@/components/ui';
 import { dirAbbrev } from '@/lib/format';
@@ -17,11 +17,11 @@ interface Props {
   breadcrumb: Crumb[];
   persona: Persona;
   unreadCount: number;
+  onOpenNavigation: () => void;
 }
 
-export function TopHeader({ breadcrumb, persona, unreadCount }: Props) {
+export function TopHeader({ breadcrumb, persona, unreadCount, onOpenNavigation }: Props) {
   const navigate = useNavigate();
-  const offline = useDemoStore((s) => s.offline);
   const setRole = useDemoStore((s) => s.setRole);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -41,6 +41,9 @@ export function TopHeader({ breadcrumb, persona, unreadCount }: Props) {
 
   return (
     <header className={styles.header}>
+      <IconButton label="Open navigation" onClick={onOpenNavigation} className={styles.mobileMenu}>
+        <Menu />
+      </IconButton>
       <nav className={styles.breadcrumb} aria-label="Breadcrumb">
         <ol>
           {breadcrumb.map((c, i) => (
@@ -63,18 +66,9 @@ export function TopHeader({ breadcrumb, persona, unreadCount }: Props) {
       <GlobalSearch />
 
       <div className={styles.right}>
-        <span className={`${styles.ai} ${offline ? styles.aiOffline : ''}`} title={offline ? 'Secure external AI is unavailable. Local assistance is active.' : 'Secure AI assistant is available'}>
-          {offline ? <WifiOff width={15} height={15} aria-hidden /> : <ShieldCheck width={15} height={15} aria-hidden />}
-          <span>{offline ? 'Local AI active' : 'Secure AI available'}</span>
-        </span>
-
         <IconButton label={`Notifications, ${unreadCount} unread`} badge={unreadCount} onClick={() => navigate('/notifications')}>
           <Bell />
         </IconButton>
-        <IconButton label="Help and training" onClick={() => navigate('/help')}>
-          <HelpCircle />
-        </IconButton>
-
         <div className={styles.profileWrap} ref={menuRef}>
           <button className={styles.profile} onClick={() => setMenuOpen((o) => !o)} aria-haspopup="menu" aria-expanded={menuOpen}>
             <Avatar initials={persona.initials} size={34} decorative />

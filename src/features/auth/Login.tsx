@@ -39,7 +39,7 @@ export function Login() {
 
         <section className={styles.formSide} aria-label="Choose your identity">
           <div className={styles.formMark}>
-            <LogoMark size={54} />
+            <LogoMark size={54} framed={false} />
             <span />
             <div>
               <strong>Parliament of Kenya</strong>

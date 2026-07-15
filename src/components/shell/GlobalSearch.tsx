@@ -1,6 +1,6 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, FileText, Bookmark, MessageSquareText, History } from 'lucide-react';
+import { Search, FileText, Bookmark, History } from 'lucide-react';
 import { useDemoStore } from '@/store/demoStore';
 import styles from './GlobalSearch.module.css';
 
@@ -21,6 +21,17 @@ export function GlobalSearch() {
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    function focusGlobalSearch(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        inputRef.current?.focus();
+      }
+    }
+    document.addEventListener('keydown', focusGlobalSearch);
+    return () => document.removeEventListener('keydown', focusGlobalSearch);
+  }, []);
+
   const suggestions = useMemo<Suggestion[]>(() => {
     const query = q.trim().toLowerCase();
     if (!query) return [];
@@ -39,9 +50,6 @@ export function GlobalSearch() {
     if (query && ('digital public services'.includes(query) || query.includes('digital') || query.includes('vulnerable') || query.includes('clause'))) {
       out.push({ icon: <Bookmark {...ic} />, label: 'Clause 14 — Protection of vulnerable users', meta: 'Digital Public Services Bill, 2026', to: '/legislative/NA-BILL-2026-015?highlight=clause-14' });
       out.push({ icon: <History {...ic} />, label: 'Version 4.0 — Legal Review Draft', meta: 'NA/BILL/2026/015', to: '/legislative/NA-BILL-2026-015/versions' });
-    }
-    if (query.includes('pps') || query.includes('submission') || query.includes('digital')) {
-      out.push({ icon: <MessageSquareText {...ic} />, label: 'Public submission PPS-2026-00841', meta: 'Awaiting classification', to: '/participation' });
     }
     return out.slice(0, 6);
   }, [q, records]);

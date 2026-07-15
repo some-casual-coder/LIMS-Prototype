@@ -19,6 +19,9 @@
 /* Brand */
 .brand {
   padding: 16px 16px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .brandLink {
   display: flex;
@@ -26,6 +29,11 @@
   gap: 12px;
   border-radius: var(--r-button);
   padding: 4px;
+  min-width: 0;
+  flex: 1;
+}
+.mobileClose {
+  display: none;
 }
 .brandLink:focus-visible {
   box-shadow: var(--focus-ring-onDark);
@@ -77,6 +85,15 @@
 .group {
   margin-top: 12px;
 }
+.recentGroup {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+.recentGroup .groupLabel {
+  color: #bdd5c7;
+  font-weight: var(--fw-bold);
+}
 .groupLabel {
   display: flex;
   align-items: center;
@@ -89,6 +106,30 @@
   padding: 4px 10px;
 }
 .groupLabel svg { opacity: 0.8; }
+
+.recordItem {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 34px;
+  padding: 6px 10px;
+  border-radius: var(--r-button);
+  color: #cfe2d6;
+  font-size: 12.5px;
+  line-height: 1.2;
+}
+.recordItem:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+.recordItem:focus-visible { box-shadow: var(--focus-ring-onDark); }
+.recordIcon { color: #9dc0ac; flex: none; }
+.recordLabel {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .item {
   position: relative;
@@ -154,36 +195,34 @@
   text-overflow: ellipsis;
 }
 
-.countBadge {
-  min-width: 20px;
-  height: 18px;
-  padding: 0 6px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--gold);
-  color: #3b2f06;
-  font-size: 11px;
-  font-weight: var(--fw-bold);
-  border-radius: 999px;
-}
-.dotBadge {
-  position: absolute;
-  top: 6px;
-  right: 14px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--gold);
-}
-
 /* Bottom */
 .bottom {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 4px;
+}
+
+.utilityItem {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 36px;
+  padding: 8px 10px;
+  border-radius: var(--r-button);
+  color: #cfe2d6;
+  font-size: var(--fs-sidebar);
+  font-weight: var(--fw-medium);
+}
+.utilityItem:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+.utilityItem:focus-visible { box-shadow: var(--focus-ring-onDark); }
+.collapsed .utilityItem {
+  justify-content: center;
+  padding-inline: 0;
 }
 .collapsed .bottom {
   padding: 10px;
@@ -206,4 +245,59 @@
 }
 .collapseBtn:focus-visible {
   box-shadow: var(--focus-ring-onDark);
+}
+
+@media (max-width: 1180px) and (min-width: 721px) {
+  .collapseBtn {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .sidebar,
+  .collapsed {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 60;
+    width: min(292px, 86vw);
+    transform: translateX(-100%);
+    transition: transform 0.18s ease;
+    box-shadow: 16px 0 34px rgba(0, 0, 0, 0.22);
+  }
+  .mobileOpen {
+    transform: translateX(0);
+  }
+  .mobileOpen .brandDivider,
+  .mobileOpen .brandText,
+  .mobileOpen .itemLabel,
+  .mobileOpen .groupLabel {
+    display: flex;
+  }
+  .mobileOpen .scroll {
+    padding: 6px 12px 12px;
+  }
+  .mobileOpen .item {
+    justify-content: flex-start;
+    padding: 8px 10px;
+  }
+  .mobileOpen .active::before {
+    left: -12px;
+  }
+  .mobileClose {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex: none;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: var(--r-button);
+    color: var(--text-onDark);
+  }
+  .mobileClose:focus-visible {
+    box-shadow: var(--focus-ring-onDark);
+  }
+  .collapseBtn {
+    display: none;
+  }
 }

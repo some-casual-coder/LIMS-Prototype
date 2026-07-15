@@ -13,7 +13,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
       <header className={styles.header}>
         <div className={styles.headInner}>
           <Link to="/public" className={styles.brand}>
-            <LogoMark size={40} />
+            <LogoMark size={40} framed />
             <span className={styles.brandText}>
               <span className={styles.brandName}>National Assembly of Kenya</span>
               <span className={styles.brandSub}>Public Participation Portal</span>

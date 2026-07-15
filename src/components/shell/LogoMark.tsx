@@ -1,8 +1,6 @@
 import emblem from '@/assets/national-assembly-emblem-sq.png';
 
-// Official National Assembly of Kenya emblem, framed in a clean white rounded
-// box so it reads clearly on both the dark green sidebar and light surfaces.
-export function LogoMark({ size = 34 }: { size?: number }) {
+export function LogoMark({ size = 34, framed = false }: { size?: number; framed?: boolean }) {
   return (
     <span
       style={{
@@ -12,16 +10,16 @@ export function LogoMark({ size = 34 }: { size?: number }) {
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#fff',
-        borderRadius: Math.round(size * 0.26),
-        border: '1px solid rgba(16, 33, 24, 0.08)',
-        boxShadow: '0 1px 2px rgba(16, 33, 24, 0.14)',
+        background: framed ? '#fff' : 'transparent',
+        borderRadius: framed ? Math.round(size * 0.26) : 0,
+        border: framed ? '1px solid rgba(16, 33, 24, 0.08)' : 0,
+        boxShadow: framed ? '0 1px 2px rgba(16, 33, 24, 0.14)' : 'none',
       }}
     >
       <img
         src={emblem}
-        width={Math.round(size * 0.82)}
-        height={Math.round(size * 0.82)}
+        width={Math.round(size * (framed ? 0.82 : 1))}
+        height={Math.round(size * (framed ? 0.82 : 1))}
         alt="National Assembly of Kenya"
         style={{ display: 'block', objectFit: 'contain' }}
       />

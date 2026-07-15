@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import {
-  LayoutGrid, ListChecks, Bell, Scale, Vote, MessageSquare, MessageSquareQuote,
-  ScrollText, PenLine, ClipboardCheck, Search, ScanLine, Library, Workflow,
+  LayoutGrid, ListChecks, Scale, Vote, MessageSquare, MessageSquareQuote,
+  ScrollText, PenLine, ClipboardCheck, Search, ScanLine, Library,
 } from 'lucide-react';
 import type { RoleId } from '@/data/types';
 
@@ -9,8 +9,6 @@ export interface NavItem {
   label: string;
   to: string;
   icon: ReactNode;
-  /** When set, item shows an unread badge sourced from notifications. */
-  badgeKey?: 'notifications';
   /** Restrict to certain roles; absent = all internal roles. */
   roles?: RoleId[];
 }
@@ -31,14 +29,13 @@ export const navGroups: NavGroup[] = [
     items: [
       { label: 'Command Centre', to: '/dashboard', icon: <LayoutGrid {...ic} /> },
       { label: 'My Work', to: '/work', icon: <ListChecks {...ic} /> },
-      { label: 'Notifications', to: '/notifications', icon: <Bell {...ic} />, badgeKey: 'notifications' },
     ],
   },
   {
     label: 'Legislative Work',
     roles: legislativeRoles,
     items: [
-      { label: 'Bills', to: '/work?type=Bill', icon: <Scale {...ic} /> },
+      { label: 'Bills', to: '/bills', icon: <Scale {...ic} /> },
       { label: 'Motions', to: '/work?type=Motion', icon: <Vote {...ic} /> },
       { label: 'Questions', to: '/work?type=Question', icon: <MessageSquare {...ic} /> },
       { label: 'Statements', to: '/work?type=Statement', icon: <MessageSquareQuote {...ic} /> },
@@ -51,13 +48,6 @@ export const navGroups: NavGroup[] = [
     items: [
       { label: 'My Drafts', to: '/work?status=in-progress', icon: <PenLine {...ic} /> },
       { label: 'Review Queue', to: '/work?status=awaiting-review', icon: <ClipboardCheck {...ic} /> },
-    ],
-  },
-  {
-    label: 'Workflow',
-    roles: ['clerk', 'ict-admin'],
-    items: [
-      { label: 'Workflow Catalogue', to: '/workflows', icon: <Workflow {...ic} /> },
     ],
   },
   {

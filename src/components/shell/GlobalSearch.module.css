@@ -1,6 +1,7 @@
 .wrap {
   position: relative;
   flex: 1;
+  min-width: 120px;
   max-width: 620px;
 }
 
@@ -27,12 +28,38 @@
 }
 
 .input {
+  min-width: 0;
   flex: 1;
   border: none;
   background: transparent;
   outline: none;
   font-size: var(--fs-body);
   color: var(--text-strong);
+}
+.input:focus-visible {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+@media (max-width: 1180px) {
+  .kbd {
+    display: none;
+  }
+  .field {
+    padding: 0 10px;
+  }
+}
+
+@media (max-width: 720px) {
+  .field {
+    height: 38px;
+  }
+  .input {
+    font-size: var(--fs-table);
+  }
+  .input::placeholder {
+    color: transparent;
+  }
 }
 .input::placeholder {
   color: var(--text-muted);
