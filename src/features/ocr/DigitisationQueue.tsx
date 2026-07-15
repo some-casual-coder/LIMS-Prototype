@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ScanLine, Archive, Clock, Loader2, UserCheck, CheckCircle2, AlertTriangle, ChevronDown,
-  Search as SearchIcon, SlidersHorizontal, Save, MoreVertical, FileText, Lock,
+  Search as SearchIcon, SlidersHorizontal, Save, MoreVertical, FileText, Lock, Files,
+  Database, Gauge, CircleAlert, History, FolderArchive,
 } from 'lucide-react';
 import { AppShell } from '@/components/shell';
 import { Button, Popover } from '@/components/ui';
@@ -46,6 +47,7 @@ export function DigitisationQueue() {
   const { showToast, ToastHost } = useToast();
 
   const statusParam = params.get('status');
+  const view = params.get('view') ?? (statusParam ? 'queue' : 'overview');
   const tabFromStatus = statusParam === 'processing' ? 'processing' : statusParam === 'needs-verification' ? 'mine'
     : statusParam === 'ready-to-archive' ? 'ready' : statusParam === 'failed' ? 'attention' : null;
   const [tab, setTab] = useState(tabFromStatus ?? (currentRole === 'records-officer' ? 'mine' : 'all'));
@@ -84,6 +86,7 @@ export function DigitisationQueue() {
 
   const openSheet = (n: string) => setParams((p) => { p.set('sheet', n); return p; });
   const closeSheet = () => setParams((p) => { p.delete('sheet'); return p; }, { replace: true });
+  const setView = (next: 'overview' | 'queue') => setParams((p) => { p.set('view', next); if (next === 'overview') p.delete('status'); return p; });
 
   return (
     <AppShell breadcrumb={[{ label: 'Home', to: '/dashboard' }, { label: 'Search & Knowledge' }, { label: 'OCR & Historical Records' }]}>
@@ -98,6 +101,15 @@ export function DigitisationQueue() {
           <Button variant="primary" leftIcon={<ScanLine width={16} height={16} />} onClick={() => openSheet('import')}>Import Historical Record</Button>
         </div>
       </div>
+
+      <div className={styles.viewTabs} role="tablist" aria-label="OCR workspace views">
+        <button role="tab" aria-selected={view === 'overview'} className={`${styles.viewTab} ${view === 'overview' ? styles.viewTabActive : ''}`} onClick={() => setView('overview')}>Overview</button>
+        <button role="tab" aria-selected={view === 'queue'} className={`${styles.viewTab} ${view === 'queue' ? styles.viewTabActive : ''}`} onClick={() => setView('queue')}>Work Queue <span>{jobs.filter((job) => job.status !== 'Verified').length}</span></button>
+      </div>
+
+      {view === 'overview' ? (
+        <OcrOverview jobs={jobs} counts={counts} navigate={navigate} onOpenQueue={(nextTab) => { setTab(nextTab); setView('queue'); }} />
+      ) : <>
 
       {/* Workload indicators */}
       <div className={styles.indicators}>
@@ -171,11 +183,86 @@ export function DigitisationQueue() {
           })}
         </div>
       )}
+      </>}
 
       <ImportSheet open={sheet === 'import'} onClose={closeSheet} showToast={showToast} />
       <ToastHost />
     </AppShell>
   );
+}
+
+function OcrOverview({ jobs, counts, navigate, onOpenQueue }: {
+  jobs: OcrJob[];
+  counts: Record<string, number>;
+  navigate: ReturnType<typeof useNavigate>;
+  onOpenQueue: (tab: string) => void;
+}) {
+  const active = jobs.filter((job) => job.status !== 'Verified');
+  const pages = active.reduce((sum, job) => sum + job.pageCount, 0);
+  const verification = jobs.filter((job) => ['Needs Verification', 'Quality Review', 'Attention Required'].includes(job.status));
+  const priority = [...active].sort((a, b) => {
+    const order: Record<string, number> = { 'Attention Required': 0, 'Needs Verification': 1, 'Quality Review': 2, 'Ready to Archive': 3, Processing: 4 };
+    return (order[a.status] ?? 9) - (order[b.status] ?? 9);
+  }).slice(0, 4);
+  const trend = [3, 5, 4, 7, 6, 8, 5, 9, 7, 10, 8, 11];
+  const types = Array.from(new Set(jobs.map((job) => job.recordType))).slice(0, 5).map((type) => ({ type, count: jobs.filter((job) => job.recordType === type).length }));
+  const recent = [...jobs].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 6);
+
+  return (
+    <div className={styles.overviewGrid}>
+      <section className={styles.metricGrid} aria-label="Digitisation workload summary">
+        <OverviewMetric icon={<Files width={18} height={18} />} label="Active records" value={active.length} note="Across the digitisation pipeline" tone="green" onClick={() => onOpenQueue('all')} />
+        <OverviewMetric icon={<Database width={18} height={18} />} label="Pages in pipeline" value={pages} note="Scanned pages under active control" tone="gold" onClick={() => onOpenQueue('processing')} />
+        <OverviewMetric icon={<UserCheck width={18} height={18} />} label="Verification workload" value={verification.length} note="Officer decision required" tone="red" onClick={() => onOpenQueue('mine')} />
+        <OverviewMetric icon={<FolderArchive width={18} height={18} />} label="Ready to archive" value={counts['Ready to Archive'] ?? 0} note="Quality checks complete" tone="charcoal" onClick={() => onOpenQueue('ready')} />
+      </section>
+
+      <section className={`${styles.overviewPanel} ${styles.pipelinePanel}`}>
+        <div className={styles.panelHeading}><div><p>Current workload</p><h2>Digitisation pipeline</h2></div><Gauge width={20} height={20} /></div>
+        <div className={styles.pipelineTotal}><strong>{active.length}</strong><span>active records</span></div>
+        <div className={styles.pipelineTicks} aria-label="Active records by processing status">
+          {INDICATORS.slice(1).map((indicator) => {
+            const amount = counts[indicator.key] ?? 0;
+            return <button key={indicator.key} className={styles.pipelineGroup} onClick={() => onOpenQueue(indicator.key === 'Processing' ? 'processing' : indicator.key === 'Attention Required' ? 'attention' : indicator.key === 'Ready to Archive' ? 'ready' : 'mine')} aria-label={`${indicator.label}: ${amount}`}>
+              <span className={`${styles.pipelineLines} ${styles['line_' + indicator.tone]}`}>{Array.from({ length: Math.max(2, amount + 1) }, (_, i) => <i key={i} />)}</span>
+              <span>{indicator.label}</span><strong>{amount}</strong>
+            </button>;
+          })}
+        </div>
+      </section>
+
+      <section className={`${styles.overviewPanel} ${styles.activityPanel}`}>
+        <div className={styles.panelHeading}><div><p>Latest changes</p><h2>Recent activity</h2></div><History width={20} height={20} /></div>
+        <ul className={styles.activityList}>
+          {recent.map((job) => <li key={job.id}><button onClick={() => navigate(actionFor(job).to)}><span className={styles.activityIcon}><FileText width={15} height={15} /></span><span><strong>{job.title}</strong><small>{job.status} · {relTime(job.updatedAt)}</small></span></button></li>)}
+        </ul>
+      </section>
+
+      <section className={`${styles.overviewPanel} ${styles.trendPanel}`}>
+        <div className={styles.panelHeading}><div><p>Illustrative reporting series</p><h2>Records processed per month</h2></div><span className={styles.period}>Jan–Dec 2026</span></div>
+        <div className={styles.barChart} role="img" aria-label="Illustrative monthly records processed, ranging from three to eleven records">
+          {trend.map((value, index) => <div key={index} className={styles.barColumn}><span className={styles.barValue}>{value}</span><span className={styles.barTrack}>{Array.from({ length: 11 }, (_, tick) => <i key={tick} className={tick >= 11 - value ? styles.barOn : ''} />)}</span><small>{['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][index]}</small></div>)}
+        </div>
+        <p className={styles.chartNote}>Throughput reflects records completing OCR extraction or verification in each month.</p>
+      </section>
+
+      <section className={`${styles.overviewPanel} ${styles.mixPanel}`}>
+        <div className={styles.panelHeading}><div><p>Active collection</p><h2>Document types</h2></div><span className={styles.period}>{jobs.length} records</span></div>
+        <ul className={styles.typeList}>{types.map((item, index) => <li key={item.type}><span className={styles.typeRank}>{index + 1}</span><span>{item.type}</span><strong>{item.count}</strong></li>)}</ul>
+        <button className={styles.panelLink} onClick={() => onOpenQueue('all')}>Open complete record list</button>
+      </section>
+
+      <section className={`${styles.overviewPanel} ${styles.priorityPanel}`}>
+        <div className={styles.panelHeading}><div><p>Operational priority</p><h2>Requires attention</h2></div><CircleAlert width={20} height={20} /></div>
+        <ul className={styles.priorityList}>{priority.map((job) => <li key={job.id}><button onClick={() => navigate(actionFor(job).to)}><span><strong>{job.title}</strong><small>{job.reference}</small></span><OcrStatusBadge status={job.status} /></button></li>)}</ul>
+        <button className={styles.panelLink} onClick={() => onOpenQueue('mine')}>Open verification queue</button>
+      </section>
+    </div>
+  );
+}
+
+function OverviewMetric({ icon, label, value, note, tone, onClick }: { icon: React.ReactNode; label: string; value: number; note: string; tone: string; onClick: () => void }) {
+  return <button className={`${styles.overviewMetric} ${styles['metric_' + tone]}`} onClick={onClick}><span className={styles.metricTop}><span>{label}</span><i>{icon}</i></span><strong>{value}</strong><small>{note}</small></button>;
 }
 
 function progressTone(status: OcrStatus): string {
