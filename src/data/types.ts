@@ -40,7 +40,8 @@ export type Directorate =
   | 'Directorate of Legal Services'
   | 'Directorate of Legislative and Procedural Services'
   | 'Office of the Clerk'
-  | 'Parliamentary Legislative Proposal Unit';
+  | 'Parliamentary Legislative Proposal Unit'
+  | 'Parliamentary Records Service';
 
 // The personas that can be selected at entry. `citizen` uses only the public portal.
 export type RoleId =
@@ -49,6 +50,7 @@ export type RoleId =
   | 'dlps-officer'
   | 'clerk'
   | 'participation-officer'
+  | 'records-officer'
   | 'ict-admin'
   | 'citizen';
 
@@ -402,4 +404,132 @@ export interface AccessRequest {
   note?: string;
   status: 'Pending' | 'Approved' | 'Declined';
   requestedAt: string;
+}
+
+// ---- OCR & Historical Records (Phase 5) ----
+
+export type OcrStatus =
+  | 'Awaiting Processing'
+  | 'Processing'
+  | 'Needs Verification'
+  | 'Quality Review'
+  | 'Ready to Archive'
+  | 'Verified'
+  | 'Attention Required';
+
+export type OcrLineKind = 'title' | 'heading' | 'subheading' | 'body' | 'page-number' | 'margin';
+
+// A single extracted line of text, positioned on the scan for region overlays.
+export interface OcrLine {
+  id: string;
+  n: number;
+  text: string;
+  kind: OcrLineKind;
+  confidence: number; // 0–100 extraction confidence
+  low?: boolean; // flagged low-confidence region
+  corrected?: boolean;
+  originalText?: string; // OCR value before correction
+  // Region rectangle on the scan page, as percentages of page dimensions.
+  region?: { top: number; left: number; width: number; height: number };
+}
+
+export type OcrPageState = 'not-reviewed' | 'in-progress' | 'verified' | 'needs-review' | 'missing';
+
+export interface OcrPage {
+  n: number;
+  state: OcrPageState;
+  confidence: number;
+  issues: number;
+  lines: OcrLine[];
+}
+
+export type OcrIssueSeverity = 'blocking' | 'review' | 'info';
+export type OcrIssueStatus = 'open' | 'resolved' | 'accepted' | 'unreadable' | 'flagged';
+
+export interface OcrIssue {
+  id: string;
+  page: number;
+  lineId?: string;
+  severity: OcrIssueSeverity;
+  type: string; // "Low confidence text", "Possible spelling error", …
+  title: string;
+  explanation?: string;
+  location: string; // "Page 7 · Paragraph 3 · Lines 8–10"
+  confidence?: number;
+  originalOcr?: string;
+  suggestion?: string;
+  status: OcrIssueStatus;
+}
+
+export interface OcrCorrection {
+  id: string;
+  page: number;
+  lineId: string;
+  original: string;
+  corrected: string;
+  officerId: RoleId | string;
+  at: string;
+  confidenceBefore: number;
+}
+
+export interface OcrStructureNode {
+  id: string;
+  label: string;
+  kind: 'title' | 'section' | 'subsection';
+  confirmed?: boolean;
+  children?: OcrStructureNode[];
+}
+
+export interface OcrMetaField {
+  field: string;
+  value: string;
+  state: 'Suggested' | 'Confirmed' | 'Needs Review';
+}
+
+export interface OcrChecklistItem {
+  id: string;
+  label: string;
+  done: boolean;
+  optional?: boolean;
+}
+
+// A digitisation job — one imported historical document moving through the pipeline.
+export interface OcrJob {
+  id: string; // HIST-OCR-2026-0048
+  reference: string; // HIST/OP/1984/0612
+  title: string;
+  dateLabel: string; // "12 June 1984"
+  recordType: WorkflowType | 'Committee Report' | 'Gazette' | 'Correspondence' | 'Other archival record';
+  sourceArchive: string;
+  sourceFormat: string; // "Scanned PDF"
+  pageCount: number;
+  status: OcrStatus;
+  processingStep?: string; // "Detecting structure"
+  processingProgress?: number; // 0–100 for actively processing
+  ocrConfidence: number;
+  lowConfidenceRegions: number;
+  verifiedPages: number;
+  issueCount: number;
+  assignedToId?: RoleId | string;
+  reviewerId?: RoleId | string;
+  updatedAt: string;
+  classification: Confidentiality;
+  restricted?: boolean;
+  physicalRef?: string;
+  shelf?: string;
+  language: string;
+  notes?: string;
+  importedById: RoleId | string;
+  importedAt: string;
+  checksum: string;
+  // Rich content for the primary demonstration record.
+  pages?: OcrPage[];
+  issues?: OcrIssue[];
+  corrections?: OcrCorrection[];
+  structure?: OcrStructureNode[];
+  metadata?: OcrMetaField[];
+  checklist?: OcrChecklistItem[];
+  // Flags used by exception-state demos.
+  suspectedMissingPage?: number;
+  suspectedDuplicateOf?: string;
 }

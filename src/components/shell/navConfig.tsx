@@ -56,6 +56,7 @@ export const navGroups: NavGroup[] = [
     items: [
       { label: 'Search', to: '/search', icon: <Search {...ic} /> },
       { label: 'Repository', to: '/repository', icon: <Library {...ic} /> },
+      { label: 'OCR & Historical Records', to: '/archive/ocr', icon: <ScanLine {...ic} /> },
       { label: 'Saved Searches', to: '/search/saved', icon: <Bookmark {...ic} /> },
       { label: 'Research Collections', to: '/research', icon: <FolderOpen {...ic} /> },
       { label: 'Recent Research', to: '/search/recent', icon: <History {...ic} /> },
@@ -65,7 +66,6 @@ export const navGroups: NavGroup[] = [
     label: 'Documents',
     items: [
       { label: 'Document Archive', to: '/documents', icon: <Archive {...ic} /> },
-      { label: 'OCR Import', to: '/documents/import', icon: <ScanLine {...ic} /> },
     ],
   },
   {

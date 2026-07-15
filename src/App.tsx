@@ -11,9 +11,13 @@ import { SavedSearchesPage } from '@/features/search/SavedSearchesPage';
 import { RecentResearchPage } from '@/features/search/RecentResearchPage';
 import { ResearchCollectionsPage, ResearchCollectionPage } from '@/features/search/ResearchCollections';
 import { Repository } from '@/features/repository/Repository';
+import { DigitisationQueue } from '@/features/ocr/DigitisationQueue';
+import { OcrProcessing } from '@/features/ocr/OcrProcessing';
+import { VerificationWorkspace } from '@/features/ocr/VerificationWorkspace';
+import { HistoricalRecordDetail } from '@/features/ocr/HistoricalRecordDetail';
 import { NotificationsPage } from '@/features/notifications/NotificationsPage';
 import {
-  DocumentArchivePage, OcrImportPage, ParticipationInboxPage, AnalyticsPage, AuditPage,
+  DocumentArchivePage, ParticipationInboxPage, AnalyticsPage, AuditPage,
   HelpPage, VersionsPage, WorkflowPage, PublishPage,
 } from '@/features/common/previewRoutes';
 import { DraftingWorkspace } from '@/features/legislative/editor/DraftingWorkspace';
@@ -60,8 +64,12 @@ export default function App() {
         <Route path="/repository/:collection" element={<Repository />} />
         <Route path="/research" element={<ResearchCollectionsPage />} />
         <Route path="/research/:collectionId" element={<ResearchCollectionPage />} />
+        <Route path="/repository/historical-records/:id" element={<HistoricalRecordDetail />} />
+        <Route path="/archive/ocr" element={<DigitisationQueue />} />
+        <Route path="/archive/ocr/jobs/:id" element={<OcrProcessing />} />
+        <Route path="/archive/ocr/jobs/:id/verify" element={<VerificationWorkspace />} />
         <Route path="/documents" element={<DocumentArchivePage />} />
-        <Route path="/documents/import" element={<OcrImportPage />} />
+        <Route path="/documents/import" element={<Navigate to="/archive/ocr" replace />} />
         <Route path="/participation" element={<ParticipationInboxPage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/audit" element={<AuditPage />} />

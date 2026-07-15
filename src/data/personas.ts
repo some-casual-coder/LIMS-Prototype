@@ -50,6 +50,15 @@ export const personas: Persona[] = [
     summary: 'Receives, validates, classifies and routes public submissions and maintains citizen-visible status.',
   },
   {
+    id: 'records-officer',
+    name: 'Lydia Mutua',
+    roleTitle: 'Senior Records Officer',
+    directorate: 'Parliamentary Records Service',
+    initials: 'LM',
+    internal: true,
+    summary: 'Imports and digitises historical records, verifies OCR text, confirms metadata and archives verified records for search.',
+  },
+  {
     id: 'ict-admin',
     name: 'Samuel Kiprop',
     roleTitle: 'ICT Administrator',
@@ -78,9 +87,13 @@ export const officers: Officer[] = [
   { id: 'dlps-officer', name: 'Ruth Naliaka', roleTitle: 'Principal Procedural Officer', directorate: 'Directorate of Legislative and Procedural Services', initials: 'RN' },
   { id: 'clerk', name: 'Office of the Clerk', roleTitle: 'Clerk of the National Assembly', directorate: 'Office of the Clerk', initials: 'OC' },
   { id: 'participation-officer', name: 'Miriam Achieng', roleTitle: 'Public Participation Officer', directorate: 'Directorate of Legislative and Procedural Services', initials: 'MA' },
+  { id: 'records-officer', name: 'Lydia Mutua', roleTitle: 'Senior Records Officer', directorate: 'Parliamentary Records Service', initials: 'LM' },
   { id: 'ict-admin', name: 'Samuel Kiprop', roleTitle: 'ICT Administrator', directorate: 'Office of the Clerk', initials: 'SK' },
   { id: 'counsel-mumo', name: 'Alice Mumo', roleTitle: 'Legal Counsel', directorate: 'Directorate of Legal Services', initials: 'AM' },
   { id: 'counsel-barasa', name: 'Peter Barasa', roleTitle: 'Senior Legal Counsel', directorate: 'Directorate of Legal Services', initials: 'PB' },
+  { id: 'quality-reviewer', name: 'Samuel Kariuki', roleTitle: 'Principal Records Reviewer', directorate: 'Parliamentary Records Service', initials: 'SK' },
+  { id: 'archivist-edwin', name: 'Edwin Kamau', roleTitle: 'Archivist', directorate: 'Parliamentary Records Service', initials: 'EK' },
+  { id: 'records-wanjiru', name: 'Ruth Wanjiku', roleTitle: 'Records Officer', directorate: 'Parliamentary Records Service', initials: 'RW' },
   { id: 'citizen', name: 'James Mwangi', roleTitle: 'Member of the public', directorate: 'Public', initials: 'JM' },
 ];
 

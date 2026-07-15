@@ -58,6 +58,10 @@ ol {
   border-radius: var(--r-button);
 }
 
+/* Continuous spinner (used by processing/loading indicators). */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 0.9s linear infinite; }
+
 /* Respect reduced-motion preferences. */
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -1,0 +1,17 @@
+.rail {
+  flex: none;
+  width: 60px;
+  background: var(--green-sidebar);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+}
+.logo { display: inline-flex; }
+.expand {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 9px;
+  color: var(--text-onDark-muted); background: rgba(255, 255, 255, 0.06);
+}
+.expand:hover { background: rgba(255, 255, 255, 0.14); color: #fff; }

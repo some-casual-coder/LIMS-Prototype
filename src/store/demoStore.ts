@@ -4,12 +4,14 @@ import type {
   RoleId, LegislativeRecord, Version, Task, AppNotification, Submission,
   AuditEvent, Comment, ValidationIssue, BillContent, WorkflowStage,
   SavedSearch, RecentSearch, ResearchCollection, ResearchItem, AccessRequest,
+  OcrJob, OcrCorrection, OcrPageState, OcrIssueStatus,
 } from '@/data/types';
 import { buildInitialState } from '@/data/seed';
 import { defaultPinned, defaultRecentlyOpened } from '@/data/myWork';
 import {
   savedSearchesSeed, recentSearchesSeed, researchCollectionsSeed,
 } from '@/data/searchData';
+import { allJobsSeed } from '@/data/ocrData';
 
 // Runtime demo state. The persona layer (role, offline) plus all mutable
 // legislative data live here, persisted to localStorage. A single reset
@@ -28,6 +30,9 @@ interface DemoState {
   recentSearches: RecentSearch[];
   researchCollections: ResearchCollection[];
   accessRequests: AccessRequest[];
+
+  // OCR & Historical Records (Phase 5)
+  ocrJobs: OcrJob[];
 
   // Mutable legislative data
   records: LegislativeRecord[];
@@ -77,6 +82,16 @@ interface DemoState {
   createResearchCollection: (c: ResearchCollection) => void;
   addToResearchCollection: (collectionId: string, item: ResearchItem) => void;
   requestAccess: (req: AccessRequest) => void;
+
+  // OCR & Historical Records actions
+  addOcrJob: (job: OcrJob) => void;
+  updateOcrJob: (id: string, patch: Partial<OcrJob>) => void;
+  setOcrPageState: (jobId: string, page: number, state: OcrPageState) => void;
+  correctOcrLine: (jobId: string, page: number, lineId: string, corrected: string) => void;
+  setOcrIssueStatus: (jobId: string, issueId: string, status: OcrIssueStatus) => void;
+  confirmOcrMeta: (jobId: string, field: string) => void;
+  toggleOcrChecklist: (jobId: string, itemId: string) => void;
+  addRecord: (record: LegislativeRecord) => void;
 }
 
 const initial = buildInitialState();
@@ -92,6 +107,7 @@ export const useDemoStore = create<DemoState>()(
       recentSearches: structuredClone(recentSearchesSeed),
       researchCollections: structuredClone(researchCollectionsSeed),
       accessRequests: [],
+      ocrJobs: structuredClone(allJobsSeed),
       ...initial,
 
       setRole: (role) => set({ currentRole: role }),
@@ -103,6 +119,7 @@ export const useDemoStore = create<DemoState>()(
         recentSearches: structuredClone(recentSearchesSeed),
         researchCollections: structuredClone(researchCollectionsSeed),
         accessRequests: [],
+        ocrJobs: structuredClone(allJobsSeed),
         ...buildInitialState(),
       }),
 
@@ -197,10 +214,75 @@ export const useDemoStore = create<DemoState>()(
           ),
         })),
       requestAccess: (req) => set((s) => ({ accessRequests: [req, ...s.accessRequests] })),
+
+      addOcrJob: (job) => set((s) => ({ ocrJobs: [job, ...s.ocrJobs] })),
+      updateOcrJob: (id, patch) =>
+        set((s) => ({ ocrJobs: s.ocrJobs.map((j) => (j.id === id ? { ...j, ...patch, updatedAt: new Date().toISOString() } : j)) })),
+      setOcrPageState: (jobId, page, state) =>
+        set((s) => ({
+          ocrJobs: s.ocrJobs.map((j) => {
+            if (j.id !== jobId || !j.pages) return j;
+            const pages = j.pages.map((p) => (p.n === page ? { ...p, state } : p));
+            return { ...j, pages, verifiedPages: pages.filter((p) => p.state === 'verified').length };
+          }),
+        })),
+      correctOcrLine: (jobId, page, lineId, corrected) =>
+        set((s) => ({
+          ocrJobs: s.ocrJobs.map((j) => {
+            if (j.id !== jobId || !j.pages) return j;
+            let entry: OcrCorrection | null = null;
+            const pages = j.pages.map((p) => {
+              if (p.n !== page) return p;
+              const lines = p.lines.map((l) => {
+                if (l.id !== lineId) return l;
+                entry = {
+                  id: `cor-${Date.now().toString(36)}`, page, lineId,
+                  original: l.originalText ?? l.text, corrected, officerId: s.currentRole ?? 'records-officer',
+                  at: new Date().toISOString(), confidenceBefore: l.confidence,
+                };
+                return { ...l, text: corrected, corrected: true, low: false, confidence: 100 };
+              });
+              return { ...p, lines };
+            });
+            return { ...j, pages, corrections: entry ? [...(j.corrections ?? []), entry] : j.corrections };
+          }),
+        })),
+      setOcrIssueStatus: (jobId, issueId, status) =>
+        set((s) => ({
+          ocrJobs: s.ocrJobs.map((j) => {
+            if (j.id !== jobId || !j.issues) return j;
+            const issues = j.issues.map((i) => (i.id === issueId ? { ...i, status } : i));
+            const openOnPage = (pg: number) => issues.filter((i) => i.page === pg && i.status === 'open').length;
+            const pages = j.pages?.map((p) => ({ ...p, issues: openOnPage(p.n) }));
+            return {
+              ...j, issues, pages,
+              issueCount: issues.filter((i) => i.status === 'open').length,
+              lowConfidenceRegions: issues.filter((i) => i.status === 'open' && i.confidence != null).length,
+            };
+          }),
+        })),
+      confirmOcrMeta: (jobId, field) =>
+        set((s) => ({
+          ocrJobs: s.ocrJobs.map((j) =>
+            j.id === jobId && j.metadata
+              ? { ...j, metadata: j.metadata.map((m) => (m.field === field ? { ...m, state: 'Confirmed' } : m)) }
+              : j,
+          ),
+        })),
+      toggleOcrChecklist: (jobId, itemId) =>
+        set((s) => ({
+          ocrJobs: s.ocrJobs.map((j) =>
+            j.id === jobId && j.checklist
+              ? { ...j, checklist: j.checklist.map((c) => (c.id === itemId ? { ...c, done: !c.done } : c)) }
+              : j,
+          ),
+        })),
+      addRecord: (record) =>
+        set((s) => (s.records.some((r) => r.id === record.id) ? {} : { records: [record, ...s.records] })),
     }),
     {
       name: 'lims-national-assembly',
-      version: 4,
+      version: 5,
       // On a data-model change, discard stale persisted data and reseed. Prototype
       // personalisation (role/pins/searches) is intentionally reset with the data.
       migrate: () => ({
@@ -212,6 +294,7 @@ export const useDemoStore = create<DemoState>()(
         recentSearches: structuredClone(recentSearchesSeed),
         researchCollections: structuredClone(researchCollectionsSeed),
         accessRequests: [],
+        ocrJobs: structuredClone(allJobsSeed),
         ...buildInitialState(),
       }),
     },

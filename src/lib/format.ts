@@ -11,6 +11,8 @@ export function dirAbbrev(directorate: Directorate | 'Public'): string {
       return 'Clerk';
     case 'Parliamentary Legislative Proposal Unit':
       return 'PLPU';
+    case 'Parliamentary Records Service':
+      return 'PRS';
     default:
       return '';
   }
