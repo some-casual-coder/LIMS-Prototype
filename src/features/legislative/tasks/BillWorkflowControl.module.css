@@ -3,19 +3,19 @@
 .menuItem:hover { background: var(--soft-grey); }
 
 /* ---- Stage map ---- */
-.panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-panel); padding: var(--sp-5); margin-bottom: var(--sp-5); }
-.stageMap { display: flex; align-items: stretch; flex-wrap: wrap; gap: 4px; }
-.stageItem { display: flex; align-items: center; flex: 1 1 0; min-width: 130px; }
-.stageCard { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 16px 10px; border: 1.5px solid var(--border); border-radius: var(--r-card); background: var(--bg-card); }
-.stageCurrent { border-color: var(--status-success); background: #F6FBF7; }
+.panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-panel); padding: 18px 20px; margin-bottom: 24px; overflow: hidden; }
+.stageMap { display: grid; grid-template-columns: repeat(6, minmax(115px, 1fr)); }
+.stageItem { position: relative; min-width: 0; }
+.stageItem:not(:last-child)::after { content: ''; position: absolute; left: calc(50% + 20px); right: calc(-50% + 20px); top: 19px; height: 2px; background: var(--border-strong); z-index: 0; }
+.stageItem:has(.stageBadgeDone):not(:last-child)::after { background: var(--green-700); }
+.stageCard { position: relative; z-index: 1; display: grid; grid-template-columns: 40px minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 10px; align-items: center; padding: 2px 8px; background: var(--bg-card); }
+.stageCurrent { background: transparent; }
 .stageBadge { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; }
 .stageBadgeDone { background: var(--soft-green); color: var(--on-green); border: 1.5px solid var(--status-success); }
 .stageBadgeCurrent { background: var(--green-700); color: #fff; }
 .stageBadgePending { background: var(--soft-grey); color: var(--text-muted); border: 1.5px solid var(--border-strong); }
-.stageName { font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--text-strong); text-align: center; }
-.stageState { font-size: 11px; color: var(--text-muted); text-align: center; }
-.stageArrow { flex-shrink: 0; color: var(--border-strong); margin: 0 2px; }
-.stageItem:last-child { flex-grow: 0; }
+.stageName { align-self: end; overflow: hidden; text-overflow: ellipsis; font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--text-strong); white-space: nowrap; }
+.stageState { align-self: start; font-size: 11px; color: var(--text-muted); }
 
 /* ---- Summary tiles ---- */
 .summaryTiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-4); margin-bottom: var(--sp-5); }
@@ -25,16 +25,21 @@
 .sumValue { font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--text-strong); }
 
 /* ---- Stage detail cards ---- */
-.sectionTitle { font-size: var(--fs-section); font-weight: var(--fw-semibold); color: var(--text-strong); margin-bottom: var(--sp-4); }
-.gateGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--sp-4); margin-bottom: var(--sp-5); }
-.gateCard { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-card); padding: var(--sp-4) var(--sp-5); }
+.detailHeading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 14px; }
+.detailKicker { margin-bottom: 3px; color: var(--text-muted); font-size: var(--fs-meta); font-weight: var(--fw-bold); text-transform: uppercase; }
+.sectionTitle { font-size: var(--fs-section); font-weight: var(--fw-semibold); color: var(--text-strong); }
+.nextStage { display: grid; justify-items: end; gap: 2px; padding-left: 24px; border-left: 1px solid var(--border); }
+.nextStage span { color: var(--text-muted); font-size: var(--fs-meta); }
+.nextStage strong { color: var(--text-strong); font-size: var(--fs-body); }
+.gateGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: var(--sp-5); }
+.gateCard { min-width: 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-card); padding: 16px 18px; }
 .gateCardBlocking { border-color: var(--status-danger); background: #FEF7F7; }
-.gateCardHead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.gateCardHead { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
 .gateCardTitle { display: inline-flex; align-items: center; gap: 7px; font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--text-strong); }
 .gateCardTitle svg { color: var(--text-muted); }
 .gateCol { font-size: var(--fs-meta); color: var(--text-muted); font-weight: var(--fw-semibold); }
 .reqList { list-style: none; display: grid; gap: 9px; }
-.reqList > li { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.reqList > li { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .reqLabel { font-size: var(--fs-body); color: var(--text); }
 .progressPill { font-size: var(--fs-meta); font-weight: var(--fw-semibold); padding: 2px 9px; border-radius: var(--r-pill); white-space: nowrap; }
 .progressDone { background: var(--soft-green); color: var(--on-green); }
@@ -48,7 +53,7 @@
 .blockLinks { display: flex; gap: 18px; flex-wrap: wrap; }
 
 /* ---- Advance bar ---- */
-.advanceBar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 20px; background: var(--soft-gold); border: 1px solid var(--gold); border-radius: var(--r-card); flex-wrap: wrap; }
+.advanceBar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 20px; background: #fffaf0; border: 1px solid #e4cf91; border-radius: var(--r-card); flex-wrap: wrap; }
 .advanceNote { font-size: var(--fs-body); color: var(--on-gold); flex: 1; min-width: 240px; }
 .advanceActions { display: flex; align-items: center; gap: 10px; }
 
@@ -81,7 +86,6 @@
 
 /* ---- Responsive ---- */
 @media (max-width: 1240px) {
-  .summaryTiles { grid-template-columns: repeat(2, 1fr); }
-  .gateGrid { grid-template-columns: 1fr; }
+  .gateGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-@media (max-width: 1080px) { .panel { overflow-x: auto; } .stageMap { min-width: 800px; } }
+@media (max-width: 1080px) { .panel { overflow-x: auto; } .stageMap { min-width: 860px; } }

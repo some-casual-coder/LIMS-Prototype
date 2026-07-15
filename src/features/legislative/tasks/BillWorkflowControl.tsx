@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import {
-  Check, ArrowRight, Scale, GitBranch, Clock3, Building2, CircleCheck,
+  Check, CircleCheck,
   ListChecks, ShieldCheck, LogIn, LogOut, TriangleAlert, ExternalLink, ClipboardList,
 } from 'lucide-react';
 import { AppShell, type Crumb } from '@/components/shell';
@@ -26,16 +26,25 @@ export function BillWorkflowControl() {
   const advanceBillStage = useDemoStore((s) => s.advanceBillStage);
   const { showToast, ToastHost } = useToast();
 
-  const stage = stageGates.find((g) => g.id === currentStageId) ?? stageGates[2];
-  const currentIndex = stageGates.findIndex((g) => g.id === currentStageId);
+  const canonicalWorkflow = record?.id === TASKS_RECORD_ID;
+  const recordStageName = record?.stage === 'Revision Requested' ? 'Legal Review' : record?.stage;
+  const resolvedStageId = canonicalWorkflow ? currentStageId : stageGates.find((gate) => gate.name === recordStageName)?.id ?? currentStageId;
+  const stage = stageGates.find((g) => g.id === resolvedStageId) ?? stageGates[2];
+  const displayStage: StageGate = canonicalWorkflow ? stage : {
+    ...stage,
+    exit: stage.exit.map((item) => item.status === 'Blocked' ? { ...item, status: 'Pending' as const } : item),
+    blocking: [],
+  };
+  const currentIndex = stageGates.findIndex((g) => g.id === resolvedStageId);
   const nextStage = stageGates[currentIndex + 1];
   // Advance only when nothing is blocked, no blocking dependency remains, and the
   // stage has actually progressed (at least one exit requirement met or under way).
   const canAdvance = useMemo(
-    () => stage.exit.every((e) => e.status !== 'Blocked')
+    () => canonicalWorkflow
+      && stage.exit.every((e) => e.status !== 'Blocked')
       && stage.blocking.length === 0
       && stage.exit.some((e) => e.status === 'Met' || e.status === 'In Progress'),
-    [stage],
+    [canonicalWorkflow, stage],
   );
   const sheetOpen = params.get('sheet') === 'stage-requirements';
   const pboSheetOpen = params.get('sheet') === 'pbo-assessment';
@@ -43,10 +52,10 @@ export function BillWorkflowControl() {
   const openPbo = () => setParam('sheet', 'pbo-assessment');
 
   function advance() {
-    if (!canAdvance || !nextStage) return;
+    if (!record || !canAdvance || !nextStage) return;
     advanceBillStage();
-    recordAudit({ recordId: TASKS_RECORD_ID, actorId: (roleId as string) ?? 'dls-reviewer', actionType: 'Stage Change', description: `Workflow advanced from ${stage.name} to ${nextStage.name}.`, previousValue: stage.name, newValue: nextStage.name });
-    notify({ category: 'Approval', recipientId: 'dlps-officer', recordId: TASKS_RECORD_ID, title: 'Procedural review assigned', body: `${record?.title ?? 'The Bill'} has advanced to ${nextStage.name}.` });
+    recordAudit({ recordId: record.id, actorId: (roleId as string) ?? 'dls-reviewer', actionType: 'Stage Change', description: `Workflow advanced from ${stage.name} to ${nextStage.name}.`, previousValue: stage.name, newValue: nextStage.name });
+    notify({ category: 'Approval', recipientId: 'dlps-officer', recordId: record.id, title: 'Procedural review assigned', body: `${record.title} has advanced to ${nextStage.name}.` });
     showToast(`Advanced to ${nextStage.name}.`);
     setParam('sheet', null);
   }
@@ -63,7 +72,7 @@ export function BillWorkflowControl() {
   return (
     <AppShell breadcrumb={breadcrumb}>
       <BillControlHeader
-        record={record} roleId={roleId} stageName={stage.name} stageOwner={stage.owner} stageDue="24 Jul 2026 (9 days)"
+        record={record} roleId={roleId} stageName={record.stage} stageOwner={displayStage.owner} stageDue={new Date(`${record.dueDate}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
         moreMenu={<><Link className={styles.menuItem} to={paths.recordTasks(record.id)}><ClipboardList width={15} height={15} /> Open tasks</Link><Link className={styles.menuItem} to={paths.record(record.id)}><ExternalLink width={15} height={15} /> Bill workspace</Link></>}
       />
 
@@ -71,8 +80,8 @@ export function BillWorkflowControl() {
       <section className={styles.panel}>
         <ol className={styles.stageMap}>
           {stageGates.map((g, i) => {
-            const isCurrent = g.id === currentStageId;
-            const done = g.state === 'Completed';
+            const isCurrent = g.id === resolvedStageId;
+            const done = i < currentIndex;
             return (
               <li key={g.id} className={styles.stageItem}>
                 <div className={`${styles.stageCard} ${isCurrent ? styles.stageCurrent : ''}`}>
@@ -80,32 +89,26 @@ export function BillWorkflowControl() {
                     {done ? <Check width={16} height={16} /> : <StageIcon name={g.icon} width={16} height={16} />}
                   </span>
                   <span className={styles.stageName}>{g.name}</span>
-                  <span className={styles.stageState}>{g.state === 'In Progress' ? 'In Progress' : g.dateLabel ?? g.state}</span>
+                  <span className={styles.stageState}>{isCurrent ? 'In progress' : done ? g.dateLabel ?? 'Completed' : 'Pending'}</span>
                 </div>
-                {i < stageGates.length - 1 && <ArrowRight width={16} height={16} className={styles.stageArrow} aria-hidden />}
               </li>
             );
           })}
         </ol>
       </section>
 
-      {/* Current-stage summary */}
-      <div className={styles.summaryTiles}>
-        <SumTile icon={<Scale width={17} height={17} />} label="Current stage" value={stage.name} />
-        <SumTile icon={<GitBranch width={17} height={17} />} label="Next stage" value={nextStage?.name ?? '—'} />
-        <SumTile icon={<Clock3 width={17} height={17} />} label="Time in stage" value={currentStageId === 'legal-review' ? '4 working days' : '—'} />
-        <SumTile icon={<Building2 width={17} height={17} />} label="Stage owner" value={stage.owner} />
-      </div>
-
       {/* Stage detail cards */}
-      <h2 className={styles.sectionTitle}>Stage Details — {stage.name}</h2>
+      <div className={styles.detailHeading}>
+        <div><p className={styles.detailKicker}>Current decision point</p><h2 className={styles.sectionTitle}>{displayStage.name} requirements</h2></div>
+        <div className={styles.nextStage}><span>Next stage</span><strong>{nextStage?.name ?? 'Workflow complete'}</strong></div>
+      </div>
       <div className={styles.gateGrid}>
-        <ReqCard title="Entry Requirements" icon={<LogIn width={16} height={16} />} rows={stage.entry} />
-        <ReqCard title="Exit Requirements" icon={<LogOut width={16} height={16} />} rows={stage.exit} />
-        <MandatoryCard mandatory={stage.mandatory} />
-        <ReqCard title="Approvals" icon={<ShieldCheck width={16} height={16} />} rows={stage.approvals} />
-        <ReqCard title="Validation" icon={<CircleCheck width={16} height={16} />} rows={stage.validation} />
-        <BlockingCard stage={stage} recordId={record.id} onOpenPbo={openPbo} />
+        <ReqCard title="Exit Requirements" icon={<LogOut width={16} height={16} />} rows={displayStage.exit} />
+        <MandatoryCard mandatory={displayStage.mandatory} />
+        <BlockingCard stage={displayStage} recordId={record.id} onOpenPbo={openPbo} />
+        <ReqCard title="Approvals" icon={<ShieldCheck width={16} height={16} />} rows={displayStage.approvals} />
+        <ReqCard title="Entry Requirements" icon={<LogIn width={16} height={16} />} rows={displayStage.entry} />
+        <ReqCard title="Validation" icon={<CircleCheck width={16} height={16} />} rows={displayStage.validation} />
       </div>
 
       {/* Advance bar */}
@@ -118,14 +121,14 @@ export function BillWorkflowControl() {
         <div className={styles.advanceActions}>
           <Button variant="secondary" onClick={() => setParam('sheet', 'stage-requirements')}>Stage requirements</Button>
           <span title={canAdvance ? undefined : 'Resolve blocking dependencies and pending exit requirements first.'}>
-            <Button variant="primary" disabled={!canAdvance} onClick={advance} rightIcon={<ArrowRight width={16} height={16} />}>Advance Stage</Button>
+            <Button variant="primary" disabled={!canAdvance} onClick={advance}>Advance Stage</Button>
           </span>
         </div>
       </div>
 
       {sheetOpen && (
         <StageRequirementsSheet
-          stage={stage} nextStageName={nextStage?.name ?? '—'} canAdvance={canAdvance}
+          stage={displayStage} nextStageName={nextStage?.name ?? '—'} canAdvance={canAdvance}
           onOpenTask={() => setParam('sheet', null)}
           onAdvance={advance} onClose={() => setParam('sheet', null)}
           onOpenPbo={openPbo}
@@ -135,15 +138,6 @@ export function BillWorkflowControl() {
       {pboSheetOpen && <PboAssessmentSheet onClose={() => setParam('sheet', null)} />}
       <ToastHost />
     </AppShell>
-  );
-}
-
-function SumTile({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <div className={styles.sumTile}>
-      <span className={styles.sumIcon} aria-hidden>{icon}</span>
-      <div><div className={styles.sumLabel}>{label}</div><div className={styles.sumValue}>{value}</div></div>
-    </div>
   );
 }
 

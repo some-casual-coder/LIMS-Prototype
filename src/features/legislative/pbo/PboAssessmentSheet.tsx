@@ -372,7 +372,7 @@ export function PboStatusCard({ state, onOpen }: { state: PboState; onOpen: () =
     <section className={`${styles.statusCard} ${styles['statusCard_' + meta.tone]}`}>
       <div className={styles.statusCardHead}><span className={styles.statusCardIcon} aria-hidden>{icon}</span><h3 className={styles.statusCardTitle}>{meta.label}</h3></div>
       <p className={styles.statusCardBody}>{meta.short}</p>
-      <button className={styles.statusCardLink} onClick={onOpen}>{label} <ArrowRight width={14} height={14} /></button>
+      <button className={styles.statusCardLink} onClick={onOpen}>{label}</button>
     </section>
   );
 }
