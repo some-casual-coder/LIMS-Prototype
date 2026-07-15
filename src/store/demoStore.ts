@@ -21,6 +21,7 @@ import {
 import {
   pboSeed, PBO_GATEWAY_REF, PBO_FIN_NOTE, PBO_RESPONSE_SUMMARY, type PboAssessment,
 } from '@/data/pbo';
+import { publicationSeed, type PublicationRecord } from '@/data/publication';
 
 // Runtime demo state. The persona layer (role, offline) plus all mutable
 // legislative data live here, persisted to localStorage. A single reset
@@ -56,6 +57,9 @@ interface DemoState {
 
   // PBO Assessment Integration (Priority 0 sanity sprint)
   pbo: PboAssessment;
+
+  // Signature, Seal & Publication Centre (Priority 0 sanity sprint)
+  publication: PublicationRecord;
 
   // Mutable legislative data
   records: LegislativeRecord[];
@@ -138,6 +142,14 @@ interface DemoState {
   failPboGateway: () => void;
   retryPboRequest: () => void;
   preparePboManualTransfer: () => void;
+
+  // Signature, seal & publication actions
+  applyPublicationSignature: () => void;
+  applyPublicationSeal: () => void;
+  markPublicationReady: () => void;
+  publishRecord: (note: string) => void;
+  failPublicationDestination: () => void;
+  retryPublicationDestination: () => void;
 }
 
 // Roll a version label forward one minor step, e.g. "v3.2" -> "v3.3".
@@ -175,6 +187,7 @@ export const useDemoStore = create<DemoState>()(
       stageGates: structuredClone(stageGatesSeed),
       currentStageId: CURRENT_STAGE_ID,
       pbo: structuredClone(pboSeed),
+      publication: structuredClone(publicationSeed),
       ...initial,
 
       setRole: (role) => set({ currentRole: role }),
@@ -193,6 +206,7 @@ export const useDemoStore = create<DemoState>()(
         stageGates: structuredClone(stageGatesSeed),
         currentStageId: CURRENT_STAGE_ID,
         pbo: structuredClone(pboSeed),
+        publication: structuredClone(publicationSeed),
         ...buildInitialState(),
       }),
 
@@ -534,10 +548,145 @@ export const useDemoStore = create<DemoState>()(
           pbo: { ...s.pbo, state: 'manual-transfer', manifestRef: `MTX-${PBO_GATEWAY_REF}` },
           billTasks: appendPboHistory(s.billTasks, 'Secure manual-transfer package prepared for PBO'),
         })),
+
+      // ---- Signature, seal & publication ----------------------------------
+      applyPublicationSignature: () =>
+        set((s) => ({
+          publication: {
+            ...s.publication,
+            state: 'seal-required',
+            signatureStatus: 'Verified',
+            signatureAppliedAt: '18 Jul 2026, 11:02 AM EAT',
+            signatureAuditRef: 'SIG-2026-00047',
+            outputs: s.publication.outputs.map((o) => ({ ...o, signatureState: 'Verified' as const })),
+          },
+          records: s.records.map((r) => (r.id === s.publication.recordId
+            ? {
+                ...r,
+                stage: 'Awaiting Signature' as const,
+                currentVersion: '5.0',
+                currentVersionLabel: 'Approved Publication Version',
+                lastUpdated: new Date().toISOString(),
+              }
+            : r)),
+        })),
+
+      applyPublicationSeal: () =>
+        set((s) => ({
+          publication: {
+            ...s.publication,
+            state: 'ready-to-publish',
+            sealStatus: 'Applied',
+            sealAppliedAt: '18 Jul 2026, 11:18 AM EAT',
+            outputs: s.publication.outputs.map((o) => ({ ...o, sealState: 'Verified' as const })),
+            destinations: s.publication.destinations.map((d) => (
+              d.status === 'Not configured' ? d : { ...d, status: 'Ready' as const }
+            )),
+          },
+          records: s.records.map((r) => (r.id === s.publication.recordId
+            ? { ...r, stage: 'Signed and Sealed' as const, currentVersion: '5.0', currentVersionLabel: 'Approved Publication Version', lastUpdated: new Date().toISOString() }
+            : r)),
+        })),
+
+      markPublicationReady: () =>
+        set((s) => ({
+          publication: {
+            ...s.publication,
+            state: 'ready-to-publish',
+            destinations: s.publication.destinations.map((d) => (
+              d.status === 'Pending' ? { ...d, status: 'Ready' as const } : d
+            )),
+          },
+        })),
+
+      publishRecord: (note) =>
+        set((s) => ({
+          publication: {
+            ...s.publication,
+            state: 'published',
+            transmissionNote: note,
+            publicationTimestamp: '18 Jul 2026, 11:35 AM EAT',
+            publicUrl: 'https://www.assembly.go.ke/acts/2026/12',
+            immutableAuditRef: 'PUB-2026-00047',
+            destinations: s.publication.destinations.map((d) => (
+              d.status === 'Ready' ? { ...d, status: 'Complete' as const } : d
+            )),
+          },
+          records: s.records.map((r) => (r.id === s.publication.recordId
+            ? {
+                ...r,
+                stage: 'Published' as const,
+                confidentiality: 'Public' as const,
+                currentVersion: '5.0',
+                currentVersionLabel: 'Published Version',
+                publicParticipation: 'Open' as const,
+                formats: ['PDF', 'HTML', 'AKN XML'],
+                citation: 'Act No. 12 of 2026 (illustrative)',
+                lastUpdated: new Date().toISOString(),
+              }
+            : r)),
+        })),
+
+      failPublicationDestination: () =>
+        set((s) => ({
+          publication: {
+            ...s.publication,
+            state: 'partially-transmitted',
+            signatureStatus: 'Verified',
+            signatureAppliedAt: s.publication.signatureAppliedAt ?? '18 Jul 2026, 11:02 AM EAT',
+            signatureAuditRef: s.publication.signatureAuditRef ?? 'SIG-2026-00047',
+            sealStatus: 'Applied',
+            sealAppliedAt: s.publication.sealAppliedAt ?? '18 Jul 2026, 11:18 AM EAT',
+            publicationTimestamp: '18 Jul 2026, 11:35 AM EAT',
+            publicUrl: undefined,
+            immutableAuditRef: 'PUB-2026-00047-PARTIAL',
+            outputs: s.publication.outputs.map((o) => ({ ...o, signatureState: 'Verified' as const, sealState: 'Verified' as const })),
+            destinations: s.publication.destinations.map((d) => {
+              if (d.id === 'na-website') return { ...d, status: 'Failed' as const };
+              if (d.id === 'repository' || d.id === 'search-index' || d.status === 'Ready') return { ...d, status: 'Complete' as const };
+              return d;
+            }),
+          },
+          records: s.records.map((r) => (r.id === s.publication.recordId
+            ? {
+                ...r,
+                stage: 'Signed and Sealed' as const,
+                currentVersion: '5.0',
+                currentVersionLabel: 'Approved Publication Version',
+                lastUpdated: new Date().toISOString(),
+              }
+            : r)),
+        })),
+
+      retryPublicationDestination: () =>
+        set((s) => ({
+          publication: {
+            ...s.publication,
+            state: 'published',
+            publicUrl: 'https://www.assembly.go.ke/acts/2026/12',
+            immutableAuditRef: 'PUB-2026-00047',
+            destinations: s.publication.destinations.map((d) => (
+              d.id === 'na-website' || d.status === 'Ready' ? { ...d, status: 'Complete' as const } : d
+            )),
+          },
+          records: s.records.map((r) => (r.id === s.publication.recordId
+            ? {
+                ...r,
+                stage: 'Published' as const,
+                confidentiality: 'Public' as const,
+                currentVersion: '5.0',
+                currentVersionLabel: 'Published Version',
+                publicParticipation: 'Open' as const,
+                formats: ['PDF', 'HTML', 'AKN XML'],
+                citation: 'Act No. 12 of 2026 (illustrative)',
+                lastUpdated: new Date().toISOString(),
+              }
+            : r)),
+        })),
     }),
     {
       name: 'lims-national-assembly',
-      version: 9,
+      version: 10,
       // On a data-model change, discard stale persisted data and reseed. Prototype
       // personalisation (role/pins/searches) is intentionally reset with the data.
       migrate: () => ({
@@ -556,6 +705,7 @@ export const useDemoStore = create<DemoState>()(
         stageGates: structuredClone(stageGatesSeed),
         currentStageId: CURRENT_STAGE_ID,
         pbo: structuredClone(pboSeed),
+        publication: structuredClone(publicationSeed),
         ...buildInitialState(),
       }),
     },

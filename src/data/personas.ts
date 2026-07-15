@@ -93,6 +93,8 @@ export const officers: Officer[] = [
   { id: 'counsel-barasa', name: 'Peter Barasa', roleTitle: 'Senior Legal Counsel', directorate: 'Directorate of Legal Services', initials: 'PB' },
   { id: 'quality-reviewer', name: 'Samuel Kariuki', roleTitle: 'Principal Records Reviewer', directorate: 'Parliamentary Records Service', initials: 'SK' },
   { id: 'pbo-liaison', name: 'Sarah Njeri', roleTitle: 'Budget Policy Analyst', directorate: 'Office of the Clerk', initials: 'SN' },
+  { id: 'deputy-clerk-nyaga', name: 'Daniel Nyaga', roleTitle: 'Deputy Clerk and Authorised Signatory', directorate: 'Office of the Clerk', initials: 'DN' },
+  { id: 'seal-custodian-okello', name: 'Patricia Okello', roleTitle: 'Authorised Seal Custodian', directorate: 'Office of the Clerk', initials: 'PO' },
   { id: 'archivist-edwin', name: 'Edwin Kamau', roleTitle: 'Archivist', directorate: 'Parliamentary Records Service', initials: 'EK' },
   { id: 'records-wanjiru', name: 'Ruth Wanjiku', roleTitle: 'Records Officer', directorate: 'Parliamentary Records Service', initials: 'RW' },
   { id: 'citizen', name: 'James Mwangi', roleTitle: 'Member of the public', directorate: 'Public', initials: 'JM' },

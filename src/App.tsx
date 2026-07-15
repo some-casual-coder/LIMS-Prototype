@@ -18,7 +18,7 @@ import { HistoricalRecordDetail } from '@/features/ocr/HistoricalRecordDetail';
 import { NotificationsPage } from '@/features/notifications/NotificationsPage';
 import {
   DocumentArchivePage, ParticipationInboxPage, AnalyticsPage, AuditPage,
-  HelpPage, VersionsPage, PublishPage,
+  HelpPage, VersionsPage,
 } from '@/features/common/previewRoutes';
 import { DraftingWorkspace } from '@/features/legislative/editor/DraftingWorkspace';
 import { PublicHome, PublicBill, PublicParticipate, PublicTrack } from '@/features/public/PublicPortal';
@@ -27,6 +27,7 @@ import { WorkflowTemplateDetail } from '@/features/workflows/WorkflowTemplateDet
 import { WorkflowComparison } from '@/features/workflows/WorkflowComparison';
 import { BillTasksControl } from '@/features/legislative/tasks/BillTasksControl';
 import { BillWorkflowControl } from '@/features/legislative/tasks/BillWorkflowControl';
+import { PublicationCentre } from '@/features/legislative/publication/PublicationCentre';
 
 function RootRedirect() {
   const role = useDemoStore((s) => s.currentRole);
@@ -65,7 +66,7 @@ export default function App() {
         <Route path="/legislative/:id/versions" element={<VersionsPage />} />
         <Route path="/legislative/:id/tasks" element={<BillTasksControl />} />
         <Route path="/legislative/:id/workflow" element={<BillWorkflowControl />} />
-        <Route path="/legislative/:id/publish" element={<PublishPage />} />
+        <Route path="/legislative/:id/publish" element={<PublicationCentre />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/search/saved" element={<SavedSearchesPage />} />
         <Route path="/search/recent" element={<RecentResearchPage />} />

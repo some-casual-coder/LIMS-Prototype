@@ -26,6 +26,7 @@ export function Presenter() {
   const currentRole = useDemoStore((s) => s.currentRole);
   const receivePboResponse = useDemoStore((s) => s.receivePboResponse);
   const failPboGateway = useDemoStore((s) => s.failPboGateway);
+  const failPublicationDestination = useDemoStore((s) => s.failPublicationDestination);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -61,6 +62,12 @@ export function Presenter() {
     if (kind === 'response') receivePboResponse();
     else failPboGateway();
     navigate(paths.recordPbo());
+    setOpen(false);
+  }
+
+  function simulatePublicationFailure() {
+    failPublicationDestination();
+    navigate(paths.recordPublish());
     setOpen(false);
   }
 
@@ -106,6 +113,9 @@ export function Presenter() {
               </button>
               <button className={styles.jump} onClick={() => simulatePbo('failure')}>
                 <TriangleAlert width={13} height={13} /> PBO gateway failure
+              </button>
+              <button className={styles.jump} onClick={simulatePublicationFailure}>
+                <TriangleAlert width={13} height={13} /> Publication transmission failed
               </button>
             </div>
 

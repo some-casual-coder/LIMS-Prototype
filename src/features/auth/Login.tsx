@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ShieldCheck, ArrowRight, Loader2, ExternalLink, Check } from 'lucide-react';
+import { Loader2, ExternalLink, Check } from 'lucide-react';
 import { LogoMark } from '@/components/shell/LogoMark';
 import { Avatar } from '@/components/ui';
 import { personas } from '@/data/personas';
@@ -28,28 +28,27 @@ export function Login() {
     <div className={styles.page}>
       <div className={styles.panel}>
         <aside className={styles.brandSide}>
-          <div className={styles.brandTop}>
-            <LogoMark size={46} />
-            <div>
-              <p className={styles.brandName}>LIMS</p>
-              <p className={styles.brandSub}>Legislative Information Management System</p>
-            </div>
-          </div>
-          <div>
-            <h1 className={styles.brandHeadline}>The National Assembly’s trusted legislative workspace.</h1>
-            <p className={styles.brandBody}>
-              Create, process, approve, publish, find and audit legislative information in one
-              secure, permission-aware system.
-            </p>
-          </div>
-          <p className={styles.secureNote}>
-            <ShieldCheck width={16} height={16} aria-hidden /> Secure institutional access · National Assembly of Kenya
+          <h1 className={styles.brandHeadline}>
+            <span>Legislative</span> Information Management System
+          </h1>
+          <p className={styles.brandBody}>
+            Automating legislative drafting, document management, workflow processing, archival, retrieval and audit-ready publication.
           </p>
+          <span className={styles.pattern} aria-hidden />
         </aside>
 
         <section className={styles.formSide} aria-label="Choose your identity">
-          <h2 className={styles.formTitle}>Select your role to continue</h2>
-          <p className={styles.formHint}>Your workspace, tasks and permitted actions are tailored to your role.</p>
+          <div className={styles.formMark}>
+            <LogoMark size={54} />
+            <span />
+            <div>
+              <strong>Parliament of Kenya</strong>
+              <small>National Assembly</small>
+            </div>
+          </div>
+          <h2 className={styles.formTitle}>Sign in to LIMS</h2>
+          <p className={styles.formHint}>One canonical workspace for DLS, DLPS and Clerk workflows, with every action traceable and every version preserved.</p>
+          <p className={styles.selectorLabel}>Role profile</p>
 
           <ul className={styles.personaList}>
             {personas.map((p) => {
@@ -79,7 +78,7 @@ export function Login() {
             {verifying ? (
               <><Loader2 width={18} height={18} className={styles.spin} aria-hidden /> Verifying role and secure access…</>
             ) : (
-              <>Enter workspace <ArrowRight width={18} height={18} aria-hidden /></>
+              <>Sign in</>
             )}
           </button>
 

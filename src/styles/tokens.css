@@ -72,8 +72,8 @@
   --shadow-pop: 0 8px 28px rgba(16, 33, 24, 0.14);
 
   /* ---- Typography ---- */
-  --font-ui: 'Source Sans 3 Variable', 'Source Sans 3', system-ui, -apple-system, Segoe UI, sans-serif;
-  --font-serif: 'Source Serif 4 Variable', 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --font-ui: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', system-ui, -apple-system, Segoe UI, sans-serif;
+  --font-serif: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', system-ui, -apple-system, Segoe UI, sans-serif;
 
   --fs-page-title: 27px;
   --fs-section: 17px;

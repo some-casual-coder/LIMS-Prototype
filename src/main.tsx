@@ -1,7 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import '@fontsource-variable/source-sans-3';
-import '@fontsource-variable/source-serif-4';
+import '@fontsource-variable/plus-jakarta-sans';
 import './styles/tokens.css';
 import './styles/global.css';
 import App from './App';
