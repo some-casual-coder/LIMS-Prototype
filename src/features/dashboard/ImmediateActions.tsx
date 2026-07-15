@@ -23,7 +23,7 @@ export function ImmediateActions({ groups }: { groups: QueueGroup[] }) {
           {rows.map((row) => (
             <li key={row.recordId} className={styles.row}>
               <div className={styles.identity}>
-                <Link to={`/legislative/${row.recordId}`} className={styles.title}>{row.title}</Link>
+                <Link to={primaryRecordDestination(row.recordId)} className={styles.title}>{row.title}</Link>
                 <span className={styles.reference}>{row.reference}</span>
               </div>
               <StatusBadge tone={row.stageTone} size="sm">{row.stage}</StatusBadge>
@@ -39,6 +39,11 @@ export function ImmediateActions({ groups }: { groups: QueueGroup[] }) {
       )}
     </Panel>
   );
+}
+
+function primaryRecordDestination(recordId: string): string {
+  const base = `/legislative/${recordId}`;
+  return recordId.startsWith('NA-BILL-') ? `${base}/draft` : base;
 }
 
 function initials(name: string): string {

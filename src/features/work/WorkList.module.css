@@ -139,3 +139,24 @@
 @container worklist (max-width: 780px) {
   .cellPriority, .table thead th:nth-child(8) { display: none; }
 }
+
+@container worklist (max-width: 620px) {
+  .tableScroll { overflow: visible; }
+  .table, .table tbody { display: block; width: 100%; }
+  .table thead { display: none; }
+  .row {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    gap: 8px 10px;
+    padding: 14px 12px;
+  }
+  .row td { padding: 0; }
+  .cellCheck { grid-column: 1; grid-row: 1 / span 4; width: 28px; padding-top: 3px !important; }
+  .cellItem { grid-column: 2 / 4; grid-row: 1; min-width: 0; max-width: none; }
+  .cellStage { grid-column: 2; grid-row: 2; }
+  .cellDue { display: block; grid-column: 3; grid-row: 2; align-self: center; font-size: var(--fs-meta); text-align: right; }
+  .cellAction { grid-column: 2 / 4; grid-row: 3; max-width: none; font-size: var(--fs-table); line-height: 1.4; }
+  .cellAction::before { content: 'Required action'; display: block; margin-bottom: 2px; color: var(--text-muted); font-size: 10px; font-weight: var(--fw-semibold); text-transform: uppercase; }
+  .cellRowAction { grid-column: 2 / 4; grid-row: 4; justify-self: start; }
+  .cellType, .cellRole, .cellPriority, .cellActivity { display: none; }
+}

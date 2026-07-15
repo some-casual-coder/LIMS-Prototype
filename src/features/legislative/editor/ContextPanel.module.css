@@ -6,6 +6,11 @@
 .tabActive::after { content: ''; position: absolute; left: 6px; right: 6px; bottom: -1px; height: 2px; background: var(--green-700); border-radius: 2px; }
 .tabBadge { display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: 16px; padding: 0 4px; background: var(--soft-amber); color: var(--on-amber); font-size: 10.5px; font-weight: var(--fw-bold); border-radius: 999px; }
 
+@media (max-width: 1500px) {
+  .tabs { gap: 0; padding-inline: 2px; }
+  .tab { gap: 2px; padding-inline: 4px; font-size: 11px; }
+}
+
 .body { flex: 1; overflow-y: auto; padding: 16px; }
 
 .secHead { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
@@ -113,3 +118,16 @@
 .refIcon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; background: var(--soft-gold); color: var(--gold-strong); flex: none; }
 .refTitle { display: block; font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--text-strong); }
 .refRel { display: block; font-size: var(--fs-meta); color: var(--text-muted); }
+.referenceBack { display:inline-flex; align-items:center; gap:6px; min-height:32px; margin-bottom:14px; border:0; background:transparent; color:var(--green-700); font-size:var(--fs-table); font-weight:var(--fw-semibold); }
+.referencePreview { padding:16px; border:1px solid var(--border); border-radius:var(--r-card); background:var(--bg-doc); }
+.referencePreviewIcon { display:grid; place-items:center; width:42px; height:42px; margin-bottom:14px; border-radius:var(--r-button); background:var(--soft-gold); color:var(--gold-strong); }
+.referenceType { color:var(--text-muted); font-size:var(--fs-meta); font-weight:var(--fw-semibold); text-transform:uppercase; }
+.referencePreview h3 { margin-top:4px; color:var(--text-strong); font-size:17px; line-height:1.3; }
+.referenceNumber { margin-top:5px; color:var(--green-700); font-size:var(--fs-table); font-weight:var(--fw-semibold); }
+.referenceSummary { margin:16px 0; color:var(--text); font-size:var(--fs-table); line-height:1.55; }
+.referencePreview dl { display:grid; gap:9px; padding-top:14px; border-top:1px solid var(--border); }
+.referencePreview dl div { display:flex; justify-content:space-between; gap:12px; }
+.referencePreview dt { color:var(--text-muted); font-size:var(--fs-meta); }
+.referencePreview dd { color:var(--text-strong); font-size:var(--fs-meta); font-weight:var(--fw-semibold); text-align:right; }
+.referenceOpen { display:inline-flex; align-items:center; min-height:34px; margin-top:16px; padding:0 12px; border:1px solid var(--border-strong); border-radius:var(--r-button); color:var(--green-700); font-size:var(--fs-table); font-weight:var(--fw-semibold); }
+.referenceOpen:hover { background:var(--soft-green); }

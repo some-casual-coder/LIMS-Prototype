@@ -15,6 +15,7 @@ import {
 } from '@/data/billWorkspace';
 import { WorkflowSheet } from './WorkflowSheet';
 import { PboAssessmentSheet, PboStatusCard } from './pbo/PboAssessmentSheet';
+import { useToast } from '@/features/search/Toast';
 import { TASKS_RECORD_ID } from '@/data/billTasks';
 import { paths } from '@/routes/paths';
 import styles from './BillWorkspace.module.css';
@@ -29,6 +30,43 @@ const billStructure = [
   ['preamble', 'Preamble and formula', 'Complete'],
   ['body', 'Parts, clauses and schedules', 'In progress'],
 ] as const;
+const lifecycleStages = [
+  { id: 'instruction', label: 'Instruction', stages: ['Instruction Received', 'Intake and Assignment'] },
+  { id: 'drafting', label: 'Drafting', stages: ['Drafting'] },
+  { id: 'legal-review', label: 'Legal Review', stages: ['Legal Review', 'Revision Requested', 'Legal Approval'] },
+  { id: 'procedural', label: 'Procedural Review', stages: ['Procedural Review'] },
+  { id: 'signature', label: 'Signature', stages: ['Awaiting Signature', 'Signed and Sealed'] },
+  { id: 'publication', label: 'Publication', stages: ['Published', 'Archived'] },
+] as const;
+
+function recordLifecycle(record: { stage: string; isPrimary?: boolean }) {
+  if (record.isPrimary) return lifecycle;
+  const current = Math.max(0, lifecycleStages.findIndex((item) => item.stages.some((stage) => stage === record.stage)));
+  return lifecycleStages.map((item, index) => ({
+    id: item.id,
+    label: item.label,
+    state: index < current ? 'completed' as const : index === current ? 'current' as const : 'upcoming' as const,
+    date: index < current ? 'Completed' : index === current ? 'Current stage' : 'Upcoming',
+  }));
+}
+
+function stageBadgeTone(stage: string) {
+  if (stage === 'Revision Requested') return 'red' as const;
+  if (stage === 'Published' || stage === 'Archived' || stage === 'Signed and Sealed') return 'green' as const;
+  if (stage === 'Legal Review' || stage === 'Procedural Review' || stage === 'Awaiting Signature') return 'gold' as const;
+  return 'grey' as const;
+}
+
+function downloadOutput(title: string, version: string, format: string) {
+  const extension = format === 'PDF' ? 'pdf' : format === 'HTML' ? 'html' : 'xml';
+  const content = `Illustrative ${format} manifestation\n${title}\nVersion ${version}\nSubject to confirmation against National Assembly SOPs.`;
+  const url = URL.createObjectURL(new Blob([content], { type: 'text/plain;charset=utf-8' }));
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-v${version}.${extension}`;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
 
 export function BillWorkspace() {
   const { id } = useParams();
@@ -42,6 +80,7 @@ export function BillWorkspace() {
   const markRecentlyOpened = useDemoStore((s) => s.markRecentlyOpened);
   const pboState = useDemoStore((s) => s.pbo.state);
   const [workflowOpen, setWorkflowOpen] = useState(false);
+  const { showToast, ToastHost } = useToast();
 
   const tab = params.get('tab') || 'Overview';
   const setTab = (t: string) => setParams((p) => { p.set('tab', t); return p; }, { replace: true });
@@ -61,6 +100,12 @@ export function BillWorkspace() {
   }
 
   const openTasks = tasks.filter((t) => t.status !== 'Completed').length;
+  const displayedLifecycle = recordLifecycle(record);
+  const headerAction = record.isPrimary
+    ? { label: 'Continue Revision', to: `/legislative/${record.id}/draft?mode=revision` }
+    : record.stage === 'Awaiting Signature'
+      ? { label: 'Open Publication Centre', to: `/legislative/${record.id}/publish` }
+      : { label: 'Open Current Work', to: `/legislative/${record.id}/draft` };
 
   return (
     <AppShell breadcrumb={[{ label: 'Legislative Work', to: '/work' }, { label: 'Bills', to: paths.bills }, { label: record.reference }]}>
@@ -72,13 +117,13 @@ export function BillWorkspace() {
           <p className={styles.refLine}>{record.reference} · Version {record.currentVersion} · {record.currentVersionLabel}</p>
           <p className={styles.metaLine}>{record.directorate} · {record.confidentiality}</p>
           <div className={styles.pills}>
-            <StatusBadge tone="red" icon={<RotateCcw width={12} height={12} />}>Revision Requested</StatusBadge>
-            <StatusBadge tone="red" icon={<Flag width={12} height={12} />}>High Priority</StatusBadge>
+            <StatusBadge tone={stageBadgeTone(record.stage)} icon={record.stage === 'Revision Requested' ? <RotateCcw width={12} height={12} /> : <CircleDot width={12} height={12} />}>{record.stage}</StatusBadge>
+            <StatusBadge tone={record.priority === 'High' ? 'red' : record.priority === 'Medium' ? 'gold' : 'grey'} icon={<Flag width={12} height={12} />}>{record.priority} Priority</StatusBadge>
             <span className={styles.classPill}><Lock width={12} height={12} /> Internal</span>
           </div>
         </div>
         <div className={styles.headActions}>
-          <Button variant="primary" size="lg" to={`/legislative/${record.id}/draft?mode=revision`}>Continue Revision</Button>
+          <Button variant="primary" size="lg" to={headerAction.to}>{headerAction.label}</Button>
           <Button variant="secondary" size="lg" to={`/legislative/${record.id}/draft?mode=preview`} leftIcon={<Eye width={17} height={17} />}>Preview Document</Button>
           <Popover label="More actions" trigger={({ toggle, ref }) => (
             <button ref={ref} className={styles.moreBtn} onClick={toggle} aria-label="More actions"><MoreVertical width={18} height={18} /></button>
@@ -86,7 +131,10 @@ export function BillWorkspace() {
             {(close) => (
               <div className={styles.menu} onClick={close}>
                 {['Add collaborator', 'Add reminder', 'Export summary', 'Copy reference', 'View access permissions'].map((m) => (
-                  <button key={m} className={styles.menuItem} onClick={() => m === 'Copy reference' && navigator.clipboard?.writeText(record.reference)}>{m}</button>
+                  <button key={m} className={styles.menuItem} onClick={() => {
+                    if (m === 'Copy reference') { navigator.clipboard?.writeText(record.reference); showToast('Bill reference copied.'); }
+                    else showToast(`${m} is managed from the Bill task and access workspace.`);
+                  }}>{m}</button>
                 ))}
               </div>
             )}
@@ -97,19 +145,19 @@ export function BillWorkspace() {
       {/* Canonical-record strip */}
       <div className={styles.canonical}>
         <ShieldCheck width={18} height={18} className={styles.canonicalIcon} aria-hidden />
-        <p><b>Canonical legislative record</b> — Version 4.0 is the current working version. Version 3.0 remains the latest legally approved version.</p>
+        <p><b>Canonical legislative record</b> — Version {record.currentVersion} is the current working expression.{record.isPrimary ? ' Version 3.0 remains the latest legally approved version.' : ' Approval history is preserved in the version record.'}</p>
         <div className={styles.canonicalActions}>
           <Link to={`/legislative/${record.id}/versions`} className={styles.canonicalLink}>View approved version <ExternalLink width={13} height={13} /></Link>
           <span className={styles.canonicalSep} />
-          <button className={styles.canonicalLink}><Info width={13} height={13} /> Learn about versions</button>
+          <button className={styles.canonicalLink} onClick={() => showToast('Working expressions preserve every revision; only an approved version can progress to official publication.')}><Info width={13} height={13} /> Learn about versions</button>
         </div>
       </div>
 
       {/* Lifecycle ribbon */}
       <ol className={styles.ribbon} aria-label="Legislative lifecycle">
-        {lifecycle.map((stage, i) => (
+        {displayedLifecycle.map((stage, i) => (
           <li key={stage.id} className={styles.ribbonItem}>
-            {i > 0 && <span className={`${styles.ribbonLine} ${lifecycle[i].state === 'upcoming' ? styles.lineDashed : ''}`} aria-hidden />}
+            {i > 0 && <span className={`${styles.ribbonLine} ${displayedLifecycle[i].state === 'upcoming' ? styles.lineDashed : ''}`} aria-hidden />}
             <button className={`${styles.stage} ${styles['stage_' + stage.state]}`} onClick={() => setWorkflowOpen(true)} aria-current={stage.state === 'returned' || stage.state === 'current' ? 'step' : undefined}>
               <span className={styles.stageDot}>{stageIcon(stage.state, i)}</span>
               <span className={styles.stageText}>
@@ -144,13 +192,14 @@ export function BillWorkspace() {
 
       {tab === 'Overview' ? (
         <OverviewTab record={record} versions={versions} onOpenWorkflow={() => setWorkflowOpen(true)}
-          pboState={isPrimary ? pboState : undefined} onOpenPbo={openPbo} />
+          pboState={isPrimary ? pboState : undefined} onOpenPbo={openPbo} showToast={showToast} />
       ) : (
         <OtherTab tab={tab} record={record} tasks={tasks} versions={versions} />
       )}
 
       <WorkflowSheet open={workflowOpen} onClose={() => setWorkflowOpen(false)} recordId={record.id} />
       {pboSheetOpen && <PboAssessmentSheet onClose={closePbo} />}
+      <ToastHost />
     </AppShell>
   );
 }
@@ -162,39 +211,87 @@ function stageIcon(state: StageState, i: number) {
   return <span className={styles.stageNum}>{i + 1}</span>;
 }
 
-function OverviewTab({ record, versions, onOpenWorkflow, pboState, onOpenPbo }: { record: any; versions: any[]; onOpenWorkflow: () => void; pboState?: import('@/data/pbo').PboState; onOpenPbo: () => void }) {
+function OverviewTab({ record, versions, onOpenWorkflow, pboState, onOpenPbo, showToast }: { record: any; versions: any[]; onOpenWorkflow: () => void; pboState?: import('@/data/pbo').PboState; onOpenPbo: () => void; showToast: (message: string) => void }) {
   const recentVersions = [...versions].reverse().slice(0, 3);
-  const done = stageChecklist.filter((c) => c.status === 'completed').length;
+  const checklist = record.isPrimary ? stageChecklist : [
+    { label: 'Canonical metadata confirmed', status: 'completed' as const },
+    { label: 'Current-stage work assigned', status: 'completed' as const },
+    { label: `${record.stage} requirements reviewed`, status: 'in-progress' as const },
+    { label: 'Prepare next workflow hand-off', status: 'pending' as const },
+  ];
+  const done = checklist.filter((c) => c.status === 'completed').length;
+  const primaryAction = record.isPrimary;
+  const actionTitle = primaryAction ? 'Resolve the blocking comment on Clause 14 and submit a corrected version for legal review.' : `Complete the current ${record.stage.toLowerCase()} work and prepare the record for its next workflow decision.`;
+  const actionLabel = primaryAction ? 'Continue Revision' : record.stage === 'Awaiting Signature' ? 'Open Publication Centre' : 'Open Current Work';
+  const actionTo = primaryAction ? `/legislative/${record.id}/draft?mode=revision` : record.stage === 'Awaiting Signature' ? `/legislative/${record.id}/publish` : `/legislative/${record.id}/draft`;
+  const displayedDates = primaryAction ? keyDates : [
+    { label: 'Record created', value: new Date(`${record.createdDate}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) },
+    { label: 'Current task due', value: new Date(`${record.dueDate}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) },
+    { label: 'Last updated', value: new Date(record.lastUpdated).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) },
+  ];
 
   return (
     <div className={styles.overview}>
       <div className={styles.mainCol}>
+        <div className={styles.workColumn}>
         {/* A. Action required */}
         <section className={styles.actionCard}>
           <div className={styles.actionHead}><TriangleAlert width={18} height={18} /> <h2>Action required</h2></div>
-          <p className={styles.actionBody}>Resolve the blocking comment on Clause 14 and submit a corrected version for legal review.</p>
+          <p className={styles.actionBody}>{actionTitle}</p>
           <ul className={styles.actionMeta}>
-            <li className={styles.urgent}><Clock width={14} height={14} /> Due today at 4:00 PM</li>
-            <li><UserRound width={14} height={14} /> Assigned to Grace Wanjiku</li>
-            <li className={styles.issueRed}><CircleAlert width={14} height={14} /> 1 blocking comment</li>
-            <li className={styles.issueAmber}><TriangleAlert width={14} height={14} /> 1 cross-reference warning</li>
+            <li className={primaryAction ? styles.urgent : ''}><Clock width={14} height={14} /> Due {primaryAction ? 'today at 4:00 PM' : new Date(`${record.dueDate}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</li>
+            <li><UserRound width={14} height={14} /> Assigned to {officerName(record.drafterId)}</li>
+            {primaryAction && <li className={styles.issueRed}><CircleAlert width={14} height={14} /> 1 blocking comment</li>}
+            {primaryAction && <li className={styles.issueAmber}><TriangleAlert width={14} height={14} /> 1 cross-reference warning</li>}
           </ul>
           <div className={styles.actionButtons}>
-            <Button variant="primary" to={`/legislative/${record.id}/draft?mode=revision`}>Continue Revision</Button>
-            <Button variant="secondary" to={`/legislative/${record.id}/draft?tab=comments`} leftIcon={<MessageSquareText width={16} height={16} />}>Review Comments</Button>
+            <Button variant="primary" to={actionTo}>{actionLabel}</Button>
+            {primaryAction && <Button variant="secondary" to={`/legislative/${record.id}/draft?tab=comments`} leftIcon={<MessageSquareText width={16} height={16} />}>Review Comments</Button>}
           </div>
         </section>
 
+        <div className={styles.stageChecklist}><Panel title="Current-stage checklist" padded actions={<span className={styles.checklistCount}>{done} of {checklist.length} complete</span>}>
+          <div className={styles.progressTrack} role="progressbar" aria-label={`${done} of ${checklist.length} current-stage requirements complete`} aria-valuemin={0} aria-valuemax={checklist.length} aria-valuenow={done}>
+            {checklist.map((item, index) => <i key={item.label} className={index < done ? styles.progressFill : ''} />)}
+          </div>
+          <ul className={styles.checklist}>
+            {checklist.map((c) => (
+              <li key={c.label} className={styles['ck_' + c.status]}>
+                <span className={styles.ckIcon}>{checklistIcon(c.status)}</span>
+                <span className={styles.ckLabel}>{c.label}</span>
+                <span className={styles.ckStatus}>{statusLabel(c.status)}</span>
+              </li>
+            ))}
+          </ul>
+          <Link to={`/legislative/${record.id}/tasks`} className={styles.cardLink}>View full checklist</Link>
+        </Panel></div>
+
+        <div className={styles.participationPanel}><Panel title="Public participation" padded>
+          <dl className={styles.ppList}>
+            <div><dt>Consultation status</dt><dd><StatusBadge tone="gold" size="sm">{participationSummary.status}</StatusBadge></dd></div>
+            <div><dt>Opening date</dt><dd>{participationSummary.opening}</dd></div>
+            <div><dt>Closing date</dt><dd>{participationSummary.closing}</dd></div>
+            <div><dt>Submissions received</dt><dd>{participationSummary.received}</dd></div>
+            <div><dt>Public page</dt><dd>{participationSummary.publicPage}</dd></div>
+          </dl>
+          <div className={styles.ppActions}>
+            <Button variant="secondary" size="sm" to={`/public/bills/${record.id}`}>Preview Public Page</Button>
+            <Button variant="tertiary" size="sm" to="/participation">Manage Participation</Button>
+          </div>
+        </Panel></div>
+        </div>
+
+        <div className={styles.workColumn}>
         {/* PBO dependency card */}
-        {pboState && <PboStatusCard state={pboState} onOpen={onOpenPbo} />}
+        {pboState && <div className={styles.pboPanel}><PboStatusCard state={pboState} onOpen={onOpenPbo} /></div>}
 
         {/* B. Current document */}
-        <Panel title="Current document" padded>
+        <div className={styles.currentDocument}><Panel title="Current document" padded>
           <div className={styles.docMaster}>
             <span className={styles.docIcon}><FileText width={22} height={22} /></span>
             <div className={styles.docInfo}>
               <p className={styles.docTitle}>Structured legislative master</p>
-              <p className={styles.docMeta}>Version {record.currentVersion} · Last saved today at 10:42 AM · Edited by Grace Wanjiku</p>
+              <p className={styles.docMeta}>Version {record.currentVersion} · Updated {new Date(record.lastUpdated).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} · Edited by {officerName(record.drafterId)}</p>
               <div className={styles.docActions}>
                 <Button variant="secondary" size="sm" to={`/legislative/${record.id}/draft`} leftIcon={<PenLine width={14} height={14} />}>Open Editor</Button>
                 <Button variant="tertiary" size="sm" to={`/legislative/${record.id}/draft?tab=metadata`} leftIcon={<Info width={14} height={14} />}>View Metadata</Button>
@@ -215,35 +312,20 @@ function OverviewTab({ record, versions, onOpenWorkflow, pboState, onOpenPbo }: 
               </ul>
             </div>
           )}
-          <p className={styles.outputsLabel}>Generated outputs <span>(from Version 4.0)</span></p>
+          <p className={styles.outputsLabel}>Generated outputs <span>(from Version {record.currentVersion})</span></p>
           <div className={styles.outputs}>
             {generatedOutputs.map((o) => (
-              <button key={o.format} className={styles.output}>
+              <button key={o.format} className={styles.output} onClick={() => downloadOutput(record.title, record.currentVersion, o.format)}>
                 <span className={styles.outputIcon} data-fmt={o.format}>{o.format === 'PDF' ? <FileText width={16} height={16} /> : o.format === 'HTML' ? <Globe width={16} height={16} /> : <Code2 width={16} height={16} />}</span>
                 <span className={styles.outputText}><span className={styles.outputName}>{o.label}</span><span className={styles.outputNote}>{o.generatedAt}</span></span>
               </button>
             ))}
           </div>
           <p className={styles.outputDisclaimer}>Generated previews are not an official publication.</p>
-        </Panel>
-
-        {/* C. Current-stage checklist */}
-        <Panel title="Current-stage checklist" padded actions={<span className={styles.checklistCount}>{done} of {stageChecklist.length} complete</span>}>
-          <div className={styles.progressTrack}><div className={styles.progressFill} style={{ width: `${(done / stageChecklist.length) * 100}%` }} /></div>
-          <ul className={styles.checklist}>
-            {stageChecklist.map((c) => (
-              <li key={c.label} className={styles['ck_' + c.status]}>
-                <span className={styles.ckIcon}>{checklistIcon(c.status)}</span>
-                <span className={styles.ckLabel}>{c.label}</span>
-                <span className={styles.ckStatus}>{statusLabel(c.status)}</span>
-              </li>
-            ))}
-          </ul>
-          <Link to={`/legislative/${record.id}/tasks`} className={styles.cardLink}>View full checklist</Link>
-        </Panel>
+        </Panel></div>
 
         {/* D. Recent versions */}
-        <Panel title="Recent versions" padded>
+        <div className={styles.recentVersions}><Panel title="Recent versions" padded>
           <ul className={styles.versions}>
             {recentVersions.map((v) => (
               <li key={v.id} className={v.version === record.currentVersion ? styles.versionCurrent : ''}>
@@ -261,10 +343,10 @@ function OverviewTab({ record, versions, onOpenWorkflow, pboState, onOpenPbo }: 
             ))}
           </ul>
           <Link to={`/legislative/${record.id}/versions`} className={styles.cardLink}>View all versions</Link>
-        </Panel>
+        </Panel></div>
 
         {/* Related records */}
-        <Panel title="Related legislative information" padded>
+        <div className={styles.relatedPanel}><Panel title="Related legislative information" padded>
           <ul className={styles.related}>
             {relatedRecords.map((r) => (
               <li key={r.title}>
@@ -274,27 +356,17 @@ function OverviewTab({ record, versions, onOpenWorkflow, pboState, onOpenPbo }: 
               </li>
             ))}
           </ul>
-        </Panel>
+        </Panel></div>
+        </div>
 
-        {/* Public participation summary */}
-        <Panel title="Public participation" padded>
-          <dl className={styles.ppList}>
-            <div><dt>Consultation status</dt><dd><StatusBadge tone="gold" size="sm">{participationSummary.status}</StatusBadge></dd></div>
-            <div><dt>Opening date</dt><dd>{participationSummary.opening}</dd></div>
-            <div><dt>Closing date</dt><dd>{participationSummary.closing}</dd></div>
-            <div><dt>Submissions received</dt><dd>{participationSummary.received}</dd></div>
-            <div><dt>Public page</dt><dd>{participationSummary.publicPage}</dd></div>
-          </dl>
-          <div className={styles.ppActions}>
-            <Button variant="secondary" size="sm" to={`/public/bills/${record.id}`}>Preview Public Page</Button>
-            <Button variant="tertiary" size="sm" to="/participation">Manage Participation</Button>
-          </div>
-        </Panel>
       </div>
 
       {/* Context rail */}
       <aside className={styles.rail}>
-        <Panel title="Ownership and people" padded>
+        <section className={styles.contextPanel} aria-labelledby="record-context-title">
+          <div className={styles.contextHeader}><h2 id="record-context-title">Record context</h2><span>{record.reference}</span></div>
+          <section className={styles.contextSection} aria-labelledby="ownership-title">
+          <h3 id="ownership-title">Ownership and people</h3>
           <ul className={styles.people}>
             {[['Drafter', record.drafterId], ['Legal reviewer', record.reviewerId], ['Procedural reviewer', record.proceduralOfficerId]].map(([role, pid]) => pid && (
               <li key={role as string}>
@@ -307,33 +379,37 @@ function OverviewTab({ record, versions, onOpenWorkflow, pboState, onOpenPbo }: 
               <span><span className={styles.personName}>{record.originatingOffice}</span><span className={styles.personRole}>Originating office</span></span>
             </li>
           </ul>
-          <button className={styles.railLink}>Manage people</button>
-        </Panel>
+          <button className={styles.railLink} onClick={() => showToast('People and role assignment is managed from the Bill task workspace.')}>Manage people</button>
+          </section>
 
-        <Panel title="Key dates" padded>
+          <section className={styles.contextSection} aria-labelledby="dates-title">
+          <h3 id="dates-title">Key dates</h3>
           <dl className={styles.dates}>
-            {keyDates.map((d) => (
+            {displayedDates.map((d) => (
               <div key={d.label}><dt><Calendar width={13} height={13} /> {d.label}</dt><dd className={d.urgent ? styles.dateUrgent : ''}>{d.value}</dd></div>
             ))}
           </dl>
-        </Panel>
+          </section>
 
-        <Panel title="Blocking issues" padded>
-          <ul className={styles.blocking}>
+          <section className={styles.contextSection} aria-labelledby="issues-title">
+          <h3 id="issues-title">Blocking issues</h3>
+          {primaryAction ? <ul className={styles.blocking}>
             <li className={styles.issueRed}><CircleAlert width={15} height={15} /> 1 blocking comment</li>
             <li className={styles.issueAmber}><TriangleAlert width={15} height={15} /> 1 cross-reference warning</li>
-          </ul>
+          </ul> : <p className={styles.noIssues}><CircleCheck width={15} height={15} /> No blocking issues recorded.</p>}
           <button className={styles.railLink} onClick={onOpenWorkflow}>View all issues</button>
-        </Panel>
+          </section>
 
-        <Panel title="Access and classification" padded>
+          <section className={styles.contextSection} aria-labelledby="access-title">
+          <h3 id="access-title">Access and classification</h3>
           <dl className={styles.access}>
             <div><dt>Classification</dt><dd><span className={styles.classPill}><Lock width={11} height={11} /> {accessInfo.classification}</span></dd></div>
             <div><dt>Visible to</dt><dd>{accessInfo.visibleTo}</dd></div>
             <div><dt>Public visibility</dt><dd>{accessInfo.publicVisibility}</dd></div>
           </dl>
-          <button className={styles.railLink}>View permissions</button>
-        </Panel>
+          <button className={styles.railLink} onClick={() => showToast('This record is internal until publication. Access changes require an authorised records or ICT administrator.')}>View permissions</button>
+          </section>
+        </section>
       </aside>
     </div>
   );

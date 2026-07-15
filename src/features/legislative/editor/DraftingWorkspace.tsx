@@ -16,6 +16,7 @@ import { changeSummary, clause14Changes } from '@/data/draftContent';
 import { useDemoStore } from '@/store/demoStore';
 import { recordAudit } from '@/mocks/mockApi';
 import styles from './DraftingWorkspace.module.css';
+import { AknBuilderWorkspace } from './AknBuilderWorkspace';
 
 const INSERT_ITEMS = ['Clause', 'Subclause', 'Paragraph', 'Definition', 'Heading', 'Cross-reference', 'Table', 'Schedule', 'Annotation'];
 
@@ -35,6 +36,7 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
   const [sheet, setSheet] = useState<'' | 'compare' | 'submit' | 'comment'>('');
   const [toast, setToast] = useState('');
   const currentRole = useDemoStore((s) => s.currentRole);
+  const record = useDemoStore((s) => s.records.find((item) => item.id === id));
 
   function showToast(msg: string) {
     setToast(msg);
@@ -62,6 +64,8 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
     recordAudit({ recordId: id, actorId: currentRole ?? 'dls-reviewer', actionType: 'Edit', description: `${status === 'accepted' ? 'Accepted' : 'Rejected'} tracked change in Clause 14.` });
   }
 
+  if (record && !record.isPrimary) return <AknBuilderWorkspace record={record} mode={mode} />;
+
   return (
     <EditorShell>
       {/* Compact editor header */}
@@ -69,7 +73,7 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
         <div className={styles.tbLeft}>
           <Link to={`/legislative/${id}`} className={styles.back}><ArrowLeft width={16} height={16} /> Back to Bill Workspace</Link>
           <nav className={styles.crumb} aria-label="Breadcrumb">
-            <span>Bills</span><ChevronRight width={12} height={12} /><span>{id.replace(/-/g, '/').replace('NA/BILL', 'NA/BILL')}</span><ChevronRight width={12} height={12} /><span className={styles.crumbCurrent}>{mode === 'review' ? 'Review' : 'Structured Drafting'}</span>
+            <span>Bills</span><ChevronRight width={12} height={12} /><span>{id.replace(/-/g, '/').replace('NA/BILL', 'NA/BILL')}</span><ChevronRight width={12} height={12} /><span className={styles.crumbCurrent}>{mode === 'review' ? 'Review' : mode === 'preview' ? 'Document Preview' : 'Structured Drafting'}</span>
           </nav>
           <div className={styles.titleRow}>
             <h1 className={styles.docTitle}>Digital Public Services Bill, 2026</h1>
@@ -91,6 +95,8 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
         <div className={styles.tbCenter}>
           {mode === 'review' ? (
             <div className={styles.statusCard}><Scale width={18} height={18} className={styles.statusIcon} /><div><p className={styles.statusTitle}>Under Legal Review</p><p className={styles.statusSub}>Saved · Today, 10:42 AM by Legal Counsel</p></div></div>
+          ) : mode === 'preview' ? (
+            <div className={styles.statusCard}><Eye width={18} height={18} className={styles.savedIcon} /><div><p className={styles.statusTitle}>Clean document preview</p><p className={styles.statusSub}>Tracked changes and editing controls are hidden</p></div></div>
           ) : (
             <div className={styles.statusCard}><CircleCheck width={18} height={18} className={styles.savedIcon} /><div><p className={styles.statusTitle}>Saved</p><p className={styles.statusSub}>Synced to canonical record · Last saved 10:42 AM</p></div></div>
           )}
@@ -103,6 +109,8 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
               <Button variant="secondary" leftIcon={<GitCompare width={16} height={16} />} onClick={() => setSheet('compare')}>Compare</Button>
               <Button variant="primary" leftIcon={<ShieldCheck width={16} height={16} />} onClick={() => showToast('Legal review approved — routing to Procedural Review.')}>Approve Legal Review</Button>
             </>
+          ) : mode === 'preview' ? (
+            <Button variant="primary" leftIcon={<PenLine width={16} height={16} />} to={`/legislative/${id}/draft`}>Return to Editing</Button>
           ) : (
             <>
               <Button variant="secondary" leftIcon={<ShieldCheck width={16} height={16} />} onClick={() => { setPanelTab('Validation'); showToast('Validation complete — 14 passed, 1 warning, 0 errors.'); }}>Validate</Button>
@@ -114,7 +122,7 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
       </header>
 
       {/* Toolbar */}
-      <div className={styles.toolbar}>
+      {mode !== 'preview' && <div className={styles.toolbar}>
         <div className={styles.toolGroup}>
           <button className={styles.tool} aria-label="Undo" onClick={() => showToast('Nothing to undo.')}><Undo2 width={16} height={16} /></button>
           <button className={styles.tool} aria-label="Redo" disabled><Redo2 width={16} height={16} /></button>
@@ -161,7 +169,7 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
             </div>
           )}
         </Popover>
-      </div>
+      </div>}
 
       {/* Change summary (review) */}
       {mode === 'review' && (
@@ -176,7 +184,7 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
       )}
 
       {/* Three columns */}
-      <div className={styles.columns}>
+      <main className={`${styles.columns} ${mode === 'preview' ? styles.previewColumns : ''}`}>
         <StructureNav active={activeClause} onSelect={(n) => { setActiveClause(n); }} />
         <DocumentSurface
           mode={effectiveMode}
@@ -189,7 +197,7 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
           onCrossRef={() => showToast('Cross-reference created for the selected passage.')}
           onToast={showToast}
         />
-        <ContextPanel
+        {mode !== 'preview' && <ContextPanel
           tab={panelTab}
           onTab={setPanelTab}
           aiInserted={aiInserted}
@@ -201,13 +209,13 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
           onOpenClause={() => openClause(14)}
           onToast={showToast}
           onGoWarning={() => { setActiveClause(14); setPanelTab('Validation'); }}
-        />
-      </div>
+        />}
+      </main>
 
       {/* Status bar */}
       <div className={styles.statusbar}>
-        <span>{mode === 'review' ? `Reviewing Version 4.1 · Clause ${activeClause}` : `1 of 1 change · Clause ${activeClause}`}</span>
-        <span className={styles.legend}><span className={styles.legIns} /> Insertions <span className={styles.legDel} /> Deletions</span>
+        <span>{mode === 'review' ? `Reviewing Version 4.1 · Clause ${activeClause}` : mode === 'preview' ? `Clean preview · Clause ${activeClause}` : `1 of 1 change · Clause ${activeClause}`}</span>
+        {mode !== 'preview' && <span className={styles.legend}><span className={styles.legIns} /> Insertions <span className={styles.legDel} /> Deletions</span>}
         <span className={styles.zoom}>Ln 24, Col 37 · 100%</span>
       </div>
 

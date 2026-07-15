@@ -109,7 +109,7 @@ export function BillsDashboard() {
                     return activeCell ? (
                       <Link
                         key={bill.id}
-                        to={paths.record(bill.id)}
+                        to={paths.recordDraft(bill.id)}
                         className={styles.matrixActive}
                         style={{ opacity: 0.48 + Math.min(openItems, 5) * 0.1 }}
                         data-tooltip={`${bill.reference.split('/').at(-1)} · ${openItems} open ${openItems === 1 ? 'item' : 'items'} · ${bill.stage}`}
@@ -180,7 +180,7 @@ export function BillsDashboard() {
         <section className={styles.tablePanel} aria-labelledby="latest-bills-heading">
           <div className={styles.sectionHead}><div><p className={styles.sectionKicker}>Recently updated</p><h2 id="latest-bills-heading">Latest Bills</h2></div><Link to="/work?type=Bill" className={styles.textLink}>View all</Link></div>
           <div className={styles.tableWrap}><table><thead><tr><th>Bill</th><th>Stage</th><th>Version</th><th>Due</th><th><span className={styles.srOnly}>Open</span></th></tr></thead><tbody>
-            {bills.slice(0, 6).map((bill) => { const action = recordAction(bill); return <tr key={bill.id}><td><Link to={paths.record(bill.id)} className={styles.billIdentity} title={bill.title}><span className={styles.billIcon}><Scale width={16} height={16} /></span><span><strong>{bill.shortTitle}</strong><small>{bill.reference}</small></span></Link></td><td><StatusBadge tone={stageTone[bill.stage] ?? 'grey'} size="sm">{bill.stage}</StatusBadge></td><td><strong>v{bill.currentVersion}</strong><small className={styles.cellMeta}>{bill.currentVersionLabel}</small></td><td>{new Date(`${bill.dueDate}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</td><td><Link to={action.to} className={styles.rowAction} aria-label={`${action.label}: ${bill.shortTitle}`} title={action.label}><Eye width={17} height={17} /></Link></td></tr>; })}
+            {bills.slice(0, 6).map((bill) => { const action = recordAction(bill); return <tr key={bill.id}><td><Link to={paths.recordDraft(bill.id)} className={styles.billIdentity} title={`Open structured draft: ${bill.title}`}><span className={styles.billIcon}><Scale width={16} height={16} /></span><span><strong>{bill.shortTitle}</strong><small>{bill.reference}</small></span></Link></td><td><StatusBadge tone={stageTone[bill.stage] ?? 'grey'} size="sm">{bill.stage}</StatusBadge></td><td><strong>v{bill.currentVersion}</strong><small className={styles.cellMeta}>{bill.currentVersionLabel}</small></td><td>{new Date(`${bill.dueDate}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</td><td><Link to={action.to} className={styles.rowAction} aria-label={`${action.label}: ${bill.shortTitle}`} title={action.label}><Eye width={17} height={17} /></Link></td></tr>; })}
           </tbody></table></div>
         </section>
 

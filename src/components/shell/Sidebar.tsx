@@ -117,7 +117,7 @@ export function Sidebar({ collapsed, mobileOpen = false, onCloseNavigation, onTo
               {recentRecords.map((record) => (
                 <li key={record.id}>
                   <Link
-                    to={`/legislative/${record.id}`}
+                    to={record.workflowType === 'Bill' ? `/legislative/${record.id}/draft` : `/legislative/${record.id}`}
                     className={styles.recordItem}
                     title={record.title}
                     onClick={onCloseNavigation}

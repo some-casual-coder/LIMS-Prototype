@@ -116,6 +116,7 @@
 .expectedSub { font-size: 11px; color: var(--on-green); }
 
 /* ---- Step 3 files ---- */
+.fileInput { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .dropzone { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; padding: 26px; border: 1.5px dashed var(--border-strong); border-radius: var(--r-card); background: #FbFcFb; cursor: pointer; margin-bottom: 16px; }
 .dropzone:hover { border-color: var(--green-700); background: #F6FBF7; }
 .dropzone:focus-visible { outline: none; box-shadow: var(--focus-ring); }
@@ -205,10 +206,10 @@
 .sheetButton svg:first-child { color: var(--text-muted); }
 .sheetBtnExt { margin-left: auto; color: var(--text-muted); }
 
-.summaryGrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
-.summaryGrid > div { display: flex; flex-direction: column; gap: 3px; }
+.summaryGrid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 20px 24px; align-items: start; }
+.summaryGrid > div { display: grid; grid-template-rows: auto minmax(48px, auto); align-content: start; gap: 6px; min-width: 0; }
 .summaryGrid dt { font-size: var(--fs-meta); color: var(--text-muted); }
-.summaryGrid dd { font-size: var(--fs-body); font-weight: var(--fw-medium); color: var(--text-strong); }
+.summaryGrid dd { margin: 0; font-size: var(--fs-body); font-weight: var(--fw-medium); color: var(--text-strong); line-height: 1.45; overflow-wrap: anywhere; }
 
 /* ---- Sticky footer ---- */
 .footer {

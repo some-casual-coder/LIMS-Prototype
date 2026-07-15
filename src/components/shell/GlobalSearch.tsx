@@ -42,13 +42,13 @@ export function GlobalSearch() {
         r.reference.toLowerCase().includes(query) ||
         r.shortTitle.toLowerCase().includes(query)
       ) {
-        out.push({ icon: <FileText {...ic} />, label: r.title, meta: `${r.reference} · ${r.workflowType}`, to: `/legislative/${r.id}` });
+        out.push({ icon: <FileText {...ic} />, label: r.title, meta: `${r.reference} · ${r.workflowType}`, to: r.workflowType === 'Bill' ? `/legislative/${r.id}/draft` : `/legislative/${r.id}` });
       }
       if (out.length >= 4) break;
     }
     // Deterministic clause / submission / version entries for the primary Bill.
     if (query && ('digital public services'.includes(query) || query.includes('digital') || query.includes('vulnerable') || query.includes('clause'))) {
-      out.push({ icon: <Bookmark {...ic} />, label: 'Clause 14 — Protection of vulnerable users', meta: 'Digital Public Services Bill, 2026', to: '/legislative/NA-BILL-2026-015?highlight=clause-14' });
+      out.push({ icon: <Bookmark {...ic} />, label: 'Clause 14 — Protection of vulnerable users', meta: 'Digital Public Services Bill, 2026', to: '/legislative/NA-BILL-2026-015/draft#clause-14' });
       out.push({ icon: <History {...ic} />, label: 'Version 4.0 — Legal Review Draft', meta: 'NA/BILL/2026/015', to: '/legislative/NA-BILL-2026-015/versions' });
     }
     return out.slice(0, 6);

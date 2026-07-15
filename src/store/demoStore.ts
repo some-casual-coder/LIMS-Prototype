@@ -6,6 +6,7 @@ import type {
   SavedSearch, RecentSearch, ResearchCollection, ResearchItem, AccessRequest,
   OcrJob, OcrCorrection, OcrPageState, OcrIssueStatus,
   WorkflowTemplate, WorkflowStageDef,
+  StructuredBillDraft, StructuredDraftBlock, StructuredDraftSection,
 } from '@/data/types';
 import { buildInitialState } from '@/data/seed';
 import { defaultPinned, defaultRecentlyOpened, type WorkItem } from '@/data/myWork';
@@ -22,6 +23,7 @@ import {
   pboSeed, PBO_GATEWAY_REF, PBO_FIN_NOTE, PBO_RESPONSE_SUMMARY, type PboAssessment,
 } from '@/data/pbo';
 import { publicationSeed, type PublicationRecord } from '@/data/publication';
+import { buildStructuredDraftSeed } from '@/data/structuredDrafts';
 
 // Runtime demo state. The persona layer (role, offline) plus all mutable
 // legislative data live here, persisted to localStorage. A single reset
@@ -61,6 +63,9 @@ interface DemoState {
   // Signature, Seal & Publication Centre (Priority 0 sanity sprint)
   publication: PublicationRecord;
 
+  // Browser-persisted Akoma Ntoso drafting documents, keyed by record id.
+  structuredDrafts: Record<string, StructuredBillDraft>;
+
   // Mutable legislative data
   records: LegislativeRecord[];
   versions: Version[];
@@ -99,6 +104,15 @@ interface DemoState {
   addComment: (c: Comment) => void;
   resolveValidation: (id: string) => void;
   updateClauseText: (clauseNumber: number, paragraphs: string[]) => void;
+  addStructuredDraft: (draft: StructuredBillDraft) => void;
+  replaceStructuredDraft: (draft: StructuredBillDraft) => void;
+  updateStructuredDraftMeta: (recordId: string, patch: Partial<StructuredBillDraft>) => void;
+  setStructuredDraftActiveSection: (recordId: string, sectionId: string) => void;
+  addStructuredDraftSection: (recordId: string, section: StructuredDraftSection) => void;
+  addStructuredDraftBlock: (recordId: string, sectionId: string, block: StructuredDraftBlock) => void;
+  updateStructuredDraftBlock: (recordId: string, blockId: string, patch: Partial<StructuredDraftBlock>) => void;
+  removeStructuredDraftBlock: (recordId: string, blockId: string) => void;
+  saveStructuredDraftRevision: (recordId: string, actorId: string, note: string) => void;
 
   // Search & Repository actions
   addSavedSearch: (s: SavedSearch) => void;
@@ -168,6 +182,7 @@ function appendPboHistory(tasks: BillTask[], label: string): BillTask[] {
 }
 
 const initial = buildInitialState();
+const initialStructuredDrafts = buildStructuredDraftSeed(initial.records);
 
 export const useDemoStore = create<DemoState>()(
   persist(
@@ -188,6 +203,7 @@ export const useDemoStore = create<DemoState>()(
       currentStageId: CURRENT_STAGE_ID,
       pbo: structuredClone(pboSeed),
       publication: structuredClone(publicationSeed),
+      structuredDrafts: structuredClone(initialStructuredDrafts),
       ...initial,
 
       setRole: (role) => set({ currentRole: role }),
@@ -207,6 +223,7 @@ export const useDemoStore = create<DemoState>()(
         currentStageId: CURRENT_STAGE_ID,
         pbo: structuredClone(pboSeed),
         publication: structuredClone(publicationSeed),
+        structuredDrafts: structuredClone(buildStructuredDraftSeed(buildInitialState().records)),
         ...buildInitialState(),
       }),
 
@@ -277,6 +294,126 @@ export const useDemoStore = create<DemoState>()(
             ),
           },
         })),
+
+      addStructuredDraft: (draft) =>
+        set((s) => ({ structuredDrafts: { ...s.structuredDrafts, [draft.recordId]: draft } })),
+      replaceStructuredDraft: (draft) =>
+        set((s) => ({ structuredDrafts: { ...s.structuredDrafts, [draft.recordId]: draft } })),
+      updateStructuredDraftMeta: (recordId, patch) =>
+        set((s) => {
+          const draft = s.structuredDrafts[recordId];
+          if (!draft) return {};
+          return {
+            structuredDrafts: {
+              ...s.structuredDrafts,
+              [recordId]: { ...draft, ...patch, recordId, updatedAt: new Date().toISOString() },
+            },
+          };
+        }),
+      setStructuredDraftActiveSection: (recordId, sectionId) =>
+        set((s) => {
+          const draft = s.structuredDrafts[recordId];
+          if (!draft || !draft.sections.some((section) => section.id === sectionId)) return {};
+          return {
+            structuredDrafts: {
+              ...s.structuredDrafts,
+              [recordId]: { ...draft, activeSectionId: sectionId },
+            },
+          };
+        }),
+      addStructuredDraftSection: (recordId, section) =>
+        set((s) => {
+          const draft = s.structuredDrafts[recordId];
+          if (!draft || draft.sections.some((item) => item.tag === section.tag)) return {};
+          const sections = [...draft.sections, section];
+          const sectionOrder = ['meta', 'coverPage', 'preface', 'preamble', 'body', 'amendmentBody', 'collectionBody', 'debateBody', 'judgmentBody', 'mainBody', 'conclusions', 'attachments', 'components'];
+          sections.sort((a, b) => sectionOrder.indexOf(a.tag) - sectionOrder.indexOf(b.tag));
+          return {
+            structuredDrafts: {
+              ...s.structuredDrafts,
+              [recordId]: { ...draft, sections, activeSectionId: section.id, updatedAt: new Date().toISOString() },
+            },
+          };
+        }),
+      addStructuredDraftBlock: (recordId, sectionId, block) =>
+        set((s) => {
+          const draft = s.structuredDrafts[recordId];
+          if (!draft) return {};
+          return {
+            structuredDrafts: {
+              ...s.structuredDrafts,
+              [recordId]: {
+                ...draft,
+                activeSectionId: sectionId,
+                updatedAt: new Date().toISOString(),
+                sections: draft.sections.map((section) => section.id === sectionId
+                  ? { ...section, blocks: [...section.blocks, block] }
+                  : section),
+              },
+            },
+          };
+        }),
+      updateStructuredDraftBlock: (recordId, blockId, patch) =>
+        set((s) => {
+          const draft = s.structuredDrafts[recordId];
+          if (!draft) return {};
+          return {
+            structuredDrafts: {
+              ...s.structuredDrafts,
+              [recordId]: {
+                ...draft,
+                updatedAt: new Date().toISOString(),
+                sections: draft.sections.map((section) => ({
+                  ...section,
+                  blocks: section.blocks.map((block) => block.id === blockId ? { ...block, ...patch } : block),
+                })),
+              },
+            },
+          };
+        }),
+      removeStructuredDraftBlock: (recordId, blockId) =>
+        set((s) => {
+          const draft = s.structuredDrafts[recordId];
+          if (!draft) return {};
+          return {
+            structuredDrafts: {
+              ...s.structuredDrafts,
+              [recordId]: {
+                ...draft,
+                updatedAt: new Date().toISOString(),
+                sections: draft.sections.map((section) => ({
+                  ...section,
+                  blocks: section.blocks.filter((block) => block.id !== blockId),
+                })),
+              },
+            },
+          };
+        }),
+      saveStructuredDraftRevision: (recordId, actorId, note) =>
+        set((s) => {
+          const draft = s.structuredDrafts[recordId];
+          if (!draft) return {};
+          const [major, minor] = draft.currentVersion.split('.').map(Number);
+          const version = `${Number.isFinite(major) ? major : 0}.${(Number.isFinite(minor) ? minor : 0) + 1}`;
+          const savedAt = new Date().toISOString();
+          const revision = {
+            id: `revision-${recordId}-${Date.now().toString(36)}`,
+            version,
+            savedAt,
+            savedBy: actorId,
+            note,
+            sections: structuredClone(draft.sections),
+          };
+          return {
+            structuredDrafts: {
+              ...s.structuredDrafts,
+              [recordId]: { ...draft, currentVersion: version, revisions: [...draft.revisions, revision], updatedAt: savedAt },
+            },
+            records: s.records.map((record) => record.id === recordId
+              ? { ...record, currentVersion: version, currentVersionLabel: 'Structured working draft', lastUpdated: savedAt }
+              : record),
+          };
+        }),
 
       addSavedSearch: (saved) => set((s) => ({ savedSearches: [saved, ...s.savedSearches] })),
       removeSavedSearch: (id) => set((s) => ({ savedSearches: s.savedSearches.filter((x) => x.id !== id) })),
@@ -686,7 +823,7 @@ export const useDemoStore = create<DemoState>()(
     }),
     {
       name: 'lims-national-assembly',
-      version: 10,
+      version: 12,
       // On a data-model change, discard stale persisted data and reseed. Prototype
       // personalisation (role/pins/searches) is intentionally reset with the data.
       migrate: () => ({
@@ -706,6 +843,7 @@ export const useDemoStore = create<DemoState>()(
         currentStageId: CURRENT_STAGE_ID,
         pbo: structuredClone(pboSeed),
         publication: structuredClone(publicationSeed),
+        structuredDrafts: structuredClone(buildStructuredDraftSeed(buildInitialState().records)),
         ...buildInitialState(),
       }),
     },

@@ -1,6 +1,8 @@
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   ListFilter, MoreHorizontal, Reply, Check, ExternalLink, Sparkles, PencilLine, Info,
-  TriangleAlert, CircleCheck, ArrowRight, Landmark, Copy, X, CircleAlert,
+  TriangleAlert, CircleCheck, ArrowRight, ArrowLeft, Landmark, Copy, X, CircleAlert,
 } from 'lucide-react';
 import { Button, StatusBadge, Avatar } from '@/components/ui';
 import {
@@ -44,7 +46,7 @@ export function ContextPanel(p: Props) {
         {tab === 'AI Assistant' && <AiTab aiInserted={p.aiInserted} aiDismissed={p.aiDismissed} onInsertAi={p.onInsertAi} onDismissAi={p.onDismissAi} onGoWarning={p.onGoWarning} onToast={p.onToast} />}
         {tab === 'Validation' && <ValidationTab onGoWarning={p.onGoWarning} onToast={p.onToast} />}
         {tab === 'Metadata' && <MetadataTab />}
-        {tab === 'References' && <ReferencesTab onToast={p.onToast} />}
+        {tab === 'References' && <ReferencesTab />}
       </div>
     </aside>
   );
@@ -206,19 +208,41 @@ function MetadataTab() {
   );
 }
 
-function ReferencesTab({ onToast }: { onToast: (m: string) => void }) {
+function ReferencesTab() {
   const refs = [
-    ['Public Service Delivery Act, 2019', 'Referenced Act'], ['Data Protection Act, 2019', 'Referenced Act'],
-    ['Motion on Digital Accessibility in Public Institutions', 'Related motion'], ['Petition on Assisted Access to Digital Government Services', 'Public submission'],
+    { title: 'Public Service Delivery Act, 2019', relation: 'Referenced Act', reference: 'Act No. 23 of 2019', to: '/legislative/NA-BILL-2019-023', summary: 'Existing public-service delivery framework referenced by Clause 14.' },
+    { title: 'Data Protection Act, 2019', relation: 'Referenced Act', reference: 'No. 24 of 2019', to: '/search?q=Data%20Protection%20Act', summary: 'Legal basis for processing personal data in the service-delivery provisions.' },
+    { title: 'Motion on Digital Accessibility in Public Institutions', relation: 'Related motion', reference: 'NA/MOT/2026/046', to: '/legislative/NA-MOT-2026-046', summary: 'Related parliamentary business on accessibility standards and assisted access.' },
+    { title: 'Petition on Assisted Access to Digital Government Services', relation: 'Public submission', reference: 'NA/PET/2026/084', to: '/legislative/NA-PET-2026-084', summary: 'Public submission linked to the policy intent and evidence for Clause 14.' },
   ];
+  const [selected, setSelected] = useState<(typeof refs)[number] | null>(null);
   const definedTerms = primaryBillContent.clauses[1].paragraphs.length - 1;
+  if (selected) {
+    return (
+      <div>
+        <button className={styles.referenceBack} onClick={() => setSelected(null)}><ArrowLeft width={15} height={15} /> References</button>
+        <div className={styles.referencePreview}>
+          <span className={styles.referencePreviewIcon}><Landmark width={20} height={20} /></span>
+          <p className={styles.referenceType}>{selected.relation}</p>
+          <h3>{selected.title}</h3>
+          <p className={styles.referenceNumber}>{selected.reference}</p>
+          <p className={styles.referenceSummary}>{selected.summary}</p>
+          <dl>
+            <div><dt>Linked from</dt><dd>Clause 14</dd></div>
+            <div><dt>Relationship</dt><dd>{selected.relation}</dd></div>
+          </dl>
+          <Link to={selected.to} className={styles.referenceOpen}>Open related record</Link>
+        </div>
+      </div>
+    );
+  }
   return (
     <div>
       <div className={styles.secHead}><h3>References</h3></div>
       <p className={styles.refsNote}>{definedTerms} defined terms · 4 external references linked.</p>
       <ul className={styles.refsList}>
-        {refs.map(([t, r]) => (
-          <li key={t}><button className={styles.refBtn} onClick={() => onToast(`Opening “${t}” in a preview panel.`)}><span className={styles.refIcon}><Landmark width={15} height={15} /></span><span><span className={styles.refTitle}>{t}</span><span className={styles.refRel}>{r}</span></span></button></li>
+        {refs.map((reference) => (
+          <li key={reference.title}><button className={styles.refBtn} onClick={() => setSelected(reference)}><span className={styles.refIcon}><Landmark width={15} height={15} /></span><span><span className={styles.refTitle}>{reference.title}</span><span className={styles.refRel}>{reference.relation}</span></span></button></li>
         ))}
       </ul>
     </div>

@@ -20,6 +20,7 @@ import { StepInstruction, StepTemplate, StepSupporting, StepAssignment } from '.
 import { StepReview } from './wizardReview';
 import { WizardSheets } from './wizardSheets';
 import styles from './InstructionWizard.module.css';
+import { createStructuredDraft } from '@/data/structuredDrafts';
 
 const PROCESSING = [
   'Creating canonical record…',
@@ -62,6 +63,7 @@ export function InstructionWizard() {
   const addRecord = useDemoStore((s) => s.addRecord);
   const addTask = useDemoStore((s) => s.addTask);
   const addWorkItem = useDemoStore((s) => s.addWorkItem);
+  const addStructuredDraft = useDemoStore((s) => s.addStructuredDraft);
   const currentRole = useDemoStore((s) => s.currentRole);
   const { showToast, ToastHost } = useToast();
 
@@ -119,7 +121,10 @@ export function InstructionWizard() {
       if (i >= PROCESSING.length) {
         window.clearInterval(timer);
         commit();
-        window.setTimeout(() => { localStorage.removeItem(DRAFT_KEY); navigate('/work'); }, 500);
+        window.setTimeout(() => {
+          localStorage.removeItem(DRAFT_KEY);
+          navigate(`/legislative/${generated.id}/draft`);
+        }, 500);
       } else {
         setProcStep(i);
       }
@@ -157,6 +162,11 @@ export function InstructionWizard() {
       sponsor: form.sponsor,
     };
     addRecord(record);
+    addStructuredDraft(createStructuredDraft(record, {
+      language: form.language,
+      supportingFiles: form.supportingFiles,
+      financialDocs: form.financialDocs,
+    }));
 
     initialTaskSeed.forEach((t, idx) => {
       const task: Task = {
@@ -188,7 +198,7 @@ export function InstructionWizard() {
       requiredAction: 'Begin drafting the Bill skeleton', myRole: 'Owner / Drafter',
       due: fmtDate(form.deadlines.drafting || form.dueDate), dueThisWeek: false,
       priority: priorityMap[form.priority] ?? 'Medium',
-      lastActivity: 'Instruction registered just now', actionLabel: 'Open workspace', actionTo: `/legislative/${generated.id}`,
+      lastActivity: 'Instruction registered just now', actionLabel: 'Open editor', actionTo: `/legislative/${generated.id}/draft`,
       confidentiality: wiConf, directorate: form.directorate.includes('Procedural') ? 'DLPS' : 'DLS',
       requiredActionLong: 'Draft the initial Bill skeleton and structure the clauses per the approved Standard Bill template.',
       previousStage: 'Instruction', currentStageSince: 'Just now', nextStage: 'Legal Review',

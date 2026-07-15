@@ -24,11 +24,11 @@
 .canonicalSep { width: 1px; height: 16px; background: var(--border); }
 
 /* ---- Lifecycle ribbon ---- */
-.ribbon { display: flex; align-items: stretch; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-panel); padding: 6px; margin-bottom: 20px; overflow-x: auto; }
-.ribbonItem { display: flex; align-items: center; flex: 1; min-width: max-content; }
-.ribbonLine { width: 100%; min-width: 16px; height: 2px; background: var(--green-700); margin: 0 2px; flex: 1; }
+.ribbon { display: grid; grid-template-columns: repeat(6, minmax(150px, 1fr)); align-items: stretch; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-panel); padding: 6px 10px; margin-bottom: 20px; overflow-x: auto; }
+.ribbonItem { position: relative; display: flex; align-items: center; justify-content: center; min-width: 150px; }
+.ribbonLine { position: absolute; z-index: 0; left: -50%; right: 50%; top: 21px; height: 2px; background: var(--green-700); }
 .lineDashed { background: repeating-linear-gradient(90deg, var(--border-strong) 0 4px, transparent 4px 8px); }
-.stage { display: flex; align-items: center; gap: 9px; padding: 8px 12px; border-radius: var(--r-button); background: transparent; border: 1px solid transparent; white-space: nowrap; }
+.stage { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 9px; width: auto; max-width: calc(100% - 18px); padding: 8px 10px; border-radius: var(--r-button); background: var(--bg-card); border: 1px solid transparent; white-space: nowrap; }
 .stage:hover { background: var(--soft-grey); }
 .stageDot { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: var(--soft-grey); color: var(--text-muted); flex: none; }
 .stageNum { font-size: 12px; font-weight: var(--fw-bold); }
@@ -53,9 +53,25 @@
 
 /* ---- Overview layout ---- */
 .overview { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; align-items: start; }
-.mainCol { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
-.mainCol > section:nth-child(5), .mainCol > section:nth-child(6) { grid-column: 1 / -1; }
+.mainCol { display: flex; min-width: 0; flex-direction: column; gap: 16px; }
+.workColumn { display: contents; }
 .rail { display: flex; flex-direction: column; gap: 16px; }
+.actionCard { order: 1; }
+.currentDocument { order: 2; }
+.stageChecklist { order: 3; }
+.pboPanel { order: 4; }
+.recentVersions { order: 5; }
+.participationPanel { order: 6; }
+.relatedPanel { order: 7; }
+.currentDocument, .stageChecklist, .pboPanel, .recentVersions, .participationPanel, .relatedPanel { min-width: 0; }
+
+.contextPanel { overflow: hidden; border: 1px solid var(--border); border-radius: var(--r-panel); background: var(--bg-card); box-shadow: var(--shadow-card); }
+.contextHeader { padding: 16px 18px; border-bottom: 1px solid var(--border); }
+.contextHeader h2 { color: var(--text-strong); font-size: var(--fs-section); font-weight: var(--fw-semibold); }
+.contextHeader span { display: block; margin-top: 3px; color: var(--text-muted); font-size: var(--fs-meta); }
+.contextSection { padding: 16px 18px; border-bottom: 1px solid var(--border); }
+.contextSection:last-child { border-bottom: 0; }
+.contextSection h3 { margin-bottom: 13px; color: var(--text-strong); font-size: var(--fs-table); font-weight: var(--fw-semibold); text-transform: uppercase; }
 
 /* Action required card */
 .actionCard { background: var(--soft-red); border: 1px solid #f0d2d7; border-radius: var(--r-panel); padding: 18px; }
@@ -104,8 +120,9 @@
 
 /* Checklist */
 .checklistCount { font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--text-muted); }
-.progressTrack { height: 6px; background: var(--soft-grey); border-radius: 999px; overflow: hidden; margin-bottom: 14px; }
-.progressFill { height: 100%; background: var(--green-700); border-radius: 999px; }
+.progressTrack { display: grid; grid-template-columns: repeat(5, minmax(22px, 1fr)); gap: 7px; height: 9px; margin-bottom: 16px; }
+.progressTrack i { display: block; border: 1px solid var(--border); border-radius: 3px; background: var(--soft-grey); }
+.progressTrack .progressFill { border-color: var(--ink); background: var(--ink); }
 .checklist { display: flex; flex-direction: column; gap: 10px; }
 .checklist li { display: flex; align-items: center; gap: 10px; font-size: var(--fs-table); }
 .ckIcon { display: inline-flex; flex: none; }
@@ -171,6 +188,7 @@
 .dateUrgent { color: var(--on-red) !important; }
 .blocking { display: flex; flex-direction: column; gap: 10px; }
 .blocking li { display: flex; align-items: center; gap: 9px; font-size: var(--fs-table); font-weight: var(--fw-medium); }
+.noIssues { display: flex; align-items: center; gap: 8px; color: var(--on-green); font-size: var(--fs-table); }
 .access { display: flex; flex-direction: column; gap: 12px; }
 .access > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .access dt { font-size: var(--fs-table); color: var(--text-muted); }
@@ -191,10 +209,8 @@
 
 @media (max-width: 1200px) {
   .overview { grid-template-columns: 1fr; }
-  .rail { flex-direction: row; flex-wrap: wrap; }
-  .rail > section { flex: 1 1 240px; }
+  .rail { display: block; }
 }
 @media (max-width: 900px) {
   .head { flex-direction: column; }
-  .mainCol { grid-template-columns: 1fr; }
 }

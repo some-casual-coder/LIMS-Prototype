@@ -190,7 +190,7 @@ const drafterData: CommandCentreData = {
     ],
   },
   attention: [
-    { title: 'Clause 14 has a blocking review comment', sub: 'Digital Public Services Bill, 2026', tone: 'red', to: '/legislative/NA-BILL-2026-015?highlight=clause-14' },
+    { title: 'Clause 14 has a blocking review comment', sub: 'Digital Public Services Bill, 2026', tone: 'red', to: '/legislative/NA-BILL-2026-015/draft#clause-14' },
     { title: 'Publication deadline is tomorrow', sub: 'Order Paper — Sitting No. 42', tone: 'amber', to: '/legislative/NA-OP-2026-042' },
   ],
   activity: [

@@ -131,6 +131,99 @@ export interface BillContent {
   clauses: Clause[];
 }
 
+export type AkomaBodyType =
+  | 'body'
+  | 'amendmentBody'
+  | 'collectionBody'
+  | 'debateBody'
+  | 'judgmentBody'
+  | 'mainBody';
+
+export type AkomaSectionTag =
+  | 'meta'
+  | 'coverPage'
+  | 'preface'
+  | 'preamble'
+  | AkomaBodyType
+  | 'conclusions'
+  | 'attachments'
+  | 'components';
+
+export type AkomaBlockType =
+  | 'heading'
+  | 'longTitle'
+  | 'paragraph'
+  | 'part'
+  | 'clause'
+  | 'subclause'
+  | 'definition'
+  | 'formula'
+  | 'recital'
+  | 'crossReference'
+  | 'table'
+  | 'schedule'
+  | 'annotation';
+
+export interface StructuredDraftBlock {
+  id: string;
+  type: AkomaBlockType;
+  label: string;
+  text: string;
+  number?: string;
+  reference?: string;
+}
+
+export interface StructuredDraftSection {
+  id: string;
+  tag: AkomaSectionTag;
+  title: string;
+  required: boolean;
+  blocks: StructuredDraftBlock[];
+}
+
+export interface StructuredDraftAttachment {
+  id: string;
+  name: string;
+  type: string;
+  size: string;
+  uploaded: string;
+  category: 'supporting' | 'financial';
+}
+
+export interface StructuredDraftRevision {
+  id: string;
+  version: string;
+  savedAt: string;
+  savedBy: string;
+  note: string;
+  sections: StructuredDraftSection[];
+}
+
+export interface StructuredBillDraft {
+  recordId: string;
+  documentType: WorkflowType;
+  bodyType: AkomaBodyType;
+  language: string;
+  title: string;
+  reference: string;
+  sponsor: string;
+  authoringBody: string;
+  currentVersion: string;
+  activeSectionId: string;
+  sections: StructuredDraftSection[];
+  attachments: StructuredDraftAttachment[];
+  revisions: StructuredDraftRevision[];
+  comments: Array<{
+    id: string;
+    authorId: string;
+    text: string;
+    sectionId: string;
+    createdAt: string;
+    resolved: boolean;
+  }>;
+  updatedAt: string;
+}
+
 export type VersionStatus =
   | 'Initial Draft'
   | 'Internal Review Draft'

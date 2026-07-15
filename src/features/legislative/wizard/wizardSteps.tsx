@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useRef, useState, type DragEvent } from 'react';
 import {
-  Flag, Lock, Search, UploadCloud, MoreVertical, X, Plus, CheckCircle2,
+  Flag, Lock, Search, UploadCloud, X, Plus, CheckCircle2,
   User as UserIcon, PenLine, Scale, ClipboardCheck, Users, FileSpreadsheet,
 } from 'lucide-react';
 import { useDemoStore } from '@/store/demoStore';
@@ -154,14 +154,26 @@ export function StepTemplate({ form, set, openSheet }: { form: WizardForm; set: 
 // ---- Step 3 — Supporting Information ---------------------------------------
 export function StepSupporting({ form, set, openSheet }: { form: WizardForm; set: SetForm; openSheet: OpenSheet }) {
   const [legQuery, setLegQuery] = useState('');
+  const supportingInput = useRef<HTMLInputElement>(null);
+  const financialInput = useRef<HTMLInputElement>(null);
   const legSuggestions = RELATED_LEGISLATION_LIBRARY.filter(
     (l) => legQuery.trim() && l.title.toLowerCase().includes(legQuery.toLowerCase()) && !form.relatedLegislation.some((r) => r.id === l.id),
   );
 
-  function addFile(list: 'supportingFiles' | 'financialDocs') {
-    const n = list === 'supportingFiles' ? form.supportingFiles.length + 1 : form.financialDocs.length + 1;
-    const f: WizardFile = { name: `Attachment_${n}.pdf`, type: 'PDF', size: '1.0 MB', uploaded: '15 Jul 2026' };
-    set({ [list]: [...form[list], f] } as Partial<WizardForm>);
+  function fileSize(bytes: number) {
+    return bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  }
+  function addFiles(list: 'supportingFiles' | 'financialDocs', selected: FileList | File[]) {
+    const existing = new Set(form[list].map((file) => file.name.toLowerCase()));
+    const files: WizardFile[] = Array.from(selected)
+      .filter((file) => !existing.has(file.name.toLowerCase()))
+      .map((file) => ({
+        name: file.name,
+        type: file.name.includes('.') ? file.name.split('.').pop()!.toUpperCase() : 'FILE',
+        size: fileSize(file.size),
+        uploaded: '15 Jul 2026',
+      }));
+    if (files.length > 0) set({ [list]: [...form[list], ...files] } as Partial<WizardForm>);
   }
   function removeFile(list: 'supportingFiles' | 'financialDocs', i: number) {
     set({ [list]: form[list].filter((_, idx) => idx !== i) } as Partial<WizardForm>);
@@ -171,7 +183,27 @@ export function StepSupporting({ form, set, openSheet }: { form: WizardForm; set
     <div className={styles.grid2col}>
       <section className={styles.panel}>
         <StepHeader title="Supporting Files" sub="Upload any supporting documents relevant to this instruction." />
-        <button className={styles.dropzone} onClick={() => addFile('supportingFiles')}>
+        <input
+          ref={supportingInput}
+          className={styles.fileInput}
+          type="file"
+          multiple
+          accept=".pdf,.doc,.docx,.odt,.txt,.xml,.xlsx,.xls,.csv,.png,.jpg,.jpeg"
+          onChange={(event) => {
+            if (event.target.files) addFiles('supportingFiles', event.target.files);
+            event.target.value = '';
+          }}
+        />
+        <button
+          type="button"
+          className={styles.dropzone}
+          onClick={() => supportingInput.current?.click()}
+          onDragOver={(event) => event.preventDefault()}
+          onDrop={(event: DragEvent<HTMLButtonElement>) => {
+            event.preventDefault();
+            addFiles('supportingFiles', event.dataTransfer.files);
+          }}
+        >
           <UploadCloud width={26} height={26} className={styles.dropIcon} aria-hidden />
           <span className={styles.dropText}>Drag & drop files here<br />or</span>
           <span className={styles.browseBtn}>Browse Files</span>
@@ -181,12 +213,12 @@ export function StepSupporting({ form, set, openSheet }: { form: WizardForm; set
             <thead><tr><th>File Name</th><th>Type</th><th>Size</th><th>Uploaded</th><th></th></tr></thead>
             <tbody>
               {form.supportingFiles.map((f, i) => (
-                <tr key={i}>
+                <tr key={`${f.name}-${f.uploaded}`}>
                   <td className={styles.fileName}>{f.name}</td>
                   <td>{f.type}</td>
                   <td>{f.size}</td>
                   <td className={styles.muted}>{f.uploaded}</td>
-                  <td><button className={styles.fileMenu} onClick={() => removeFile('supportingFiles', i)} aria-label={`Remove ${f.name}`}><MoreVertical width={15} height={15} /></button></td>
+                  <td><button className={styles.fileMenu} onClick={() => removeFile('supportingFiles', i)} aria-label={`Remove ${f.name}`} title={`Remove ${f.name}`}><X width={15} height={15} /></button></td>
                 </tr>
               ))}
             </tbody>
@@ -240,7 +272,18 @@ export function StepSupporting({ form, set, openSheet }: { form: WizardForm; set
                 </li>
               ))}
             </ul>
-            <button className={styles.linkBtn} onClick={() => addFile('financialDocs')}><Plus width={13} height={13} /> Add Document</button>
+            <input
+              ref={financialInput}
+              className={styles.fileInput}
+              type="file"
+              multiple
+              accept=".pdf,.doc,.docx,.xlsx,.xls,.csv"
+              onChange={(event) => {
+                if (event.target.files) addFiles('financialDocs', event.target.files);
+                event.target.value = '';
+              }}
+            />
+            <button className={styles.linkBtn} onClick={() => financialInput.current?.click()}><Plus width={13} height={13} /> Add Document</button>
             <button className={styles.linkBtn} onClick={() => openSheet('pbo')} style={{ marginLeft: 16 }}>PBO Requirement Details</button>
           </>
         )}
