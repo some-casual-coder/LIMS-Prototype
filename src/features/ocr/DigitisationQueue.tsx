@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ScanLine, Archive, Clock, Loader2, UserCheck, CheckCircle2, AlertTriangle, ChevronDown,
@@ -180,7 +180,7 @@ export function DigitisationQueue() {
                         </tr>
                       </thead>
                       <tbody>
-                        {g.jobs.map((j) => <QueueRow key={j.id} job={j} navigate={navigate} showToast={showToast} />)}
+                        {g.jobs.map((j, ri) => <QueueRow key={j.id} job={j} index={ri} navigate={navigate} showToast={showToast} />)}
                       </tbody>
                     </table>
                   </div>
@@ -241,14 +241,19 @@ function OcrOverview({ jobs, counts, navigate, onOpenQueue }: {
       <section className={`${styles.overviewPanel} ${styles.activityPanel}`}>
         <div className={styles.panelHeading}><div><p>Latest changes</p><h2>Recent activity</h2></div><History width={20} height={20} /></div>
         <ul className={styles.activityList}>
-          {recent.map((job) => <li key={job.id}><button onClick={() => navigate(actionFor(job).to)}><span className={styles.activityIcon}><FileText width={15} height={15} /></span><span><strong>{job.title}</strong><small>{job.status} · {relTime(job.updatedAt)}</small></span></button></li>)}
+          {recent.map((job, i) => <li key={job.id} className="item-in" style={{ '--item-delay': `${i * 0.05}s` } as CSSProperties}><button onClick={() => navigate(actionFor(job).to)}><span className={styles.activityIcon}><FileText width={15} height={15} /></span><span><strong>{job.title}</strong><small>{job.status} · {relTime(job.updatedAt)}</small></span></button></li>)}
         </ul>
       </section>
 
       <section className={`${styles.overviewPanel} ${styles.trendPanel}`}>
         <div className={styles.panelHeading}><div><p>Illustrative reporting series</p><h2>Records processed per month</h2></div><span className={styles.period}>Jan–Dec 2026</span></div>
         <div className={styles.barChart} role="img" aria-label="Illustrative monthly records processed, ranging from three to eleven records">
-          {trend.map((value, index) => <div key={index} className={styles.barColumn}><span className={styles.barValue}>{value}</span><span className={styles.barTrack}>{Array.from({ length: 11 }, (_, tick) => <i key={tick} className={tick >= 11 - value ? styles.barOn : ''} />)}</span><small>{['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][index]}</small></div>)}
+          {trend.map((value, index) => <div key={index} className={styles.barColumn}><span className={styles.barValue}>{value}</span><span className={styles.barTrack}>{Array.from({ length: 11 }, (_, tick) => {
+            const on = tick >= 11 - value;
+            return on
+              ? <i key={tick} className={styles.barOn} style={{ '--item-delay': `${index * 0.03 + (10 - tick) * 0.03}s` } as CSSProperties} />
+              : <i key={tick} />;
+          })}</span><small>{['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][index]}</small></div>)}
         </div>
         <p className={styles.chartNote}>Throughput reflects records completing OCR extraction or verification in each month.</p>
       </section>
@@ -278,13 +283,13 @@ function progressTone(status: OcrStatus): string {
       : status === 'Needs Verification' ? 'var(--gold-strong)' : 'var(--on-blue)';
 }
 
-function QueueRow({ job, navigate, showToast }: { job: OcrJob; navigate: ReturnType<typeof useNavigate>; showToast: (m: string) => void }) {
+function QueueRow({ job, index, navigate, showToast }: { job: OcrJob; index: number; navigate: ReturnType<typeof useNavigate>; showToast: (m: string) => void }) {
   const conf = job.ocrConfidence > 0 ? confidenceMeta(job.ocrConfidence) : null;
   const pct = job.pageCount ? Math.round((job.verifiedPages / job.pageCount) * 100) : 0;
 
   const action = actionFor(job);
   return (
-    <tr className={styles.row} onClick={() => navigate(action.to)}>
+    <tr className={`${styles.row} item-in`} style={{ '--item-delay': `${Math.min(index, 10) * 0.03}s` } as CSSProperties} onClick={() => navigate(action.to)}>
       <td>
         <div className={styles.recCell}>
           <span className={styles.recIcon} aria-hidden>{job.restricted ? <Lock width={15} height={15} /> : <FileText width={15} height={15} />}</span>

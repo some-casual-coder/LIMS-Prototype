@@ -65,7 +65,9 @@
 .barColumn:hover .barValue { opacity: 1; }
 .barTrack { display: flex; flex-direction: column-reverse; justify-content: space-between; width: min(22px, 70%); height: 150px; }
 .barTrack i { display: block; width: 100%; height: 7px; border-radius: 4px; background: #edf0ed; }
-.barTrack .barOn { background: var(--green-700); }
+.barTrack .barOn { background: var(--green-700); transform-origin: bottom; animation: ocrBarIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: var(--item-delay, 0s); }
+@keyframes ocrBarIn { from { opacity: 0; transform: scaleY(0.2); } to { opacity: 1; transform: scaleY(1); } }
+@media (prefers-reduced-motion: reduce) { .barTrack .barOn { animation: none; } }
 .barColumn:nth-child(3n+2) .barTrack .barOn { background: var(--gold-strong); }
 .barColumn:nth-child(4n) .barTrack .barOn { background: var(--ink); }
 .barColumn small { align-self: end; color: var(--text-muted); font-size: 10px; }
