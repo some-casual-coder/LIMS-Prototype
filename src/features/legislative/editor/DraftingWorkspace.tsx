@@ -155,7 +155,7 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
           ) : (
             <>
               <Button variant="secondary" leftIcon={<ShieldCheck width={16} height={16} />} onClick={() => { setPanelTab('Validation'); showToast('Validation complete — 14 passed, 1 warning, 0 errors.'); }}>Validate</Button>
-              <Button variant="secondary" leftIcon={<Eye width={16} height={16} />} onClick={() => { setTrackChanges(false); showToast('Preview — clean document with tracked changes hidden.'); }}>Preview</Button>
+              <Button variant="secondary" leftIcon={<Eye width={16} height={16} />} to={`/legislative/${id}/draft?mode=preview`}>Preview</Button>
               <Button variant="primary" leftIcon={<Send width={15} height={15} />} onClick={() => setSheet('submit')}>Submit Revision</Button>
             </>
           )}
@@ -242,7 +242,7 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
           inserted={inserted.filter((b) => b.clause === activeClause)}
           onEditInserted={editInserted}
           onRemoveInserted={removeInserted}
-          highlight={find}
+          highlight={mode === 'preview' ? '' : find}
           onRef={(t) => navigate(`/search?q=${encodeURIComponent(t)}`)}
           onAccept={(cid) => setChange(cid, 'accepted')}
           onReject={(cid) => setChange(cid, 'rejected')}

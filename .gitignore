@@ -19,3 +19,6 @@ PROGRESS.md
 # tsc composite emit for vite.config (should not be committed)
 vite.config.js
 vite.config.d.ts
+
+# Demonstrator guides (internal, not shipped)
+demo-guides/

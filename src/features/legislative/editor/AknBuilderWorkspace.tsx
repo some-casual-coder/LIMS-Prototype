@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  ArrowLeft, Check, ChevronDown, ChevronRight, CircleCheck, CircleDot,
+  ArrowLeft, Check, ChevronDown, ChevronRight, ChevronUp, CircleCheck, CircleDot,
   Eye, FileCode2, FilePlus2, GripVertical, ListTree, Plus, Redo2,
   Save, Search, ShieldCheck, Trash2, Undo2, MessageSquare, Sparkles,
-  GitCompare, PenLine, MoreHorizontal, Landmark, Info, WandSparkles,
+  GitCompare, PenLine, MoreHorizontal, Landmark, Info, WandSparkles, X,
 } from 'lucide-react';
 import { Button, Popover } from '@/components/ui';
 import type {
@@ -68,9 +68,12 @@ export function AknBuilderWorkspace({ record, mode }: Props) {
   const [compareOpen, setCompareOpen] = useState(false);
   const [panelTab, setPanelTab] = useState<'Comments' | 'AI Assistant' | 'Validation' | 'Metadata' | 'References'>('Comments');
   const [aiDrafted, setAiDrafted] = useState(false);
+  const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
+  const [findCursor, setFindCursor] = useState(-1);
   const undoStack = useRef<StructuredBillDraft[]>([]);
   const redoStack = useRef<StructuredBillDraft[]>([]);
   const editCheckpoint = useRef<string | null>(null);
+  const blockRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
     if (!storedDraft) addDraft(createStructuredDraft(record));
@@ -98,6 +101,45 @@ export function AknBuilderWorkspace({ record, mode }: Props) {
     [trackChanges, lastRevision, draft.sections],
   );
 
+  // Find in document: count occurrences per block + per section so the toolbar
+  // can cycle through hits and the structure sidebar can badge match counts.
+  const find = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return { term: '', hits: [] as { sectionId: string; blockId: string; count: number }[], perBlock: {} as Record<string, number>, perSection: {} as Record<string, number>, total: 0 };
+    const perBlock: Record<string, number> = {};
+    const perSection: Record<string, number> = {};
+    const hits: { sectionId: string; blockId: string; count: number }[] = [];
+    let total = 0;
+    draft.sections.forEach((section) => {
+      let secCount = section.title.toLowerCase().split(q).length - 1;
+      section.blocks.forEach((block) => {
+        const count = `${block.label} ${block.text} ${block.number ?? ''}`.toLowerCase().split(q).length - 1;
+        if (count > 0) {
+          perBlock[block.id] = count;
+          hits.push({ sectionId: section.id, blockId: block.id, count });
+          secCount += count;
+          total += count;
+        }
+      });
+      if (secCount > 0) perSection[section.id] = secCount;
+    });
+    return { term: q, hits, perBlock, perSection, total };
+  }, [query, draft.sections]);
+
+  const currentHit = findCursor >= 0 ? find.hits[findCursor] : undefined;
+
+  // A new query resets the cursor; typing highlights live but does not scroll.
+  useEffect(() => { setFindCursor(-1); }, [query]);
+
+  function stepFind(direction: 1 | -1) {
+    if (!find.hits.length) return;
+    const next = findCursor < 0 ? (direction === 1 ? 0 : find.hits.length - 1) : (findCursor + direction + find.hits.length) % find.hits.length;
+    setFindCursor(next);
+    const hit = find.hits[next];
+    if (hit.sectionId !== draft.activeSectionId) setActiveSection(record.id, hit.sectionId);
+    setActiveBlockId(hit.blockId);
+  }
+
   useEffect(() => {
     const requestedTab = searchParams.get('tab')?.toLowerCase();
     if (requestedTab === 'metadata') {
@@ -108,6 +150,20 @@ export function AknBuilderWorkspace({ record, mode }: Props) {
       setPanelTab('References');
     }
   }, [draft.activeSectionId, draft.sections, record.id, searchParams, setActiveSection]);
+
+  // Scroll the active block into view (after navigating from the structure tree
+  // or inserting a block) and hold a gold accent on it so the drafter can see
+  // exactly where they are within the section.
+  useEffect(() => {
+    if (!activeBlockId) return;
+    const node = blockRefs.current[activeBlockId];
+    if (node) node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [activeBlockId, draft.activeSectionId]);
+
+  function goToBlock(sectionId: string, blockId: string) {
+    if (sectionId !== draft.activeSectionId) setActiveSection(record.id, sectionId);
+    setActiveBlockId(blockId);
+  }
 
   function announce(message: string) {
     setToast(message);
@@ -159,8 +215,10 @@ export function AknBuilderWorkspace({ record, mode }: Props) {
     const ordinal = target.blocks.filter((block) => block.type === type).length + 1;
     const block = makeDraftBlock(type, ordinal);
     addBlock(record.id, target.id, initialText ? { ...block, text: initialText } : block);
-    // Make sure the section receiving the block is the one on screen.
+    // Make sure the section receiving the block is the one on screen, then
+    // scroll to + accent the new block so the insert is visibly confirmed.
     if (target.id !== draft.activeSectionId) setActiveSection(record.id, target.id);
+    setActiveBlockId(block.id);
     announce(`${akomaBlockOptions.find((item) => item.type === type)?.label ?? 'Content block'} inserted in <${target.tag}>.`);
   }
 
@@ -179,18 +237,6 @@ export function AknBuilderWorkspace({ record, mode }: Props) {
 
   function finishBlockEdit() {
     editCheckpoint.current = null;
-  }
-
-  function runSearch() {
-    const term = query.trim().toLowerCase();
-    if (!term) return;
-    const matches = draft.sections.filter((section) =>
-      section.title.toLowerCase().includes(term)
-      || section.tag.toLowerCase().includes(term)
-      || section.blocks.some((block) => `${block.label} ${block.text}`.toLowerCase().includes(term)),
-    );
-    if (matches[0]) setActiveSection(record.id, matches[0].id);
-    announce(matches.length ? `${matches.length} AKN section${matches.length === 1 ? '' : 's'} matched “${query.trim()}”.` : `No document content matched “${query.trim()}”.`);
   }
 
   function saveVersion() {
@@ -298,16 +344,25 @@ export function AknBuilderWorkspace({ record, mode }: Props) {
             {(close) => <div className={styles.actionMenu}>{['Suggest clearer wording', 'Check consistency', 'Identify ambiguity', 'Draft explanatory note'].map((action) => <button key={action} onClick={() => { setPanelTab('AI Assistant'); setAiDrafted(true); announce(`${action} prepared for human review.`); close(); }}>{action}</button>)}</div>}
           </Popover>
           <button className={styles.textTool} onClick={() => setCollapsed((value) => !value)}><ListTree width={16} height={16} /> {collapsed ? 'Show structure' : 'Hide structure'}</button>
-          <form className={styles.search} onSubmit={(event) => { event.preventDefault(); runSearch(); }}>
+          <form className={`${styles.search} ${query.trim() ? styles.searchActive : ''}`} onSubmit={(event) => { event.preventDefault(); stepFind(1); }}>
             <Search width={15} height={15} />
             <input name="draft-search" value={query} onChange={(event) => setQuery(event.target.value)} aria-label="Find in document" placeholder="Find in document" />
+            {query.trim() && (
+              <div className={styles.findControls}>
+                <span className={styles.findCount} title={`${find.total} match${find.total === 1 ? '' : 'es'} in ${find.hits.length} block${find.hits.length === 1 ? '' : 's'}`}>
+                  {find.hits.length ? `${findCursor >= 0 ? findCursor + 1 : 1}/${find.hits.length}` : '0/0'}
+                </span>
+                <button type="button" className={styles.findNav} aria-label="Previous match" disabled={!find.hits.length} onClick={() => stepFind(-1)}><ChevronUp width={15} height={15} /></button>
+                <button type="button" className={styles.findNav} aria-label="Next match" disabled={!find.hits.length} onClick={() => stepFind(1)}><ChevronDown width={15} height={15} /></button>
+                <button type="button" className={styles.findNav} aria-label="Clear search" onClick={() => { setQuery(''); setFindCursor(-1); }}><X width={14} height={14} /></button>
+              </div>
+            )}
           </form>
           <Popover label="More editor actions" align="right" trigger={({ toggle, ref }) => (
             <button ref={ref} className={styles.iconTool} aria-label="More editor actions" title="More editor actions" onClick={toggle}><MoreHorizontal width={17} height={17} /></button>
           )}>
             {(close) => <div className={styles.actionMenu}>
               <button onClick={() => { setPanelTab('Metadata'); close(); }}>Document metadata</button>
-              <button onClick={() => { announce('Sequential numbering rules confirmed.'); close(); }}>Numbering settings</button>
               <button onClick={() => { exportWorkingCopy(); close(); }}>Export working copy</button>
             </div>}
           </Popover>
@@ -324,14 +379,23 @@ export function AknBuilderWorkspace({ record, mode }: Props) {
                 const status = sectionStatus(draft, section.id);
                 return (
                   <li key={section.id}>
-                    <button className={`${styles.sectionButton} ${active ? styles.sectionActive : ''}`} onClick={() => setActiveSection(record.id, section.id)} aria-current={active ? 'true' : undefined}>
+                    <button className={`${styles.sectionButton} ${active ? styles.sectionActive : ''}`} onClick={() => { setActiveSection(record.id, section.id); setActiveBlockId(null); }} aria-current={active ? 'true' : undefined}>
                       <span className={styles.tag}>&lt;{section.tag}&gt;</span>
                       <span className={styles.sectionName}>{section.title}</span>
-                      {status === 'complete' ? <Check width={14} height={14} className={styles.complete} /> : <CircleDot width={14} height={14} className={styles.empty} />}
+                      {find.perSection[section.id] ? (
+                        <span className={styles.matchBadge} title={`${find.perSection[section.id]} match${find.perSection[section.id] === 1 ? '' : 'es'}`}>{find.perSection[section.id]}</span>
+                      ) : status === 'complete' ? <Check width={14} height={14} className={styles.complete} /> : <CircleDot width={14} height={14} className={styles.empty} />}
                     </button>
                     {section.blocks.length > 0 && (
                       <ol className={styles.blockTree} aria-label={`${section.title} contents`}>
-                        {section.blocks.map((block) => <li key={block.id}><button onClick={() => setActiveSection(record.id, section.id)}><FileCode2 width={12} height={12} /><span>{blockLabel(block)}</span></button></li>)}
+                        {section.blocks.map((block) => (
+                          <li key={block.id}>
+                            <button className={activeBlockId === block.id ? styles.blockTreeActive : ''} onClick={() => goToBlock(section.id, block.id)}>
+                              <FileCode2 width={12} height={12} /><span>{blockLabel(block)}</span>
+                              {find.perBlock[block.id] ? <span className={styles.matchBadgeSm} title={`${find.perBlock[block.id]} match${find.perBlock[block.id] === 1 ? '' : 'es'}`}>{find.perBlock[block.id]}</span> : null}
+                            </button>
+                          </li>
+                        ))}
                       </ol>
                     )}
                   </li>
@@ -368,13 +432,17 @@ export function AknBuilderWorkspace({ record, mode }: Props) {
                 <div className={styles.blocks}>
                   {activeSection.blocks.map((block) => {
                     const mark = trackMarks[block.id];
+                    const matchCount = find.perBlock[block.id] ?? 0;
+                    const isCurrentHit = currentHit?.blockId === block.id;
+                    const findClass = isCurrentHit ? styles.blockFindCurrent : matchCount ? styles.blockFindMatch : '';
                     return (
-                    <div key={block.id} className={`${styles.block} ${mark ? styles.blockChanged : ''}`} data-change={mark ?? undefined}>
+                    <div key={block.id} ref={(el) => { blockRefs.current[block.id] = el; }} className={`${styles.block} ${mark ? styles.blockChanged : ''} ${activeBlockId === block.id ? styles.blockActive : ''} ${findClass}`} data-change={mark ?? undefined}>
                       <GripVertical width={16} height={16} className={styles.grip} aria-hidden />
                       <div className={styles.blockContent}>
                         <div className={styles.blockMeta}>
                           <span>&lt;{block.type}&gt;</span>
                           {mark && <span className={`${styles.changeChip} ${mark === 'added' ? styles.chipAdd : styles.chipMod}`}>{mark === 'added' ? 'New' : 'Edited'}</span>}
+                          {matchCount > 0 && <span className={`${styles.changeChip} ${styles.chipFind}`}>{matchCount} match{matchCount === 1 ? '' : 'es'}</span>}
                           {(block.type === 'clause' || block.type === 'subclause') && (
                             <label>Number <input name={`${block.id}-number`} value={block.number ?? ''} onFocus={() => beginBlockEdit(block.id)} onBlur={finishBlockEdit} onChange={(event) => updateBlock(record.id, block.id, { number: event.target.value })} /></label>
                           )}
@@ -463,7 +531,7 @@ function BlockMenu({ onSelect }: { onSelect: (type: AkomaBlockType) => void }) {
 }
 
 function SectionMenu({ items, onSelect }: { items: typeof akomaSectionOptions; onSelect: (tag: AkomaSectionTag) => void }) {
-  return <div className={styles.insertMenu}>{items.map((item) => <button key={item.tag} onClick={() => onSelect(item.tag)}><b>&lt;{item.tag}&gt;</b><small>{item.description}</small></button>)}</div>;
+  return <div className={styles.sectionMenu}>{items.map((item) => <button key={item.tag} onClick={() => onSelect(item.tag)}><b>&lt;{item.tag}&gt;</b><small>{item.description}</small></button>)}</div>;
 }
 
 function MetadataEditor({ draft, onCheckpoint, onChange }: {

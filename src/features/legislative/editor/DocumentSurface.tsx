@@ -94,8 +94,11 @@ function FloatingToolbar({ onComment, onSuggest, onCrossRef, onToast, clauseNo }
 export function DocumentSurface({ mode, activeClause, changeStatus, inserted = [], onEditInserted, onRemoveInserted, highlight, onRef, onAccept, onReject, onComment, onSuggest, onCrossRef, onToast, zoom = 100 }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const insertedRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { scrollRef.current?.scrollTo({ top: 0 }); setSelected(null); }, [activeClause]);
+  // When a block is inserted, scroll it into view so the change is visible.
+  useEffect(() => { if (inserted.length) insertedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, [inserted.length]);
 
   const paraChangeIds = (p: DraftPara) => [...new Set(p.runs.map((r) => r.changeId).filter(Boolean))] as string[];
   const clean = primaryBillContent.clauses.find((c) => c.number === activeClause);
@@ -154,7 +157,7 @@ export function DocumentSurface({ mode, activeClause, changeStatus, inserted = [
         )}
 
         {mode !== 'preview' && inserted.length > 0 && (
-          <div className={styles.insertedGroup}>
+          <div className={styles.insertedGroup} ref={insertedRef}>
             {inserted.map((b) => (
               <div key={b.id} className={styles.insertedBlock}>
                 <div className={styles.insertedMeta}>

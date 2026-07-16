@@ -29,7 +29,10 @@
 .tbRight { flex: 1; display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
 
 /* Toolbar */
-.toolbar { flex: none; display: flex; align-items: center; gap: 4px; padding: 6px 16px; background: var(--bg-card); border-bottom: 1px solid var(--border); overflow-x: auto; }
+/* No overflow: overflow-x:auto forces overflow-y:auto and clipped the Insert /
+   version / Find dropdowns that open below the toolbar. Wrap is the fallback for
+   narrow widths so the strip never overflows horizontally instead. */
+.toolbar { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 6px 16px; background: var(--bg-card); border-bottom: 1px solid var(--border); }
 .toolGroup { display: inline-flex; gap: 2px; }
 .tool { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: none; background: transparent; border-radius: 7px; color: var(--text); }
 .tool:hover:not(:disabled) { background: var(--soft-grey); }
