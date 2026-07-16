@@ -97,7 +97,7 @@ export function VerificationWorkspace() {
   const lines = page?.lines ?? [];
 
   return (
-    <div className={styles.screen}>
+    <div className={styles.screen} role="main">
       <OcrRail />
       <div className={styles.main}>
         {/* Header */}
