@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { StatusBadge } from '@/components/ui';
@@ -64,10 +65,11 @@ export function WorkList({ groups, collapsed, onToggleGroup, selected, onToggleS
                     </tr>
                   </thead>
                   <tbody>
-                    {group.items.map((item) => (
+                    {group.items.map((item, index) => (
                       <Row
                         key={item.recordId}
                         item={item}
+                        index={index}
                         selected={selected.has(item.recordId)}
                         onToggleSelect={onToggleSelect}
                         onOpen={onOpenItem}
@@ -84,11 +86,11 @@ export function WorkList({ groups, collapsed, onToggleGroup, selected, onToggleS
   );
 }
 
-function Row({ item, selected, onToggleSelect, onOpen }: {
-  item: WorkItem; selected: boolean; onToggleSelect: (id: string) => void; onOpen: (id: string) => void;
+function Row({ item, index, selected, onToggleSelect, onOpen }: {
+  item: WorkItem; index: number; selected: boolean; onToggleSelect: (id: string) => void; onOpen: (id: string) => void;
 }) {
   return (
-    <tr className={`${styles.row} ${selected ? styles.rowSelected : ''}`}>
+    <tr className={`${styles.row} ${selected ? styles.rowSelected : ''} item-in`} style={{ '--item-delay': `${index * 0.03}s` } as CSSProperties}>
       <td className={styles.cellCheck} onClick={(e) => e.stopPropagation()}>
         <input type="checkbox" checked={selected} onChange={() => onToggleSelect(item.recordId)} aria-label={`Select ${item.title}`} />
       </td>

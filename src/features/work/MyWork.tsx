@@ -1,9 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   Plus, Download, MoreVertical, Bookmark, ChevronDown, SlidersHorizontal, Group as GroupIcon,
   ArrowUpDown, Columns3, ListChecks, Kanban, CalendarDays, Search as SearchIcon,
   UserPlus, BellPlus, Flag, BookmarkPlus, FileDown, X,
+  Vote, MessageSquare, MessageSquareQuote, ScrollText, PenLine, ClipboardCheck,
+  type LucideIcon,
 } from 'lucide-react';
 import { AppShell } from '@/components/shell';
 import { Button, Popover } from '@/components/ui';
@@ -23,6 +25,18 @@ import { TransitionSheet, type PendingTransition } from './sheets/TransitionShee
 import { useToast } from '@/features/search/Toast';
 import { applyFilters, sortItems, groupItems, emptyFilters, filterCount, type Filters } from './logic';
 import styles from './MyWork.module.css';
+
+// Scoped views: the same worklist engine presented as a dedicated legislative
+// page (title/icon/context) with the matching type or status pre-applied.
+interface Scope { title: string; desc: string; icon: LucideIcon; kind: 'type' | 'status'; value: string }
+const SCOPES: Record<string, Scope> = {
+  motions: { title: 'Motions', desc: 'Motions in your legislative workflow.', icon: Vote, kind: 'type', value: 'Motion' },
+  questions: { title: 'Questions', desc: 'Parliamentary questions you are handling.', icon: MessageSquare, kind: 'type', value: 'Question' },
+  statements: { title: 'Statements', desc: 'Statements in drafting or review.', icon: MessageSquareQuote, kind: 'type', value: 'Statement' },
+  petitions: { title: 'Petitions', desc: 'Public petitions in your legislative workflow.', icon: ScrollText, kind: 'type', value: 'Petition' },
+  'my-drafts': { title: 'My Drafts', desc: 'Records you are actively drafting.', icon: PenLine, kind: 'status', value: 'in-progress' },
+  'review-queue': { title: 'Review Queue', desc: 'Records awaiting your review.', icon: ClipboardCheck, kind: 'status', value: 'awaiting-review' },
+};
 
 const GROUP_OPTIONS = [
   { id: 'work-state', label: 'Work state' },
@@ -44,13 +58,18 @@ export function MyWork() {
   const view: 'list' | 'board' | 'calendar' = requestedView === 'board' || requestedView === 'calendar' ? requestedView : 'list';
   const quickItemId = params.get('item') || '';
   const sheet = params.get('sheet') || '';
+  const scopeKey = params.get('scope') || '';
+  const scope = SCOPES[scopeKey] ?? null;
 
-  const [status, setStatusState] = useState(params.get('status') || 'all');
+  const [status, setStatusState] = useState(
+    params.get('status') || (scope?.kind === 'status' ? scope.value : 'all'),
+  );
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Filters>(() => {
     const initial = emptyFilters();
     const type = params.get('type');
     if (type) initial.types.add(type);
+    if (scope?.kind === 'type') initial.types.add(scope.value);
     const stage = params.get('stage');
     if (stage) initial.stages.add(stage);
     return initial;
@@ -63,6 +82,23 @@ export function MyWork() {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({ completed: true });
   const [pending, setPending] = useState<PendingTransition | null>(null);
   const { showToast, ToastHost } = useToast();
+
+  // Client-side nav between scopes keeps the same MyWork mount, so the
+  // once-only useState initializers wouldn't update. Re-apply scope defaults
+  // (status + type filter) whenever the scope changes.
+  useEffect(() => {
+    const sc = SCOPES[scopeKey] ?? null;
+    setStatusState(params.get('status') || (sc?.kind === 'status' ? sc.value : 'all'));
+    const next = emptyFilters();
+    const type = params.get('type');
+    if (type) next.types.add(type);
+    if (sc?.kind === 'type') next.types.add(sc.value);
+    const stage = params.get('stage');
+    if (stage) next.stages.add(stage);
+    setFilters(next);
+    setSearch('');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scopeKey]);
 
   const setView = (v: string) => setParams((p) => { p.set('view', v); p.delete('item'); return p; }, { replace: true });
   const setStatus = (value: string) => {
@@ -119,12 +155,25 @@ export function MyWork() {
     showToast(`${filtered.length} work items exported.`);
   }
 
+  const ScopeIcon = scope?.icon;
+  const breadcrumb = scope
+    ? [{ label: 'Home', to: '/dashboard' }, { label: 'My Work', to: '/work' }, { label: scope.title }]
+    : [{ label: 'Home', to: '/dashboard' }, { label: 'My Work' }];
+
   return (
-    <AppShell breadcrumb={[{ label: 'Home', to: '/dashboard' }, { label: 'My Work' }]}>
+    <AppShell breadcrumb={breadcrumb}>
       {/* Header */}
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>My Work</h1>
+          <h1 className={styles.title}>
+            {ScopeIcon && <ScopeIcon width={22} height={22} className={styles.titleIcon} aria-hidden />}
+            {scope ? scope.title : 'My Work'}
+          </h1>
+          {scope && (
+            <p className={styles.subtitle}>
+              {scope.desc} <Link to="/work" className={styles.subtitleLink}>View all My Work</Link>
+            </p>
+          )}
         </div>
         <div className={styles.headerActions}>
           <Button variant="primary" size="lg" to="/legislative/new" leftIcon={<Plus width={18} height={18} />}>New Legislative Instruction</Button>

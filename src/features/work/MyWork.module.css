@@ -6,7 +6,11 @@
   gap: 24px;
   margin-bottom: 18px;
 }
-.title { font-size: var(--fs-page-title); font-weight: var(--fw-semibold); color: var(--text-strong); letter-spacing: 0; }
+.title { display: inline-flex; align-items: center; gap: 10px; font-size: var(--fs-page-title); font-weight: var(--fw-semibold); color: var(--text-strong); letter-spacing: 0; }
+.titleIcon { color: var(--green-700); flex: none; }
+.subtitle { margin-top: 4px; font-size: var(--fs-table); color: var(--text-muted); }
+.subtitleLink { color: var(--green-700); font-weight: var(--fw-semibold); }
+.subtitleLink:hover { text-decoration: underline; }
 .headerActions { display: flex; align-items: center; gap: 10px; flex: none; }
 .moreBtn {
   display: inline-flex; align-items: center; justify-content: center;

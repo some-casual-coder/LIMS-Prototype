@@ -36,18 +36,18 @@ export const navGroups: NavGroup[] = [
     roles: legislativeRoles,
     items: [
       { label: 'Bills', to: '/bills', icon: <Scale {...ic} /> },
-      { label: 'Motions', to: '/work?type=Motion', icon: <Vote {...ic} /> },
-      { label: 'Questions', to: '/work?type=Question', icon: <MessageSquare {...ic} /> },
-      { label: 'Statements', to: '/work?type=Statement', icon: <MessageSquareQuote {...ic} /> },
-      { label: 'Petitions', to: '/work?type=Petition', icon: <ScrollText {...ic} /> },
+      { label: 'Motions', to: '/work?scope=motions', icon: <Vote {...ic} /> },
+      { label: 'Questions', to: '/work?scope=questions', icon: <MessageSquare {...ic} /> },
+      { label: 'Statements', to: '/work?scope=statements', icon: <MessageSquareQuote {...ic} /> },
+      { label: 'Petitions', to: '/work?scope=petitions', icon: <ScrollText {...ic} /> },
     ],
   },
   {
     label: 'Drafting',
     roles: draftingRoles,
     items: [
-      { label: 'My Drafts', to: '/work?status=in-progress', icon: <PenLine {...ic} /> },
-      { label: 'Review Queue', to: '/work?status=awaiting-review', icon: <ClipboardCheck {...ic} /> },
+      { label: 'My Drafts', to: '/work?scope=my-drafts', icon: <PenLine {...ic} /> },
+      { label: 'Review Queue', to: '/work?scope=review-queue', icon: <ClipboardCheck {...ic} /> },
     ],
   },
   {
