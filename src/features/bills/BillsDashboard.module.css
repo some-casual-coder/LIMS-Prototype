@@ -4,13 +4,18 @@
 .dashboardTop { display:grid; grid-template-columns:minmax(260px,.58fr) minmax(420px,1.2fr) minmax(285px,.68fr); gap:14px; align-items:stretch; margin-bottom:14px; }
 .metrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
 .metric,.matrixPanel,.actionPanel,.performancePanel,.statusPanel,.tablePanel,.agePanel { min-width:0; border:1px solid var(--border); border-radius:var(--r-card); background:var(--bg-card); }
-.metric { min-height:120px; padding:14px; }
+.metric { display:flex; flex-direction:column; gap:9px; min-height:120px; padding:14px; transition:background .12s ease, border-color .12s ease; }
+.metric:hover { background:rgba(11,107,58,.05); border-color:var(--border-strong); }
 .metricTop { display:flex; align-items:start; justify-content:space-between; gap:8px; font-size:12px; color:var(--text); font-weight:var(--fw-semibold); }
-.metricIcon { width:34px; height:34px; border-radius:var(--r-button); display:inline-flex; align-items:center; justify-content:center; }
+.metricIcon { width:34px; height:34px; border-radius:var(--r-button); flex:none; display:inline-flex; align-items:center; justify-content:center; }
 .metricIcon svg { width:17px; height:17px; }
 .green { color:#08763d; background:#dff4e7; }.gold { color:#725800; background:#fff0ad; }.red { color:#b32130; background:#fde0e3; }.charcoal { color:#fff; background:#344139; }
-.metricValue { margin-top:7px; font-size:36px; line-height:1; font-weight:var(--fw-bold); color:var(--text-strong); }
-.metric p { margin:6px 0 0; font-size:11px; color:var(--text-muted); }
+.metricBody { display:flex; align-items:flex-end; justify-content:space-between; gap:14px; margin-top:auto; }
+.metricValue { font-size:34px; line-height:1; font-weight:var(--fw-bold); color:var(--text-strong); font-variant-numeric:tabular-nums; }
+.metricTicks { flex:1; min-width:64px; height:26px; display:flex; align-items:flex-end; justify-content:flex-end; gap:2px; }
+.metricTicks i { width:3px; border-radius:2px; }
+.metricTicks i:nth-child(3n+1){height:10px}.metricTicks i:nth-child(3n+2){height:18px}.metricTicks i:nth-child(3n){height:25px}
+.metric p { margin:0; font-size:11px; color:var(--text-muted); }
 .matrixPanel,.actionPanel,.performancePanel,.statusPanel,.agePanel { padding:16px; }
 .sectionHead { display:flex; align-items:center; justify-content:space-between; gap:14px; }
 .sectionHead h2,.aknTop h2 { margin:3px 0 0; font-size:16px; line-height:1.25; color:var(--text-strong); }
@@ -21,6 +26,19 @@
 .donutWrap { display:grid; place-items:center; padding:14px 0; }.donut { width:154px; aspect-ratio:1; border-radius:50%; display:grid; place-items:center; position:relative; }.donut::after { content:''; position:absolute; inset:24px; border-radius:50%; background:var(--bg-card); }.donut span { z-index:1; text-align:center; color:var(--text-muted); font-size:10px; }.donut strong { display:block; color:var(--text-strong); font-size:24px; }.statusLegend { display:grid; gap:7px; }.statusLegend li { display:grid; grid-template-columns:10px 1fr auto; align-items:center; gap:7px; font-size:11px; color:var(--text); }.statusLegend i { width:9px; height:9px; border-radius:2px; }.keyGreen{background:#00834f}.keyGold{background:#e3b92f}.keyCharcoal{background:#344139}.keyMutedGreen{background:#7a9b87}
 .detailGrid { display:grid; grid-template-columns:minmax(500px,1.35fr) minmax(330px,.65fr); gap:14px; align-items:start; }.tablePanel { overflow:hidden; }.tablePanel>.sectionHead { padding:16px 16px 10px; }.tableWrap { overflow-x:auto; }table{width:100%;border-collapse:collapse}th{padding:8px 10px;text-align:left;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--soft-grey);color:var(--text-muted);font-size:10px;font-weight:var(--fw-semibold);white-space:nowrap}td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text);font-size:11px;vertical-align:middle}tbody tr:last-child td{border-bottom:0}.billIdentity{min-width:200px;display:flex;align-items:center;gap:8px;color:inherit}.billIcon{width:30px;height:30px;flex:none;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--r-button);background:#dff4e7;color:#08763d}.billIdentity strong,.billIdentity small,.cellMeta{display:block}.billIdentity strong{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-strong);font-size:11px}.billIdentity small,.cellMeta{margin-top:2px;color:var(--text-muted);font-size:9px}.rowAction{width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:var(--r-button);color:var(--text)}.rowAction:hover{border-color:var(--green-700);color:var(--green-700)}
 .period { padding:5px 8px; border:1px solid var(--border); border-radius:var(--r-button); font-size:10px; color:var(--text-muted); }.ageChart { display:grid; gap:14px; margin-top:24px; }.ageRow { display:grid; grid-template-columns:104px minmax(0,1fr) 38px; align-items:center; gap:9px; }.ageRow>span,.ageRow>strong { font-size:10px; color:var(--text-muted); }.ageRow>strong { color:var(--text-strong); text-align:right; }.ageRow>div { position:relative; height:11px; border-radius:3px; background:var(--soft-grey); }.ageRow>div i { display:block; height:100%; border-radius:3px; background:var(--green-700); }.ageRow>div .ageRisk { background:var(--status-warning); }.ageRow>div b { position:absolute; top:-4px; bottom:-4px; width:2px; background:var(--ink); opacity:.55; }.chartNote { margin:20px 0 0; padding-top:12px; border-top:1px solid var(--border); font-size:11px; line-height:1.5; color:var(--text-muted); }.srOnly{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+/* Smooth line chart: draw-in animation, hover crosshair + tooltip. */
+.lineChart { position:relative; }
+.drawLine { stroke-dasharray:1; stroke-dashoffset:1; animation:billsDraw 1.15s cubic-bezier(0.16,1,0.3,1) forwards; }
+@keyframes billsDraw { to { stroke-dashoffset:0; } }
+.crosshair { stroke:var(--border-strong); stroke-width:1; stroke-dasharray:3 4; vector-effect:non-scaling-stroke; }
+.weekActive { color:var(--text-strong) !important; font-weight:var(--fw-bold); }
+.chartTip { position:absolute; top:-8px; transform:translateX(-50%); z-index:6; min-width:154px; padding:8px 10px; border-radius:var(--r-button); background:var(--ink); box-shadow:var(--shadow-pop); pointer-events:none; }
+.chartTip strong { display:block; margin-bottom:5px; color:#fff; font-size:11px; }
+.chartTip span { display:flex; align-items:center; gap:6px; font-size:10px; color:rgba(255,255,255,.82); line-height:1.75; }
+.chartTip span i { width:8px; height:8px; border-radius:2px; flex:none; }
+.chartTip span b { margin-left:auto; color:#fff; font-weight:var(--fw-bold); font-variant-numeric:tabular-nums; }
+@media (prefers-reduced-motion: reduce) { .drawLine { animation:none; stroke-dasharray:none; stroke-dashoffset:0; } }
+
 .matrixAxis { display:grid; grid-template-columns:85px minmax(0,1fr); align-items:start; margin-top:9px; }
 .matrixAxis > span { padding:1px 8px 0 0; color:var(--text-muted); font-size:8px; line-height:1.25; }
 .matrixAxis .matrixCodes { margin:0; }

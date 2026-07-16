@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react';
+import { useMemo, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarClock, CircleAlert, Eye, FileCheck2, FileClock, Files, Plus, Scale, Workflow } from 'lucide-react';
 import { AppShell } from '@/components/shell';
@@ -55,9 +55,86 @@ function recordAction(record: LegislativeRecord) {
   return { label: 'Open Bill workspace', to: paths.record(record.id) };
 }
 
-function points(values: number[], width = 720, height = 210) {
-  const max = 5;
-  return values.map((value, index) => `${36 + index * ((width - 56) / (values.length - 1))},${height - 20 - (value / max) * (height - 40)}`).join(' ');
+const CHART_W = 720, CHART_H = 210, PAD_L = 36, PAD_R = 20, PAD_T = 20, PAD_B = 20, MAX_V = 5;
+type Pt = { x: number; y: number };
+function coords(values: number[]): Pt[] {
+  const innerW = CHART_W - PAD_L - PAD_R;
+  const innerH = CHART_H - PAD_T - PAD_B;
+  const n = Math.max(1, values.length - 1);
+  return values.map((v, i) => ({ x: PAD_L + (i * innerW) / n, y: PAD_T + innerH - (Math.min(v, MAX_V) / MAX_V) * innerH }));
+}
+// Catmull-Rom → cubic Bézier: a smooth, modern curve through the data points.
+function smoothLine(pts: Pt[]): string {
+  if (pts.length < 2) return pts.length ? `M ${pts[0].x} ${pts[0].y}` : '';
+  let d = `M ${pts[0].x} ${pts[0].y}`;
+  for (let i = 0; i < pts.length - 1; i += 1) {
+    const p0 = pts[i - 1] ?? pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] ?? p2;
+    const c1x = p1.x + (p2.x - p0.x) / 6, c1y = p1.y + (p2.y - p0.y) / 6;
+    const c2x = p2.x - (p3.x - p1.x) / 6, c2y = p2.y - (p3.y - p1.y) / 6;
+    d += ` C ${c1x.toFixed(1)} ${c1y.toFixed(1)} ${c2x.toFixed(1)} ${c2y.toFixed(1)} ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+  }
+  return d;
+}
+function smoothArea(pts: Pt[]): string {
+  if (pts.length < 2) return '';
+  const base = CHART_H - PAD_B;
+  return `${smoothLine(pts)} L ${pts[pts.length - 1].x} ${base} L ${pts[0].x} ${base} Z`;
+}
+
+const SERIES = [
+  { key: 'created' as const, label: 'Instructions received', color: '#00834f', cls: 'lineCreated' },
+  { key: 'reviewed' as const, label: 'Review decisions', color: '#e3b92f', cls: 'lineReviewed' },
+  { key: 'completed' as const, label: 'Published', color: '#bd2c3a', cls: 'lineCompleted' },
+];
+
+function ThroughputChart() {
+  const [hover, setHover] = useState<number | null>(null);
+  const series = SERIES.map((s) => ({ ...s, pts: coords(weeklySeries[s.key]) }));
+  const innerW = CHART_W - PAD_L - PAD_R;
+  const lastIndex = WEEK_LABELS.length - 1;
+
+  function onMove(event: MouseEvent<SVGRectElement>) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const relX = ((event.clientX - rect.left) / rect.width) * CHART_W;
+    const index = Math.round(((relX - PAD_L) / innerW) * lastIndex);
+    setHover(Math.max(0, Math.min(lastIndex, index)));
+  }
+
+  const hoverX = hover != null ? series[0].pts[hover].x : 0;
+  return (
+    <div className={styles.lineChart} onMouseLeave={() => setHover(null)}>
+      <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} preserveAspectRatio="none" role="img" aria-label="Illustrative weekly throughput over twelve weeks: instructions received range from one to four, review decisions from one to three, and publication events from zero to one.">
+        <defs>
+          {SERIES.map((s) => (
+            <linearGradient key={s.key} id={`billsArea-${s.key}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={s.color} stopOpacity="0.20" />
+              <stop offset="100%" stopColor={s.color} stopOpacity="0" />
+            </linearGradient>
+          ))}
+        </defs>
+        {[54, 88, 122, 156, 190].map((y, index) => <g key={y}><line x1={PAD_L} x2={CHART_W - PAD_R} y1={y} y2={y} className={styles.gridLine} /><text x={PAD_L - 10} y={y + 3} className={styles.axisLabel}>{4 - index}</text></g>)}
+        {series.map((s) => <path key={`a-${s.key}`} d={smoothArea(s.pts)} fill={`url(#billsArea-${s.key})`} stroke="none" />)}
+        {series.map((s) => <path key={`l-${s.key}`} d={smoothLine(s.pts)} pathLength={1} className={`${styles[s.cls]} ${styles.drawLine}`} />)}
+        {hover != null && (
+          <g>
+            <line x1={hoverX} x2={hoverX} y1={PAD_T} y2={CHART_H - PAD_B} className={styles.crosshair} />
+            {series.map((s) => <circle key={`p-${s.key}`} cx={s.pts[hover].x} cy={s.pts[hover].y} r="4" fill={s.color} stroke="#fff" strokeWidth="2" />)}
+          </g>
+        )}
+        <rect x="0" y="0" width={CHART_W} height={CHART_H} fill="transparent" onMouseMove={onMove} />
+      </svg>
+      <div className={styles.weekLabels} aria-hidden>{WEEK_LABELS.map((label, index) => <span key={label} className={hover === index ? styles.weekActive : ''}>{label}</span>)}</div>
+      {hover != null && (
+        <div className={styles.chartTip} style={{ left: `clamp(82px, ${(hoverX / CHART_W) * 100}%, calc(100% - 82px))` }} role="status">
+          <strong>{WEEK_LABELS[hover]}</strong>
+          {series.map((s) => <span key={s.key}><i style={{ background: s.color }} />{s.label}<b>{weeklySeries[s.key][hover]}</b></span>)}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function BillsDashboard() {
@@ -87,10 +164,10 @@ export function BillsDashboard() {
 
       <div className={styles.dashboardTop}>
         <section className={styles.metrics} aria-label="Bill portfolio summary">
-          <Metric label="New Instructions" value={newInstructions.length} detail="Last 30 days" icon={<Files />} tone="green" />
-          <Metric label="Legal Decisions" value={awaitingReview.length} detail="Currently pending" icon={<FileClock />} tone="gold" />
-          <Metric label="Due in 7 Days" value={dueSoon.length} detail="By 22 July" icon={<CalendarClock />} tone="red" />
-          <Metric label="Published" value={publishedThisYear.length} detail="During 2026" icon={<FileCheck2 />} tone="charcoal" />
+          <Metric label="New Instructions" value={newInstructions.length} detail="Last 30 days" icon={<Files />} tone="green" to="/work?type=Bill" />
+          <Metric label="Legal Decisions" value={awaitingReview.length} detail="Currently pending" icon={<FileClock />} tone="gold" to="/work?scope=review-queue" />
+          <Metric label="Due in 7 Days" value={dueSoon.length} detail="By 22 July" icon={<CalendarClock />} tone="red" to="/work?type=Bill" />
+          <Metric label="Published" value={publishedThisYear.length} detail="During 2026" icon={<FileCheck2 />} tone="charcoal" to="/repository" />
         </section>
 
         <section className={styles.matrixPanel} aria-labelledby="matrix-heading">
@@ -145,16 +222,7 @@ export function BillsDashboard() {
             <div><p className={styles.sectionKicker}>Illustrative reporting series</p><h2 id="performance-heading">Weekly workflow throughput</h2></div>
             <div className={styles.seriesLegend}><span className={styles.createdKey}>Instructions received</span><span className={styles.reviewedKey}>Review decisions</span><span className={styles.completedKey}>Published</span></div>
           </div>
-          <div className={styles.lineChart}>
-            <svg viewBox="0 0 720 210" preserveAspectRatio="none" role="img" aria-label="Illustrative weekly throughput over twelve weeks: instructions received range from one to four, review decisions from one to three, and publication events from zero to one.">
-              {[54, 88, 122, 156, 190].map((y, index) => <g key={y}><line x1="36" x2="700" y1={y} y2={y} className={styles.gridLine} /><text x="26" y={y + 3} className={styles.axisLabel}>{4 - index}</text></g>)}
-              <polyline points={points(weeklySeries.created)} className={styles.lineCreated} />
-              <polyline points={points(weeklySeries.reviewed)} className={styles.lineReviewed} />
-              <polyline points={points(weeklySeries.completed)} className={styles.lineCompleted} />
-              {weeklySeries.created.map((value, index) => <circle key={index} cx={36 + index * (664 / 11)} cy={190 - (value / 5) * 170} r="3" className={styles.pointCreated} />)}
-            </svg>
-            <div className={styles.weekLabels} aria-hidden>{WEEK_LABELS.map((label) => <span key={label}>{label}</span>)}</div>
-          </div>
+          <ThroughputChart />
         </section>
 
         <section className={styles.statusPanel} aria-labelledby="status-heading">
@@ -196,6 +264,27 @@ export function BillsDashboard() {
   );
 }
 
-function Metric({ label, value, detail, icon, tone }: { label: string; value: number; detail: string; icon: ReactNode; tone: 'green' | 'gold' | 'red' | 'charcoal' }) {
-  return <article className={styles.metric}><div className={styles.metricTop}><span>{label}</span><span className={`${styles.metricIcon} ${styles[tone]}`}>{icon}</span></div><div className={styles.metricValue}>{value}</div><p>{detail}</p></article>;
+const METRIC_FILL: Record<string, string> = { green: 'var(--green-700)', gold: 'var(--gold)', red: 'var(--status-danger)', charcoal: '#344139' };
+const METRIC_BARS = 14;
+
+function Metric({ label, value, detail, icon, tone, to }: { label: string; value: number; detail: string; icon: ReactNode; tone: 'green' | 'gold' | 'red' | 'charcoal'; to: string }) {
+  return (
+    <Link to={to} className={styles.metric}>
+      <div className={styles.metricTop}><span>{label}</span><span className={`${styles.metricIcon} ${styles[tone]}`}>{icon}</span></div>
+      <div className={styles.metricBody}>
+        <div className={styles.metricValue}>{value}</div>
+        {/* Thin equalizer (1 bar = 1 record) + faded echo, charge-bar load-in. */}
+        <span className={styles.metricTicks} role="img" aria-label={`${value}`}>
+          {Array.from({ length: METRIC_BARS }, (_, index) => {
+            const lit = index < value;
+            const echo = !lit && index < value * 2;
+            const echoT = value > 0 ? (index - value) / value : 0;
+            if (!lit && !echo) return <i key={index} style={{ background: 'var(--soft-grey)' }} />;
+            return <i key={index} className="charge-bar" style={{ '--charge-fill': METRIC_FILL[tone], '--charge-track': 'var(--soft-grey)', '--charge-delay': `${index * 0.04}s`, opacity: lit ? 1 : 0.5 - 0.22 * echoT } as CSSProperties} />;
+          })}
+        </span>
+      </div>
+      <p>{detail}</p>
+    </Link>
+  );
 }
