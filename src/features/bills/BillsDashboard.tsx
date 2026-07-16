@@ -176,8 +176,8 @@ export function BillsDashboard() {
             <div className={styles.matrixLegend} aria-label="Colour intensity represents open workflow items per Bill, from one to five or more"><strong>Open items</strong><span>1</span><i /><i /><i /><i /><i /><span>5+</span></div>
           </div>
           <div className={styles.matrix} role="group" aria-label={`Bill workflow matrix. ${STAGE_GROUPS.map((group, index) => `${group.label}: ${stageCounts[index]}`).join(', ')}`}>
-            {STAGE_GROUPS.map((group) => (
-              <div key={group.label} className={styles.matrixRow}>
+            {STAGE_GROUPS.map((group, rowIndex) => (
+              <div key={group.label} className={`${styles.matrixRow} item-in`} style={{ '--item-delay': `${rowIndex * 0.06}s` } as CSSProperties}>
                 <span>{group.label}</span>
                 <div className={styles.matrixCells}>
                   {bills.slice(0, 12).map((bill) => {
@@ -207,9 +207,9 @@ export function BillsDashboard() {
         <section className={styles.actionPanel} aria-labelledby="attention-heading">
           <div className={styles.sectionHead}><div><p className={styles.sectionKicker}>Priority queue</p><h2 id="attention-heading">Awaiting action</h2></div><CircleAlert width={20} height={20} /></div>
           <div className={styles.actionList}>
-            {urgent.map((bill) => {
+            {urgent.map((bill, actionIndex) => {
               const action = recordAction(bill);
-              return <Link key={bill.id} to={action.to} className={styles.actionItem} title={bill.title}><span className={styles.actionRule} /><span className={styles.actionCopy}><strong>{bill.shortTitle}</strong><span>{action.label}</span><small>{bill.reference} · Due {new Date(`${bill.dueDate}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</small></span></Link>;
+              return <Link key={bill.id} to={action.to} className={`${styles.actionItem} item-in`} style={{ '--item-delay': `${actionIndex * 0.06}s` } as CSSProperties} title={bill.title}><span className={styles.actionRule} /><span className={styles.actionCopy}><strong>{bill.shortTitle}</strong><span>{action.label}</span><small>{bill.reference} · Due {new Date(`${bill.dueDate}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</small></span></Link>;
             })}
           </div>
           <Link to="/work?type=Bill" className={styles.textLink}>Open Bill worklist</Link>
@@ -255,7 +255,7 @@ export function BillsDashboard() {
         <section className={styles.agePanel} aria-labelledby="age-heading">
           <div className={styles.sectionHead}><div><p className={styles.sectionKicker}>Bottleneck indicator</p><h2 id="age-heading">Average days in current stage</h2></div><span className={styles.period}>7-day review threshold</span></div>
           <div className={styles.ageChart} role="img" aria-label="Illustrative average stage age: Drafting 6.2 days, Legal review 8.4 days, Procedural review 3.1 days, Signature 2.7 days.">
-            {STAGE_AGE.map((stage) => <div key={stage.label} className={styles.ageRow}><span>{stage.label}</span><div><i style={{ width: `${stage.days * 10}%` }} className={stage.days > 7 ? styles.ageRisk : ''} /><b style={{ left: '70%' }} aria-hidden /></div><strong>{stage.days.toFixed(1)} d</strong></div>)}
+            {STAGE_AGE.map((stage, ageIndex) => <div key={stage.label} className={styles.ageRow} style={{ '--item-delay': `${ageIndex * 0.09}s` } as CSSProperties}><span>{stage.label}</span><div><i style={{ width: `${stage.days * 10}%` }} className={stage.days > 7 ? styles.ageRisk : ''} /><b style={{ left: '70%' }} aria-hidden /></div><strong>{stage.days.toFixed(1)} d</strong></div>)}
           </div>
           <p className={styles.chartNote}>Legal review is above the illustrative seven-day threshold. Production values can be derived from stage-change audit events.</p>
         </section>
