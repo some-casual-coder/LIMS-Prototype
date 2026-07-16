@@ -36,7 +36,6 @@ export function HistoricalRecordDetail() {
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const jobs = useDemoStore((s) => s.ocrJobs);
-  const records = useDemoStore((s) => s.records);
   const currentRole = useDemoStore((s) => s.currentRole);
   const updateOcrJob = useDemoStore((s) => s.updateOcrJob);
   const { showToast, ToastHost } = useToast();
@@ -57,7 +56,7 @@ export function HistoricalRecordDetail() {
     );
   }
 
-  const archived = job.status === 'Verified' || records.some((r) => r.id === 'HIST-OP-1984-0612');
+  const archived = job.status === 'Verified';
   const isQualityReview = job.status === 'Quality Review';
   const isReady = job.status === 'Ready to Archive';
   const canApprove = currentRole === 'records-officer' || currentRole === 'clerk';
@@ -148,7 +147,13 @@ export function HistoricalRecordDetail() {
             <ul className={styles.formatList}>
               {FORMAT_ROWS.map((f) => (
                 <li key={f.label}><span className={styles.fmtName}>{f.label}</span><span className={styles.fmtSize}>{f.size}</span>
-                  <button className={styles.fmtBtn} onClick={() => showToast(f.kind === 'open' ? `Opening ${f.label}…` : `Preparing ${f.label} for download…`)}>{f.kind === 'open' ? <><ExternalLink width={13} height={13} /> Open</> : <Download width={13} height={13} />}</button>
+                  <button className={styles.fmtBtn} onClick={() => {
+                    if (f.kind === 'open') { navigate(`/archive/ocr/jobs/${job.id}/verify`); return; }
+                    const text = [job.title, `${job.reference} · ${job.recordType}`, `Source: ${job.sourceArchive}`, `Format: ${f.label}`].join('\n');
+                    const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
+                    const a = document.createElement('a'); a.href = url; a.download = `${job.reference.replace(/[/\s]+/g, '-')}.txt`; a.click(); URL.revokeObjectURL(url);
+                    showToast(`${f.label} downloaded.`);
+                  }}>{f.kind === 'open' ? <><ExternalLink width={13} height={13} /> Open</> : <Download width={13} height={13} />}</button>
                 </li>
               ))}
             </ul>
@@ -165,7 +170,7 @@ export function HistoricalRecordDetail() {
           <Card icon={<Link2 width={15} height={15} />} title="Related Records" action={<button className={styles.cardHeadLink} onClick={() => openSheet('link')}>View all <ArrowRight width={12} height={12} /></button>}>
             <ul className={styles.relatedList}>
               {RELATED.map((r) => (
-                <li key={r.ref}><span className={styles.relIcon}><FileText width={14} height={14} /></span><span className={styles.relText}><span className={styles.relTitle}>{r.title}</span><span className={styles.relRef}>{r.ref}</span></span><span className={styles.relTag}>{r.rel}</span></li>
+                <li key={r.ref}><button type="button" className={styles.relBtn} onClick={() => navigate(`/search?q=${encodeURIComponent(r.title)}`)}><span className={styles.relIcon}><FileText width={14} height={14} /></span><span className={styles.relText}><span className={styles.relTitle}>{r.title}</span><span className={styles.relRef}>{r.ref}</span></span><span className={styles.relTag}>{r.rel}</span></button></li>
               ))}
             </ul>
           </Card>
@@ -176,7 +181,7 @@ export function HistoricalRecordDetail() {
             <Meta label="Full-text search" value={archived ? 'Available' : '—'} />
             <Meta label="Keywords extracted" value="24" />
             <Meta label="Index quality score" value="92%" />
-            <button className={styles.cardLink} onClick={() => navigate('/search?q=Order%20Paper%201984')} disabled={!archived}>View in Legislative Search</button>
+            <button className={styles.cardLink} onClick={() => navigate(`/search?q=${encodeURIComponent(job.title)}`)} disabled={!archived}>View in Legislative Search</button>
           </Card>
 
           <Card icon={<Eye width={15} height={15} />} title="Document Preview">
