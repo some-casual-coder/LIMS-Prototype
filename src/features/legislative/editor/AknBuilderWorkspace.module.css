@@ -62,7 +62,14 @@
 .block:focus-within { background: linear-gradient(90deg, transparent, #f8faf8 8%, #f8faf8 92%, transparent); }
 .grip { margin-top: 31px; color: var(--border-strong); }
 .blockContent { min-width: 0; }
-.blockMeta { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.blockMeta { display: flex; align-items: center; justify-content: flex-start; gap: 10px; margin-bottom: 8px; }
+.blockMeta label { margin-left: auto; }
+/* Track Changes markers: a left accent + chip on blocks changed since last save. */
+.block[data-change="added"] { box-shadow: inset 3px 0 0 var(--status-success); }
+.block[data-change="modified"] { box-shadow: inset 3px 0 0 var(--gold-strong); }
+.changeChip { font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 999px; letter-spacing: 0.02em; flex: none; }
+.chipAdd { background: var(--soft-green); color: var(--on-green); }
+.chipMod { background: var(--soft-gold); color: var(--on-gold); }
 .blockMeta > span { color: var(--green-700); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; font-weight: 700; }
 .blockMeta label { display: flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 11px; }
 .blockMeta input { width: 54px; height: 28px; padding: 0 7px; border: 1px solid var(--border); border-radius: 5px; font: inherit; }

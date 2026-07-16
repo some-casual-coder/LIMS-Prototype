@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft, Check, ChevronDown, ChevronRight, CircleCheck, CircleDot,
   Eye, FileCode2, FilePlus2, GripVertical, ListTree, Plus, Redo2,
@@ -19,6 +19,8 @@ import { useDemoStore } from '@/store/demoStore';
 import { recordAudit } from '@/mocks/mockApi';
 import { EditorShell } from './EditorShell';
 import type { EditorMode } from './DocumentSurface';
+import { AknCompareSheet } from './AknCompareSheet';
+import { diffSections } from './draftDiff';
 import styles from './AknBuilderWorkspace.module.css';
 
 interface Props {
@@ -63,6 +65,7 @@ export function AknBuilderWorkspace({ record, mode }: Props) {
   const [query, setQuery] = useState('');
   const [collapsed, setCollapsed] = useState(false);
   const [trackChanges, setTrackChanges] = useState(true);
+  const [compareOpen, setCompareOpen] = useState(false);
   const [panelTab, setPanelTab] = useState<'Comments' | 'AI Assistant' | 'Validation' | 'Metadata' | 'References'>('Comments');
   const [aiDrafted, setAiDrafted] = useState(false);
   const undoStack = useRef<StructuredBillDraft[]>([]);
@@ -87,6 +90,13 @@ export function AknBuilderWorkspace({ record, mode }: Props) {
     if (!draft.sections.some((section) => section.tag === 'conclusions')) warnings.push('Concluding matter has not been added.');
     return { errors, warnings };
   }, [bodySection, draft.reference, draft.sections, draft.title]);
+
+  // Track Changes: mark blocks changed since the last saved version.
+  const lastRevision = draft.revisions[draft.revisions.length - 1];
+  const trackMarks = useMemo(
+    () => (trackChanges && lastRevision ? diffSections(lastRevision.sections, draft.sections).byBlock : {}),
+    [trackChanges, lastRevision, draft.sections],
+  );
 
   useEffect(() => {
     const requestedTab = searchParams.get('tab')?.toLowerCase();
@@ -194,6 +204,24 @@ export function AknBuilderWorkspace({ record, mode }: Props) {
     announce('New structured version saved to the canonical record.');
   }
 
+  function exportWorkingCopy() {
+    const lines = [draft.title, `${draft.reference} · Version ${draft.currentVersion}`, ''];
+    draft.sections.forEach((section) => {
+      lines.push(`<${section.tag}> ${section.title}`);
+      section.blocks.forEach((block) => {
+        lines.push(`  [${block.type}${block.number ? ` ${block.number}` : ''}] ${block.text}`);
+      });
+      lines.push('');
+    });
+    const url = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' }));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${draft.reference.replace(/\//g, '-')}-working-copy.txt`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    announce('Working copy downloaded from the browser-persisted draft.');
+  }
+
   function addComment() {
     const text = window.prompt(`Add a comment to <${activeSection?.tag ?? 'body'}>:`)?.trim();
     if (!text) return;
@@ -258,7 +286,7 @@ export function AknBuilderWorkspace({ record, mode }: Props) {
           <InsertMenu missingSections={missingSections} onBlock={insertBlock} onSection={insertSection} />
           <button className={`${styles.textTool} ${trackChanges ? styles.toolActive : ''}`} aria-pressed={trackChanges} onClick={() => { setTrackChanges((value) => !value); announce(trackChanges ? 'Tracked changes hidden.' : 'Tracked changes shown.'); }}><PenLine width={16} height={16} /> Track Changes</button>
           <button className={styles.textTool} onClick={() => setPanelTab('Comments')}><MessageSquare width={16} height={16} /> Comments</button>
-          <button className={styles.textTool} disabled={!draft.revisions.length} title={draft.revisions.length ? 'Compare with the previous saved version' : 'Save a version before comparing'} onClick={() => announce(`Comparing Version ${draft.currentVersion} with the previous saved version.`)}><GitCompare width={16} height={16} /> Compare</button>
+          <button className={styles.textTool} disabled={!draft.revisions.length} title={draft.revisions.length ? 'Compare the working copy with a saved version' : 'Save a version before comparing'} onClick={() => setCompareOpen(true)}><GitCompare width={16} height={16} /> Compare</button>
           <button className={styles.textTool} onClick={() => { setPanelTab('Validation'); announce(validation.errors.length ? `${validation.errors.length} validation errors found.` : `AKN structure valid with ${validation.warnings.length} warnings.`); }}><ShieldCheck width={16} height={16} /> Validate</button>
           <Popover label="AI Assist" align="left" trigger={({ toggle, ref }) => (
             <button ref={ref} className={styles.textTool} onClick={() => { setPanelTab('AI Assistant'); toggle(); }}><Sparkles width={16} height={16} /> AI Assist <ChevronDown width={13} height={13} /></button>
@@ -276,7 +304,7 @@ export function AknBuilderWorkspace({ record, mode }: Props) {
             {(close) => <div className={styles.actionMenu}>
               <button onClick={() => { setPanelTab('Metadata'); close(); }}>Document metadata</button>
               <button onClick={() => { announce('Sequential numbering rules confirmed.'); close(); }}>Numbering settings</button>
-              <button onClick={() => { announce('Working copy prepared from the browser-persisted draft.'); close(); }}>Export working copy</button>
+              <button onClick={() => { exportWorkingCopy(); close(); }}>Export working copy</button>
             </div>}
           </Popover>
         </div>
@@ -334,12 +362,15 @@ export function AknBuilderWorkspace({ record, mode }: Props) {
                   <p>{activeSection.required ? 'Required document structure' : 'Optional document structure'}</p>
                 </div>
                 <div className={styles.blocks}>
-                  {activeSection.blocks.map((block) => (
-                    <div key={block.id} className={styles.block}>
+                  {activeSection.blocks.map((block) => {
+                    const mark = trackMarks[block.id];
+                    return (
+                    <div key={block.id} className={`${styles.block} ${mark ? styles.blockChanged : ''}`} data-change={mark ?? undefined}>
                       <GripVertical width={16} height={16} className={styles.grip} aria-hidden />
                       <div className={styles.blockContent}>
                         <div className={styles.blockMeta}>
                           <span>&lt;{block.type}&gt;</span>
+                          {mark && <span className={`${styles.changeChip} ${mark === 'added' ? styles.chipAdd : styles.chipMod}`}>{mark === 'added' ? 'New' : 'Edited'}</span>}
                           {(block.type === 'clause' || block.type === 'subclause') && (
                             <label>Number <input name={`${block.id}-number`} value={block.number ?? ''} onFocus={() => beginBlockEdit(block.id)} onBlur={finishBlockEdit} onChange={(event) => updateBlock(record.id, block.id, { number: event.target.value })} /></label>
                           )}
@@ -352,7 +383,8 @@ export function AknBuilderWorkspace({ record, mode }: Props) {
                       </div>
                       <button className={styles.deleteBlock} onClick={() => deleteBlock(block)} aria-label={`Remove ${blockLabel(block)}`} title={`Remove ${blockLabel(block)}`}><Trash2 width={16} height={16} /></button>
                     </div>
-                  ))}
+                    );
+                  })}
                   {!activeSection.blocks.length && (
                     <div className={styles.emptyState}>
                       <FilePlus2 width={28} height={28} />
@@ -385,7 +417,7 @@ export function AknBuilderWorkspace({ record, mode }: Props) {
             }} />}
             {panelTab === 'Validation' && <ContextValidation validation={validation} />}
             {panelTab === 'Metadata' && <ContextMetadata draft={draft} />}
-            {panelTab === 'References' && <ContextReferences count={draft.attachments.length} onToast={announce} />}
+            {panelTab === 'References' && <ContextReferences count={draft.attachments.length} />}
           </aside>
         )}
       </div>
@@ -396,6 +428,7 @@ export function AknBuilderWorkspace({ record, mode }: Props) {
         <span>Browser-persisted · Version {draft.currentVersion}</span>
       </footer>
       {toast && <div className={styles.toast} role="status" aria-live="polite">{toast}</div>}
+      <AknCompareSheet open={compareOpen} onClose={() => setCompareOpen(false)} draft={draft} onToast={announce} />
     </EditorShell>
   );
 }
@@ -516,12 +549,13 @@ function ContextMetadata({ draft }: { draft: StructuredBillDraft }) {
   );
 }
 
-function ContextReferences({ count, onToast }: { count: number; onToast: (message: string) => void }) {
+function ContextReferences({ count }: { count: number }) {
+  const navigate = useNavigate();
   const references = ['Public Service Delivery Act, 2019', 'Data Protection Act, 2019', 'Related instruction source files'];
   return (
     <div className={styles.contextBody}>
       <div className={styles.contextHeading}><div><h2>References</h2><p>{count} source files retained</p></div><Landmark width={17} height={17} /></div>
-      <ul className={styles.referenceList}>{references.map((reference) => <li key={reference}><button onClick={() => onToast(`Opening “${reference}” in the reference preview.`)}><Landmark width={15} height={15} /><span><b>{reference}</b><small>Linked legislative information</small></span></button></li>)}</ul>
+      <ul className={styles.referenceList}>{references.map((reference) => <li key={reference}><button onClick={() => navigate(`/search?q=${encodeURIComponent(reference)}`)}><Landmark width={15} height={15} /><span><b>{reference}</b><small>Search linked legislative information</small></span></button></li>)}</ul>
     </div>
   );
 }
