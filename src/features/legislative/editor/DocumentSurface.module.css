@@ -81,13 +81,19 @@
 .floatMenu button:hover { background: var(--soft-grey); }
 
 /* Inserted blocks (functional Insert on the primary editor) */
-.insertedGroup { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--border-strong); display: flex; flex-direction: column; gap: 12px; }
-.insertedBlock { border: 1px solid var(--border); border-left: 3px solid var(--green-700); border-radius: 0 var(--r-button) var(--r-button) 0; padding: 10px 12px; background: #f8fbf8; }
-.insertedMeta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-.insertedTag { font-size: 11px; font-weight: 700; color: var(--green-700); text-transform: uppercase; letter-spacing: 0.02em; }
-.insertedRemove { font-size: 12px; color: var(--on-red); font-weight: 600; }
-.insertedRemove:hover { text-decoration: underline; }
-.insertedInput, .insertedHeading { width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font: inherit; font-size: 15px; line-height: 1.6; resize: vertical; }
-.insertedHeading { font-weight: 700; }
+/* Inserted provisions read as part of the document (serif, squared green
+   accent, quiet inputs that only reveal a soft green ring on focus) — matching
+   the drafting inputs elsewhere rather than looking like a raw web form. */
+.insertedGroup { margin-top: 24px; padding-top: 18px; border-top: 1px dashed var(--border); display: flex; flex-direction: column; gap: 16px; }
+.insertedBlock { position: relative; padding: 2px 0 2px 16px; border-left: 3px solid var(--green-700); }
+.insertedMeta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
+.insertedTag { font-family: var(--font-ui); font-size: 10px; font-weight: 700; color: var(--green-700); text-transform: uppercase; letter-spacing: 0.04em; }
+.insertedRemove { font-family: var(--font-ui); font-size: 12px; font-weight: 500; color: var(--text-muted); }
+.insertedRemove:hover { color: var(--on-red); text-decoration: underline; }
+.insertedInput, .insertedHeading { width: 100%; border: 1px solid transparent; border-radius: 5px; padding: 6px 8px; font-family: var(--font-serif); font-size: 16px; line-height: 1.7; color: var(--text-strong); background: transparent; resize: vertical; transition: border-color 0.12s ease, box-shadow 0.12s ease; }
+.insertedInput { min-height: 52px; }
+.insertedInput:hover, .insertedHeading:hover { border-color: var(--border); }
+.insertedInput:focus, .insertedHeading:focus { outline: none; border-color: var(--green-700); box-shadow: 0 0 0 3px rgba(43, 105, 65, 0.12); background: #fff; }
+.insertedHeading { font-size: 18px; font-weight: 700; }
 
 .find { background: #fff3bf; color: #5f4b00; border-radius: 2px; box-shadow: 0 0 0 1px rgba(180,150,0,.35); }

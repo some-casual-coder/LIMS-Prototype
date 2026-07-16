@@ -215,7 +215,7 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
         </div>
         <span className={styles.toolSep} />
         {mode !== 'review' && (
-          <Popover label="Insert" trigger={({ toggle, ref }) => (
+          <Popover label="Insert" align="left" trigger={({ toggle, ref }) => (
             <button ref={ref} className={styles.toolText} onClick={toggle}><Plus width={15} height={15} /> Insert <ChevronDown width={13} height={13} /></button>
           )}>
             {(close) => (<div className={styles.menu} onClick={close}>{INSERT_ITEMS.map((it) => <button key={it} className={styles.menuItem} onClick={() => insertBlock(it)}>{it}</button>)}</div>)}
@@ -226,7 +226,7 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
         <button className={styles.toolText} onClick={() => setSheet('compare')}><GitCompare width={15} height={15} /> Compare</button>
         <button className={styles.toolText} onClick={() => { setPanelTab('Validation'); showToast('Validation complete — 14 passed, 1 warning, 0 errors.'); }}><ShieldCheck width={15} height={15} /> Validate</button>
         {mode !== 'review' && (
-          <Popover label="AI Assist" trigger={({ toggle, ref }) => (
+          <Popover label="AI Assist" align="left" trigger={({ toggle, ref }) => (
             <button ref={ref} className={styles.toolText} onClick={() => { setPanelTab('AI Assistant'); toggle(); }}><Sparkles width={15} height={15} /> AI Assist <ChevronDown width={13} height={13} /></button>
           )}>
             {(close) => (<div className={styles.menu} onClick={close}>{['Suggest clearer wording', 'Check consistency', 'Identify ambiguity', 'Compare related provisions', 'Summarise selected clause', 'Draft explanatory note'].map((it) => <button key={it} className={styles.menuItem} onClick={() => setPanelTab('AI Assistant')}>{it}</button>)}</div>)}
