@@ -27,7 +27,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: var(--fw-semibold);
-  color: var(--text-muted);
+  color: var(--text);
   padding: 8px 12px 10px;
   border-bottom: 1px solid var(--border);
   white-space: nowrap;

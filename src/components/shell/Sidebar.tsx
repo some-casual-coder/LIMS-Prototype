@@ -70,11 +70,11 @@ export function Sidebar({ collapsed, mobileOpen = false, onCloseNavigation, onTo
     <nav className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''} ${mobileOpen ? styles.mobileOpen : ''}`} aria-label="Primary">
       <div className={styles.brand}>
         <Link to="/dashboard" className={styles.brandLink} aria-label="LIMS National Assembly of Kenya, home" onClick={onCloseNavigation}>
-          <LogoMark size={collapsed ? 36 : 40} framed />
+          <LogoMark size={collapsed ? 36 : 40} framed decorative />
           {!collapsed && <span className={styles.brandDivider} aria-hidden />}
           {!collapsed && (
-            <span className={styles.brandText}>
-              <span className={styles.brandName}>LIMS</span>
+            <span className={styles.brandText} aria-hidden>
+              <span className={styles.brandName}>LIMS</span>{' '}
               <span className={styles.brandOrg}>National Assembly of Kenya</span>
             </span>
           )}

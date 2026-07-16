@@ -1,6 +1,6 @@
 import emblem from '@/assets/national-assembly-emblem-sq.png';
 
-export function LogoMark({ size = 34, framed = false }: { size?: number; framed?: boolean }) {
+export function LogoMark({ size = 34, framed = false, decorative = false }: { size?: number; framed?: boolean; decorative?: boolean }) {
   return (
     <span
       style={{
@@ -20,7 +20,7 @@ export function LogoMark({ size = 34, framed = false }: { size?: number; framed?
         src={emblem}
         width={Math.round(size * (framed ? 0.82 : 1))}
         height={Math.round(size * (framed ? 0.82 : 1))}
-        alt="National Assembly of Kenya"
+        alt={decorative ? '' : 'National Assembly of Kenya'}
         style={{ display: 'block', objectFit: 'contain' }}
       />
     </span>
