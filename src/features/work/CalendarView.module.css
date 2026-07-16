@@ -48,6 +48,14 @@
 .hourLabel { position: absolute; top: -7px; right: 8px; font-size: 11px; color: var(--text-muted); }
 .dayCol { position: relative; border-right: 1px solid var(--border); }
 .dayColToday { background: rgba(232, 244, 236, 0.35); }
+/* Live "now" indicator line in today's column */
+.nowLine { position: absolute; left: 0; right: 0; height: 2px; background: var(--status-danger); z-index: 3; pointer-events: none; }
+.nowDot { position: absolute; left: -3px; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--status-danger); box-shadow: 0 0 0 2px var(--bg-card); }
+/* Live clock in the toolbar */
+.liveNow { display: inline-flex; align-items: center; gap: 6px; margin-right: 4px; font-size: 12px; font-weight: var(--fw-medium); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.liveDot { width: 7px; height: 7px; border-radius: 50%; background: var(--status-danger); animation: calNowPulse 2s ease-in-out infinite; }
+@keyframes calNowPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { .liveDot { animation: none; } }
 .gridLine { position: absolute; left: 0; right: 0; border-top: 1px solid var(--border); }
 
 .event {

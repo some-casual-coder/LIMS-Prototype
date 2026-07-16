@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { ChevronLeft, ChevronRight, FileClock, CalendarCheck, Gavel, Bell } from 'lucide-react';
 import { toneVars } from '@/components/ui/tone';
 import { calendarWeek, calendarEvents, type CalendarEvent } from '@/data/myWork';
@@ -21,6 +21,14 @@ const TYPE_LABEL: Record<CalendarEvent['type'], string> = {
 
 export function CalendarView({ onOpenItem }: { onOpenItem: (id: string) => void }) {
   const [mode, setMode] = useState('Week');
+  // Live clock: drives the "now" indicator line + the toolbar time; ticks each minute.
+  const [now, setNow] = useState(() => new Date());
+  const [scrollSignal, setScrollSignal] = useState(0);
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
+  const liveTime = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
   return (
     <div className={styles.wrap}>
@@ -31,22 +39,28 @@ export function CalendarView({ onOpenItem }: { onOpenItem: (id: string) => void 
           ))}
         </div>
         <div className={styles.nav}>
-          <button className={styles.today}>Today</button>
-          <button className={styles.navArrow} aria-label="Previous week" disabled title="Current week"><ChevronLeft width={16} height={16} /></button>
+          <span className={styles.liveNow} aria-live="polite"><span className={styles.liveDot} /> Now · {liveTime}</span>
+          <button className={styles.today} onClick={() => { setMode('Week'); setScrollSignal((s) => s + 1); }}>Today</button>
+          <button className={styles.navArrow} aria-label="Previous week" disabled title="This week is the only seeded period"><ChevronLeft width={16} height={16} /></button>
           <span className={styles.range}>{calendarWeek.label}</span>
-          <button className={styles.navArrow} aria-label="Next week" disabled title="Current week"><ChevronRight width={16} height={16} /></button>
+          <button className={styles.navArrow} aria-label="Next week" disabled title="This week is the only seeded period"><ChevronRight width={16} height={16} /></button>
         </div>
       </div>
 
-      {mode === 'Week' && <WeekGrid onOpenItem={onOpenItem} />}
+      {mode === 'Week' && <WeekGrid onOpenItem={onOpenItem} now={now} scrollSignal={scrollSignal} />}
       {mode === 'Agenda' && <Agenda onOpenItem={onOpenItem} />}
       {mode === 'Month' && <MonthGrid onOpenItem={onOpenItem} />}
     </div>
   );
 }
 
-function WeekGrid({ onOpenItem }: { onOpenItem: (id: string) => void }) {
+function WeekGrid({ onOpenItem, now, scrollSignal }: { onOpenItem: (id: string) => void; now: Date; scrollSignal: number }) {
   const hours = Array.from({ length: HOUR_END - HOUR_START }, (_, i) => HOUR_START + i);
+  const nowHour = now.getHours() + now.getMinutes() / 60;
+  const showNow = nowHour >= HOUR_START && nowHour < HOUR_END;
+  const nowTop = (nowHour - HOUR_START) * HOUR_H;
+  const nowRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (scrollSignal) nowRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, [scrollSignal]);
   return (
     <div className={styles.weekWrap}>
       <div className={styles.weekHead}>
@@ -73,14 +87,15 @@ function WeekGrid({ onOpenItem }: { onOpenItem: (id: string) => void }) {
         {calendarWeek.days.map((d, dayIdx) => (
           <div key={d.date} className={`${styles.dayCol} ${dayIdx === calendarWeek.todayIndex ? styles.dayColToday : ''}`} style={{ height: (HOUR_END - HOUR_START) * HOUR_H }}>
             {hours.map((h) => <div key={h} className={styles.gridLine} style={{ top: (h - HOUR_START) * HOUR_H }} />)}
-            {calendarEvents.filter((e) => e.day === dayIdx).map((e) => {
+            {dayIdx === calendarWeek.todayIndex && showNow && <div ref={nowRef} className={styles.nowLine} style={{ top: nowTop }}><span className={styles.nowDot} /></div>}
+            {calendarEvents.filter((e) => e.day === dayIdx).map((e, ei) => {
               const tv = toneVars[e.tone];
               const Icon = TYPE_ICON[e.type];
               return (
                 <button
                   key={e.id}
-                  className={styles.event}
-                  style={{ top: (e.start - HOUR_START) * HOUR_H + 2, height: (e.end - e.start) * HOUR_H - 3, background: tv.bg, color: tv.fg }}
+                  className={`${styles.event} item-in`}
+                  style={{ top: (e.start - HOUR_START) * HOUR_H + 2, height: (e.end - e.start) * HOUR_H - 3, background: tv.bg, color: tv.fg, '--item-delay': `${(dayIdx * 2 + ei) * 0.05}s` } as CSSProperties}
                   onClick={() => e.recordId && onOpenItem(e.recordId)}
                   disabled={!e.recordId}
                 >
@@ -104,11 +119,11 @@ function Agenda({ onOpenItem }: { onOpenItem: (id: string) => void }) {
         <div key={day.date} className={styles.agendaDay}>
           <div className={styles.agendaDate}><span className={styles.agendaWeekday}>{day.label}</span><span className={styles.agendaNum}>{day.date} July</span></div>
           <ul className={styles.agendaList}>
-            {events.map((e) => {
+            {events.map((e, ei) => {
               const tv = toneVars[e.tone];
               const Icon = TYPE_ICON[e.type];
               return (
-                <li key={e.id}>
+                <li key={e.id} className="item-in" style={{ '--item-delay': `${ei * 0.05}s` } as CSSProperties}>
                   <button className={styles.agendaItem} onClick={() => e.recordId && onOpenItem(e.recordId)} disabled={!e.recordId}>
                     <span className={styles.agendaBar} style={{ background: tv.dot }} />
                     <span className={styles.agendaIcon} style={{ color: tv.fg }}><Icon width={15} height={15} /></span>
@@ -139,6 +154,7 @@ function MonthGrid({ onOpenItem }: { onOpenItem: (id: string) => void }) {
     const date = calendarWeek.days[e.day].date;
     (eventsByDate[date] ??= []).push(e);
   });
+  const todayDate = calendarWeek.days[calendarWeek.todayIndex].date;
   return (
     <div className={styles.month}>
       <div className={styles.monthHead}>
@@ -146,10 +162,10 @@ function MonthGrid({ onOpenItem }: { onOpenItem: (id: string) => void }) {
       </div>
       <div className={styles.monthGrid}>
         {cells.map((d, i) => (
-          <div key={i} className={`${styles.monthCell} ${d === 15 ? styles.monthToday : ''}`}>
+          <div key={i} className={`${styles.monthCell} ${d === todayDate ? styles.monthToday : ''}`}>
             {d && <span className={styles.monthNum}>{d}</span>}
-            {d && (eventsByDate[d] ?? []).map((e) => (
-              <button key={e.id} className={styles.monthEvent} style={{ background: toneVars[e.tone].bg, color: toneVars[e.tone].fg }} onClick={() => e.recordId && onOpenItem(e.recordId)} disabled={!e.recordId}>
+            {d && (eventsByDate[d] ?? []).map((e, ei) => (
+              <button key={e.id} className={`${styles.monthEvent} item-in`} style={{ background: toneVars[e.tone].bg, color: toneVars[e.tone].fg, '--item-delay': `${ei * 0.05}s` } as CSSProperties} onClick={() => e.recordId && onOpenItem(e.recordId)} disabled={!e.recordId}>
                 {e.title}
               </button>
             ))}
