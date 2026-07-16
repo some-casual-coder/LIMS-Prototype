@@ -243,9 +243,10 @@ const drafterData: CommandCentreData = {
   readiness: {
     nextSitting: 'Tuesday, 21 July · 2:30 PM',
     items: [
+      // Sitting-pipeline readiness → the page that owns each concern.
       { label: 'Ready for procedural review', count: 4, tone: 'green', to: '/bills' },
-      { label: 'Awaiting signature', count: 2, tone: 'blue', to: '/work?status=waiting-on-others' },
-      { label: 'Publication checks incomplete', count: 1, tone: 'gold', to: '/legislative/NA-BILL-2026-012/publish' },
+      { label: 'Awaiting signature', count: 2, tone: 'blue', to: '/legislative/NA-BILL-2026-015/publish' },
+      { label: 'Publication checks incomplete', count: 1, tone: 'gold', to: '/legislative/NA-BILL-2026-015/publish' },
       { label: 'At risk', count: 2, tone: 'red', to: '/work?status=overdue' },
     ],
   },
