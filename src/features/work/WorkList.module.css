@@ -63,10 +63,10 @@
   border-bottom: 1px solid var(--border);
   transition: background 0.12s ease;
 }
-.row:hover { background: #f8fbf8; }
+.row:hover { background: rgba(11, 107, 58, 0.05); }
 .table tbody .row:last-child { border-bottom: 0; }
 .rowSelected { background: var(--soft-green); }
-.rowSelected:hover { background: #e0efe6; }
+.rowSelected:hover { background: #d7ebdf; }
 .row td { padding: 12px; vertical-align: middle; }
 
 .cellCheck { width: 36px; padding-right: 0 !important; }
