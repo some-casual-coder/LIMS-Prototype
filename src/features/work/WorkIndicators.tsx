@@ -1,11 +1,11 @@
 import { Target, UserRound, CalendarClock, Clock4, CircleAlert } from 'lucide-react';
 import { toneVars } from '@/components/ui/tone';
-import { indicators } from '@/data/myWork';
+import type { Indicator } from '@/data/myWork';
 import styles from './WorkIndicators.module.css';
 
 const icons = { active: Target, action: UserRound, due: CalendarClock, waiting: Clock4, overdue: CircleAlert } as const;
 
-export function WorkIndicators({ activeStatus, onSelect }: { activeStatus: string; onSelect: (filter: string) => void }) {
+export function WorkIndicators({ indicators, activeStatus, onSelect }: { indicators: Indicator[]; activeStatus: string; onSelect: (filter: string) => void }) {
   const visibleIndicators = indicators.filter((indicator) => indicator.id !== 'waiting');
   return (
     <div className={styles.grid}>

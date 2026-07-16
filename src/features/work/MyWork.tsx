@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { AppShell } from '@/components/shell';
 import { Button, Popover } from '@/components/ui';
-import { workItems, savedViews } from '@/data/myWork';
+import { worklistFor, savedViewsFor, indicatorsFor } from '@/data/myWork';
 import { useDemoStore } from '@/store/demoStore';
 import { WorkIndicators } from './WorkIndicators';
 import { WorkList } from './WorkList';
@@ -78,9 +78,14 @@ export function MyWork() {
   const openItem = (id: string) => setParams((p) => { p.set('item', id); return p; });
   const closeItem = () => setParams((p) => { p.delete('item'); return p; }, { replace: true });
 
+  // Role-aware: My Work shows the signed-in officer's own worklist.
+  const role = useDemoStore((s) => s.currentRole);
+  const roleWork = useMemo(() => worklistFor(role), [role]);
+  const views = useMemo(() => savedViewsFor(role), [role]);
+  const indicators = useMemo(() => indicatorsFor(role), [role]);
   // Runtime-created instructions (from the New Instruction wizard) surface here too.
   const createdWork = useDemoStore((s) => s.createdWorkItems);
-  const allWork = useMemo(() => [...createdWork, ...workItems], [createdWork]);
+  const allWork = useMemo(() => [...createdWork, ...roleWork], [createdWork, roleWork]);
 
   const filtered = useMemo(() => sortItems(applyFilters(allWork, { search, status, filters }), sort), [allWork, search, status, filters, sort]);
   const groups = useMemo(() => groupItems(filtered, groupBy), [filtered, groupBy]);
@@ -139,7 +144,7 @@ export function MyWork() {
       </div>
 
       {/* Workload indicators */}
-      <WorkIndicators activeStatus={status} onSelect={(f) => setStatus(status === f ? 'all' : f)} />
+      <WorkIndicators indicators={indicators} activeStatus={status} onSelect={(f) => setStatus(status === f ? 'all' : f)} />
 
       {/* View switcher + control bar */}
       <div className={styles.controlBar}>
@@ -163,7 +168,7 @@ export function MyWork() {
           )}>
             {(close) => (
               <div className={styles.menu} onClick={close}>
-                {savedViews.map((v) => (
+                {views.map((v) => (
                   <button
                     key={v.id}
                     className={`${styles.menuItem} ${savedViewActive(v.id) ? styles.menuItemActive : ''}`}

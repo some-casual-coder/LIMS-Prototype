@@ -48,8 +48,8 @@ export function ReadinessRail({ data }: { data: CommandCentreData }) {
         </div>
 
         <ul className={styles.readList}>
-          {data.readiness.items.map((item) => (
-            <li key={item.label}>
+          {data.readiness.items.map((item, index) => (
+            <li key={item.label} className="item-in" style={{ '--item-delay': `${index * 0.05}s` } as CSSProperties}>
               <Link to={item.to ?? '/work'} className={styles.readItem}>
                 <span className={styles.readDot} style={{ background: toneVars[item.tone].dot }} aria-hidden />
                 <span className={styles.readItemLabel}>{item.label}</span>
@@ -63,8 +63,8 @@ export function ReadinessRail({ data }: { data: CommandCentreData }) {
 
       <Panel title="Supporting Inputs" icon={<Inbox />}>
         <ul className={styles.inputList}>
-          {data.supportingInputs.map((input) => (
-            <li key={input.label}>
+          {data.supportingInputs.map((input, index) => (
+            <li key={input.label} className="item-in" style={{ '--item-delay': `${index * 0.05}s` } as CSSProperties}>
               <Link to={input.to} className={styles.inputItem}>
                 <span className={styles.inputCount} style={{ color: toneVars[input.tone].fg, background: toneVars[input.tone].bg }} data-count data-count-to={input.count}>{input.count}</span>
                 <span className={styles.inputText}>
@@ -80,8 +80,8 @@ export function ReadinessRail({ data }: { data: CommandCentreData }) {
 
       <Panel title="Attention Required" icon={<TriangleAlert />}>
         <ul className={styles.attnList}>
-          {data.attention.map((a) => (
-            <li key={a.title}>
+          {data.attention.map((a, index) => (
+            <li key={a.title} className="item-in" style={{ '--item-delay': `${index * 0.05}s` } as CSSProperties}>
               <Link to={a.to} className={styles.attnItem} style={{ borderLeftColor: toneVars[a.tone].dot }}>
                 <span className={styles.attnText}>
                   <span className={styles.attnTitle}>{a.title}</span>
@@ -113,7 +113,7 @@ export function ReadinessRail({ data }: { data: CommandCentreData }) {
               </>
             );
             return (
-              <li key={i} className={styles.activityItem}>
+              <li key={i} className={`${styles.activityItem} item-in`} style={{ '--item-delay': `${i * 0.05}s` } as CSSProperties}>
                 {ev.to ? <Link to={ev.to} className={styles.activityLink}>{body}</Link> : <div className={styles.activityLink}>{body}</div>}
               </li>
             );

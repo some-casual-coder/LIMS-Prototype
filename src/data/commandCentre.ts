@@ -1,5 +1,5 @@
 import type { RoleId, WorkflowType, Priority } from './types';
-import { countByStatus, workItems } from './myWork';
+import { countByStatus, countByStage, worklistFor } from './myWork';
 
 // Presentation model for the Legislative Command Centre. Kept separate from the
 // canonical record model because these are role-specific operational views.
@@ -91,8 +91,8 @@ export interface CommandCentreData {
 // and meaningful (Drafting reads as gold rather than charcoal).
 const STAGE_TONE: Record<string, Tone> = { Drafting: 'gold' };
 
-function computeWorkByStage(): StageDatum[] {
-  const active = workItems.filter((i) => i.workState !== 'completed');
+function computeWorkByStage(role: RoleId): StageDatum[] {
+  const active = worklistFor(role).filter((i) => i.workState !== 'completed');
   const map = new Map<string, { count: number; tone: Tone }>();
   active.forEach((i) => {
     const entry = map.get(i.stage) ?? { count: 0, tone: STAGE_TONE[i.stage] ?? i.stageTone };
@@ -115,13 +115,13 @@ const CONTEXT_DATE = 'Directorate of Legal Services · Wednesday, 15 July 2026';
 // Counts derived from the drafter worklist so each card matches the list it
 // opens (e.g. "Awaiting My Review" shows exactly the number of awaiting-review
 // records at /work?status=awaiting-review).
-const DRAFTER_ACTION = countByStatus('requires-action');
-const DRAFTER_DUE_48 = countByStatus('due-48');
-const DRAFTER_RETURNED = countByStatus('returned');
-const DRAFTER_REVIEW = countByStatus('awaiting-review');
-const DRAFTER_DUE_48_HIGH = workItems.filter((i) => i.dueUrgent && i.priority === 'High').length;
-const DRAFTER_SUPPORTING = workItems.filter((i) => i.stage === 'Awaiting Supporting Information').length;
-const DRAFTER_PETITIONS = workItems.filter((i) => i.stage === 'Intake Verification').length;
+const DRAFTER_ACTION = countByStatus('requires-action', 'dls-drafter');
+const DRAFTER_DUE_48 = countByStatus('due-48', 'dls-drafter');
+const DRAFTER_RETURNED = countByStatus('returned', 'dls-drafter');
+const DRAFTER_REVIEW = countByStatus('awaiting-review', 'dls-drafter');
+const DRAFTER_DUE_48_HIGH = worklistFor('dls-drafter').filter((i) => i.dueUrgent && i.priority === 'High').length;
+const DRAFTER_SUPPORTING = countByStage('Awaiting Supporting Information', 'dls-drafter');
+const DRAFTER_PETITIONS = countByStage('Intake Verification', 'dls-drafter');
 
 // ---- DLS Drafter (Grace Wanjiku) — fully specified per the Phase 1 brief ----
 const drafterData: CommandCentreData = {
@@ -235,7 +235,7 @@ const drafterData: CommandCentreData = {
     { title: 'Digital Public Services Bill', sub: 'Version 4.0 · Legal review', pct: 72, tone: 'green', to: '/legislative/NA-BILL-2026-015/draft', icon: 'draft' },
     { title: 'Publication package', sub: 'Signature and seal pending', pct: 84, tone: 'gold', to: '/legislative/NA-BILL-2026-012/publish', icon: 'publish' },
   ],
-  workByStage: computeWorkByStage(),
+  workByStage: computeWorkByStage('dls-drafter'),
   supportingInputs: [
     { label: 'Awaiting PBO documentation', count: DRAFTER_SUPPORTING, sub: 'Public Finance Bill + 1 record', tone: 'amber', to: '/work?stage=Awaiting%20Supporting%20Information' },
     { label: 'Petitions to classify', count: DRAFTER_PETITIONS, sub: 'Assisted-access petition', tone: 'gold', to: '/work?stage=Intake%20Verification' },
@@ -271,12 +271,21 @@ const drafterData: CommandCentreData = {
 // ---- DLS Reviewer (David Otieno) — same shell, review-focused content ----
 const reviewerData: CommandCentreData = {
   ...drafterData,
-  attentionCount: 5,
+  attentionCount: countByStatus('requires-action', 'dls-reviewer'),
   summaryCards: [
-    { id: 'review', label: 'Awaiting My Review', value: 5, sub: '1 submitted today', tone: 'green', icon: 'review', to: '/work?status=awaiting-review', repeatsQueue: true },
-    { id: 'blocking', label: 'Blocking Issues', value: 2, sub: 'Across 2 records', tone: 'red', icon: 'returned', to: '/work?status=requires-action' },
-    { id: 'due', label: 'Due Within 48 Hours', value: 3, sub: '2 marked high priority', tone: 'amber', icon: 'due', to: '/work?status=due-48' },
-    { id: 'approved', label: 'Recently Approved', value: 6, sub: 'This week', tone: 'gold', icon: 'action', to: '/work?status=completed' },
+    { id: 'review', label: 'Awaiting My Review', value: countByStatus('requires-action', 'dls-reviewer'), sub: 'Submitted for legal review', tone: 'green', icon: 'review', to: '/work?status=requires-action', repeatsQueue: true },
+    { id: 'due', label: 'Due Within 48 Hours', value: countByStatus('due-48', 'dls-reviewer'), sub: 'Sitting-critical reviews', tone: 'amber', icon: 'due', to: '/work?status=due-48' },
+    { id: 'returned', label: 'Returned to Drafters', value: countByStatus('waiting-on-others', 'dls-reviewer'), sub: 'Awaiting rework', tone: 'red', icon: 'returned', to: '/work?status=waiting-on-others' },
+    { id: 'approved', label: 'Recently Approved', value: countByStatus('completed', 'dls-reviewer'), sub: 'This period', tone: 'gold', icon: 'action', to: '/work?status=completed' },
+  ],
+  workByStage: computeWorkByStage('dls-reviewer'),
+  supportingInputs: [
+    { label: 'Awaiting drafter rework', count: countByStatus('waiting-on-others', 'dls-reviewer'), sub: 'Returned records', tone: 'amber', to: '/work?status=waiting-on-others' },
+    { label: 'Overdue reviews', count: countByStatus('overdue', 'dls-reviewer'), sub: 'Past due date', tone: 'red', to: '/work?status=overdue' },
+  ],
+  progressRecords: [
+    { title: 'Digital Public Services Bill', sub: 'Version 4.0 · Legal review', pct: 50, tone: 'green', to: '/legislative/NA-BILL-2026-015/review', icon: 'draft' },
+    { title: 'E-Government Services Bill', sub: 'Version 2.0 · Legal review', pct: 33, tone: 'green', to: '/legislative/NA-BILL-2026-016/review', icon: 'draft' },
   ],
   groups: [
     {
@@ -304,13 +313,22 @@ const reviewerData: CommandCentreData = {
 // ---- DLPS Officer (Ruth Naliaka) — procedural / publication focused ----
 const dlpsData: CommandCentreData = {
   ...drafterData,
-  attentionCount: 6,
+  attentionCount: countByStatus('requires-action', 'dlps-officer'),
   contextDate: 'Directorate of Legislative and Procedural Services · Wednesday, 15 July 2026',
   summaryCards: [
-    { id: 'procedural', label: 'Awaiting Procedural Review', value: 3, sub: '1 due today', tone: 'gold', icon: 'action', to: '/work?status=requires-action', repeatsQueue: true },
-    { id: 'signature', label: 'Awaiting Signature', value: 2, sub: 'Sitting-critical', tone: 'amber', icon: 'due', to: '/work?status=waiting-on-others' },
-    { id: 'checks', label: 'Publication Checks', value: 1, sub: '1 incomplete', tone: 'red', icon: 'returned' },
-    { id: 'ready', label: 'Ready to Publish', value: 4, sub: 'Cleared today', tone: 'green', icon: 'review', to: '/work?status=completed' },
+    { id: 'procedural', label: 'Awaiting Procedural Review', value: countByStatus('requires-action', 'dlps-officer'), sub: 'Requires your action', tone: 'gold', icon: 'action', to: '/work?status=requires-action', repeatsQueue: true },
+    { id: 'signature', label: 'Awaiting Signature', value: countByStage('Awaiting Signature', 'dlps-officer'), sub: 'Sitting-critical', tone: 'amber', icon: 'due', to: '/work?stage=Awaiting%20Signature' },
+    { id: 'due', label: 'Due Within 48 Hours', value: countByStatus('due-48', 'dlps-officer'), sub: 'Time-critical', tone: 'red', icon: 'returned', to: '/work?status=due-48' },
+    { id: 'ready', label: 'Recently Published', value: countByStatus('completed', 'dlps-officer'), sub: 'This period', tone: 'green', icon: 'review', to: '/work?status=completed' },
+  ],
+  workByStage: computeWorkByStage('dlps-officer'),
+  supportingInputs: [
+    { label: 'Awaiting legal clearance', count: countByStatus('waiting-on-others', 'dlps-officer'), sub: 'With DLS', tone: 'amber', to: '/work?status=waiting-on-others' },
+    { label: 'Publications in preparation', count: countByStatus('in-progress', 'dlps-officer'), sub: 'Cyber Harassment Bill', tone: 'gold', to: '/work?status=in-progress' },
+  ],
+  progressRecords: [
+    { title: 'County Governments Bill', sub: 'Awaiting signature', pct: 80, tone: 'gold', to: '/legislative/NA-BILL-2026-004/publish', icon: 'publish' },
+    { title: 'Cyber Harassment Bill', sub: 'Publication preparation', pct: 60, tone: 'green', to: '/legislative/NA-BILL-2026-012', icon: 'draft' },
   ],
   groups: [
     {
@@ -337,13 +355,22 @@ const dlpsData: CommandCentreData = {
 // ---- Clerk — oversight focused; retains the same design system ----
 const clerkData: CommandCentreData = {
   ...drafterData,
-  attentionCount: 8,
+  attentionCount: countByStatus('requires-action', 'clerk'),
   contextDate: 'Office of the Clerk · Wednesday, 15 July 2026',
   summaryCards: [
-    { id: 'atrisk', label: 'At-Risk Business', value: 2, sub: 'May miss the next sitting', tone: 'red', icon: 'returned', to: '/work?status=due-48' },
-    { id: 'approvals', label: 'Pending Approvals', value: 3, sub: '1 awaiting authorisation', tone: 'gold', icon: 'action', to: '/work?status=requires-action', repeatsQueue: true },
-    { id: 'bottleneck', label: 'Bottleneck Stage', value: 5, sub: 'Legal Review — 5 items', tone: 'amber', icon: 'due', to: '/work?status=awaiting-review' },
-    { id: 'compliance', label: 'Compliance Exceptions', value: 1, sub: 'Review this week', tone: 'green', icon: 'review' },
+    { id: 'approvals', label: 'Pending Authorisation', value: countByStatus('requires-action', 'clerk'), sub: 'Awaiting your sign-off', tone: 'gold', icon: 'action', to: '/work?status=requires-action', repeatsQueue: true },
+    { id: 'atrisk', label: 'At-Risk Business', value: countByStatus('overdue', 'clerk'), sub: 'May miss the next sitting', tone: 'red', icon: 'returned', to: '/work?status=overdue' },
+    { id: 'signature', label: 'Awaiting Signature', value: countByStage('Awaiting Signature', 'clerk'), sub: 'Ready to authorise', tone: 'amber', icon: 'due', to: '/work?stage=Awaiting%20Signature' },
+    { id: 'authorised', label: 'Recently Authorised', value: countByStatus('completed', 'clerk'), sub: 'This period', tone: 'green', icon: 'review', to: '/work?status=completed' },
+  ],
+  workByStage: computeWorkByStage('clerk'),
+  supportingInputs: [
+    { label: 'Awaiting DLPS confirmation', count: countByStatus('waiting-on-others', 'clerk'), sub: 'Order Paper — Sitting No. 42', tone: 'amber', to: '/work?status=waiting-on-others' },
+    { label: 'At risk of missing sitting', count: countByStatus('overdue', 'clerk'), sub: 'Cyber Harassment Bill', tone: 'red', to: '/work?status=overdue' },
+  ],
+  progressRecords: [
+    { title: 'County Governments Bill', sub: 'Awaiting authorisation', pct: 80, tone: 'gold', to: '/legislative/NA-BILL-2026-004/publish', icon: 'publish' },
+    { title: 'Cyber Harassment Bill', sub: 'At risk · awaiting sign-off', pct: 80, tone: 'red', to: '/legislative/NA-BILL-2026-012', icon: 'publish' },
   ],
   groups: [
     {

@@ -82,8 +82,17 @@ ol {
   animation-delay: var(--charge-delay, 0s);
 }
 
+/* Staggered list load-in: items fade + rise gently one after another. Set a
+   per-item --item-delay for the stagger. Reusable across lists/pages. */
+@keyframes listItemIn { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+.item-in {
+  animation: listItemIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--item-delay, 0s);
+}
+
 /* Respect reduced-motion preferences. */
 @media (prefers-reduced-motion: reduce) {
+  .item-in { animation: none !important; }
   *,
   *::before,
   *::after {

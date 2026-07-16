@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { Avatar, Button, Panel, StatusBadge } from '@/components/ui';
 import type { QueueGroup } from '@/data/commandCentre';
@@ -20,8 +21,8 @@ export function ImmediateActions({ groups }: { groups: QueueGroup[] }) {
         </div>
       ) : (
         <ul className={styles.list}>
-          {rows.map((row) => (
-            <li key={row.recordId} className={styles.row}>
+          {rows.map((row, index) => (
+            <li key={row.recordId} className={`${styles.row} item-in`} style={{ '--item-delay': `${index * 0.05}s` } as CSSProperties}>
               <div className={styles.identity}>
                 <Link to={primaryRecordDestination(row.recordId)} className={styles.title}>{row.title}</Link>
                 <span className={styles.reference}>{row.reference}</span>
