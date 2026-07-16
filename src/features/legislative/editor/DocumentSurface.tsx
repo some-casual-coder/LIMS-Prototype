@@ -20,6 +20,8 @@ interface Props {
   inserted?: InsertedBlock[];
   onEditInserted?: (id: string, text: string) => void;
   onRemoveInserted?: (id: string) => void;
+  highlight?: string;
+  onRef?: (text: string) => void;
   onAccept?: (changeId: string) => void;
   onReject?: (changeId: string) => void;
   onComment?: () => void;
@@ -29,20 +31,40 @@ interface Props {
   zoom?: number;
 }
 
-function renderRun(run: Run, mode: EditorMode, status: ChangeStatus, key: number, onToast?: (m: string) => void) {
+// Wrap case-insensitive matches of `term` in <mark> for the Find feature.
+function highlightText(text: string, term?: string): React.ReactNode {
+  if (!term) return text;
+  const lower = text.toLowerCase();
+  const t = term.toLowerCase();
+  const parts: React.ReactNode[] = [];
+  let i = 0;
+  let k = 0;
+  let idx = lower.indexOf(t, i);
+  while (idx !== -1) {
+    if (idx > i) parts.push(text.slice(i, idx));
+    parts.push(<mark key={`h${k}`} className={styles.find}>{text.slice(idx, idx + term.length)}</mark>);
+    k += 1;
+    i = idx + term.length;
+    idx = lower.indexOf(t, i);
+  }
+  if (i < text.length) parts.push(text.slice(i));
+  return parts;
+}
+
+function renderRun(run: Run, mode: EditorMode, status: ChangeStatus, key: number, onToast?: (m: string) => void, highlight?: string, onRef?: (t: string) => void) {
   const st = run.changeId ? status[run.changeId] ?? 'pending' : undefined;
-  if (run.ref) return <a key={key} className={styles.ref} href="#" onClick={(e) => { e.preventDefault(); onToast?.(`Opening “${run.text}” in a reference preview.`); }}>{run.text}</a>;
+  if (run.ref) return <a key={key} className={styles.ref} href="#" onClick={(e) => { e.preventDefault(); onRef ? onRef(run.text) : onToast?.(`Opening “${run.text}”.`); }}>{run.text}</a>;
   if (run.type === 'ins') {
-    if (mode === 'preview' || st === 'accepted') return <span key={key}>{run.text}</span>;
+    if (mode === 'preview' || st === 'accepted') return <span key={key}>{highlightText(run.text, highlight)}</span>;
     if (st === 'rejected') return null;
-    return <ins key={key} className={styles.ins}>{run.text}</ins>;
+    return <ins key={key} className={styles.ins}>{highlightText(run.text, highlight)}</ins>;
   }
   if (run.type === 'del') {
     if (mode === 'preview' || st === 'accepted') return null;
-    if (st === 'rejected') return <span key={key}>{run.text}</span>;
+    if (st === 'rejected') return <span key={key}>{highlightText(run.text, highlight)}</span>;
     return <del key={key} className={styles.del}>{run.text}</del>;
   }
-  return <span key={key}>{run.text}</span>;
+  return <span key={key}>{highlightText(run.text, highlight)}</span>;
 }
 
 // Shared selection toolbar shown under any selected paragraph (edit mode).
@@ -69,7 +91,7 @@ function FloatingToolbar({ onComment, onSuggest, onCrossRef, onToast, clauseNo }
   );
 }
 
-export function DocumentSurface({ mode, activeClause, changeStatus, inserted = [], onEditInserted, onRemoveInserted, onAccept, onReject, onComment, onSuggest, onCrossRef, onToast, zoom = 100 }: Props) {
+export function DocumentSurface({ mode, activeClause, changeStatus, inserted = [], onEditInserted, onRemoveInserted, highlight, onRef, onAccept, onReject, onComment, onSuggest, onCrossRef, onToast, zoom = 100 }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -84,8 +106,8 @@ export function DocumentSurface({ mode, activeClause, changeStatus, inserted = [
   return (
     <div className={styles.workspace} style={{ fontSize: `${zoom}%` }} ref={scrollRef}>
       <article className={styles.page} id={`clause-${activeClause}`}>
-        {activeClause === LONG_TITLE && (<><h2 className={styles.clauseHeading}>Long Title</h2><SelectablePlain id="lt" text={primaryBillContent.longTitle} mode={mode} selected={selected} onSelect={setSelected} toolbar={toolbar} /></>)}
-        {activeClause === PREAMBLE && (<><h2 className={styles.clauseHeading}>Preamble</h2><SelectablePlain id="pre" text={primaryBillContent.preamble} mode={mode} selected={selected} onSelect={setSelected} toolbar={toolbar} /></>)}
+        {activeClause === LONG_TITLE && (<><h2 className={styles.clauseHeading}>Long Title</h2><SelectablePlain id="lt" text={primaryBillContent.longTitle} mode={mode} selected={selected} onSelect={setSelected} toolbar={toolbar} highlight={highlight} /></>)}
+        {activeClause === PREAMBLE && (<><h2 className={styles.clauseHeading}>Preamble</h2><SelectablePlain id="pre" text={primaryBillContent.preamble} mode={mode} selected={selected} onSelect={setSelected} toolbar={toolbar} highlight={highlight} /></>)}
         {activeClause === SCHEDULES && (<><h2 className={styles.clauseHeading}>Schedules</h2><p className={styles.plainPara}>No schedules are currently attached to this Bill.</p></>)}
 
         {activeClause === 14 && (
@@ -101,7 +123,7 @@ export function DocumentSurface({ mode, activeClause, changeStatus, inserted = [
                   <div className={styles.paraMain}>
                     <p className={`${styles.para} ${selected === p.id && mode === 'edit' ? styles.paraSelected : ''}`} onClick={() => mode === 'edit' && setSelected((s) => (s === p.id ? null : p.id))}>
                       {p.label && <span className={styles.label}>{p.label}</span>}
-                      {p.runs.map((r, i) => renderRun(r, mode, changeStatus, i, onToast))}
+                      {p.runs.map((r, i) => renderRun(r, mode, changeStatus, i, onToast, highlight, onRef))}
                     </p>
                     {mode === 'edit' && selected === p.id && toolbar}
                   </div>
@@ -125,7 +147,7 @@ export function DocumentSurface({ mode, activeClause, changeStatus, inserted = [
           <>
             <h2 className={styles.clauseHeading}>Clause {clean.number} — {clean.heading}</h2>
             {clean.paragraphs.map((para, i) => (
-              <SelectablePlain key={i} id={`c${activeClause}-${i}`} text={para} mode={mode} selected={selected} onSelect={setSelected} toolbar={toolbar} />
+              <SelectablePlain key={i} id={`c${activeClause}-${i}`} text={para} mode={mode} selected={selected} onSelect={setSelected} toolbar={toolbar} highlight={highlight} />
             ))}
             {mode === 'edit' && <p className={styles.cleanNote}>This clause has no tracked changes in the current version.</p>}
           </>
@@ -154,13 +176,13 @@ export function DocumentSurface({ mode, activeClause, changeStatus, inserted = [
 }
 
 // A plain paragraph that is selectable (edit mode) and shows the floating toolbar.
-function SelectablePlain({ id, text, mode, selected, onSelect, toolbar }: {
-  id: string; text: string; mode: EditorMode; selected: string | null; onSelect: (id: string | null) => void; toolbar: React.ReactNode;
+function SelectablePlain({ id, text, mode, selected, onSelect, toolbar, highlight }: {
+  id: string; text: string; mode: EditorMode; selected: string | null; onSelect: (id: string | null) => void; toolbar: React.ReactNode; highlight?: string;
 }) {
   return (
     <div className={styles.paraMain}>
       <p className={`${styles.plainPara} ${styles.para} ${selected === id && mode === 'edit' ? styles.paraSelected : ''}`} onClick={() => mode === 'edit' && onSelect(selected === id ? null : id)}>
-        {text}
+        {highlightText(text, highlight)}
       </p>
       {mode === 'edit' && selected === id && toolbar}
     </div>

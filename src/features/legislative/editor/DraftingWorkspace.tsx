@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft, ChevronRight, ChevronDown, CircleCheck, Scale, RotateCcw,
   Undo2, Redo2, Plus, GitCompare, Eye, Sparkles, Search, MoreHorizontal, ShieldCheck, MessageSquare, Send, PenLine,
@@ -36,6 +36,10 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
   const [sheet, setSheet] = useState<'' | 'compare' | 'submit' | 'comment'>('');
   const [toast, setToast] = useState('');
   const [inserted, setInserted] = useState<Array<{ id: string; clause: number; type: string; text: string }>>([]);
+  const [find, setFind] = useState('');
+  const [viewVersion, setViewVersion] = useState<string | null>(null);
+  const [autoNumber, setAutoNumber] = useState(true);
+  const navigate = useNavigate();
   const currentRole = useDemoStore((s) => s.currentRole);
   const record = useDemoStore((s) => s.records.find((item) => item.id === id));
 
@@ -83,7 +87,9 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
     showToast(`Removed inserted ${last.type.toLowerCase()}.`);
   }
 
-  const effectiveMode: EditorMode = mode === 'edit' && !trackChanges ? 'preview' : mode;
+  const readOnlyVersion = viewVersion !== null;
+  const effectiveMode: EditorMode = readOnlyVersion ? 'preview' : (mode === 'edit' && !trackChanges ? 'preview' : mode);
+  const shownVersion = viewVersion ?? (mode === 'review' ? '4.1' : '4.0');
   const reviewedCount = clause14Changes.filter((c) => changeStatus[c.id] && changeStatus[c.id] !== 'pending').length;
 
   function insertAi(edited: boolean) {
@@ -113,13 +119,13 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
           <div className={styles.titleRow}>
             <h1 className={styles.docTitle}>Digital Public Services Bill, 2026</h1>
             <Popover label="Select version" align="left" trigger={({ toggle, ref }) => (
-              <button ref={ref} className={styles.versionSel} onClick={toggle}>NA/BILL/2026/015 · Version {mode === 'review' ? '4.1' : '4.0'} <ChevronDown width={14} height={14} /></button>
+              <button ref={ref} className={styles.versionSel} onClick={toggle}>NA/BILL/2026/015 · Version {shownVersion} <ChevronDown width={14} height={14} /></button>
             )}>
               {(close) => (
                 <div className={styles.menu} onClick={close}>
-                  <button className={styles.menuItem} onClick={() => showToast('Viewing Version 4.0 — current working version.')}>Version 4.0 · Current working</button>
-                  <button className={styles.menuItem} onClick={() => showToast('Version 3.1 is superseded.')}>Version 3.1 · Superseded</button>
-                  <button className={styles.menuItem} onClick={() => showToast('Version 3.0 is the latest approved version.')}>Version 3.0 · Latest approved</button>
+                  <button className={styles.menuItem} onClick={() => { setViewVersion(null); showToast('Showing Version 4.0 — current working version.'); }}>Version 4.0 · Current working</button>
+                  <button className={styles.menuItem} onClick={() => { setViewVersion('3.1'); showToast('Viewing Version 3.1 (superseded) — read-only.'); }}>Version 3.1 · Superseded</button>
+                  <button className={styles.menuItem} onClick={() => { setViewVersion('3.0'); showToast('Viewing Version 3.0 (latest approved) — read-only.'); }}>Version 3.0 · Latest approved</button>
                   <Link to={`/legislative/${id}/versions`} className={styles.menuItem}>View all versions →</Link>
                 </div>
               )}
@@ -156,8 +162,16 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
         </div>
       </header>
 
+      {/* Read-only historical version banner */}
+      {readOnlyVersion && (
+        <div className={styles.readonlyBar} role="status">
+          <span>Viewing <b>Version {viewVersion}</b> — read-only historical version. Editing is disabled.</span>
+          <button className={styles.readonlyReturn} onClick={() => { setViewVersion(null); showToast('Returned to Version 4.0 (working).'); }}>Return to working version</button>
+        </div>
+      )}
+
       {/* Toolbar */}
-      {mode !== 'preview' && <div className={styles.toolbar}>
+      {mode !== 'preview' && !readOnlyVersion && <div className={styles.toolbar}>
         <div className={styles.toolGroup}>
           <button className={styles.tool} aria-label="Undo" onClick={undoInsert}><Undo2 width={16} height={16} /></button>
           <button className={styles.tool} aria-label="Redo" disabled><Redo2 width={16} height={16} /></button>
@@ -185,7 +199,7 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
           <button ref={ref} className={styles.toolText} onClick={toggle}><Search width={15} height={15} /> Find</button>
         )}>
           {(close) => (
-            <form className={styles.findBar} onSubmit={(e) => { e.preventDefault(); const q = (e.currentTarget.elements.namedItem('q') as HTMLInputElement).value.trim(); close(); showToast(q ? `${q.length % 3 + 1} matches for “${q}” in Clause ${activeClause}.` : 'Enter a term to find.'); }}>
+            <form className={styles.findBar} onSubmit={(e) => { e.preventDefault(); const q = (e.currentTarget.elements.namedItem('q') as HTMLInputElement).value.trim(); close(); setFind(q); showToast(q ? `Highlighting “${q}” in the document.` : 'Cleared find highlighting.'); }}>
               <input name="q" className={styles.findInput} placeholder="Find in document…" aria-label="Find in document" autoFocus />
               <button type="submit" className={styles.findGo}>Find</button>
             </form>
@@ -197,7 +211,7 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
           {(close) => (
             <div className={styles.menu} onClick={close}>
               <button className={styles.menuItem} onClick={() => setPanelTab('Metadata')}>Document metadata</button>
-              <button className={styles.menuItem} onClick={() => showToast('Numbering settings updated.')}>Numbering settings</button>
+              <button className={styles.menuItem} onClick={() => { setAutoNumber((v) => !v); showToast(autoNumber ? 'Automatic clause numbering turned off.' : 'Automatic clause numbering turned on.'); }}>Automatic numbering: {autoNumber ? 'On' : 'Off'}</button>
               <button className={styles.menuItem} onClick={() => showToast('Keyboard: ⌘S Save · ⌘F Find · ⌘⇧C Comment.')}>Keyboard shortcuts</button>
               <button className={styles.menuItem} onClick={() => { setPanelTab('References'); showToast('Accessibility outline: heading structure valid.'); }}>View accessibility outline</button>
               <button className={styles.menuItem} onClick={exportWorkingCopy}>Export working copy</button>
@@ -228,11 +242,13 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
           inserted={inserted.filter((b) => b.clause === activeClause)}
           onEditInserted={editInserted}
           onRemoveInserted={removeInserted}
+          highlight={find}
+          onRef={(t) => navigate(`/search?q=${encodeURIComponent(t)}`)}
           onAccept={(cid) => setChange(cid, 'accepted')}
           onReject={(cid) => setChange(cid, 'rejected')}
           onComment={() => setSheet('comment')}
           onSuggest={() => setPanelTab('AI Assistant')}
-          onCrossRef={() => showToast('Cross-reference created for the selected passage.')}
+          onCrossRef={() => insertBlock('Cross-reference')}
           onToast={showToast}
         />
         {mode !== 'preview' && <ContextPanel

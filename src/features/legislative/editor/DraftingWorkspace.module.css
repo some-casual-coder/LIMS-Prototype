@@ -94,3 +94,8 @@
   max-width: 520px;
 }
 @keyframes toastIn { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+/* Read-only historical version banner */
+.readonlyBar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 18px; background: var(--soft-gold); border-bottom: 1px solid var(--border); font-size: var(--fs-table); color: var(--on-gold); }
+.readonlyReturn { font-weight: 600; color: var(--green-700); }
+.readonlyReturn:hover { text-decoration: underline; }

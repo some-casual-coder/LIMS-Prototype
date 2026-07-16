@@ -89,3 +89,5 @@
 .insertedRemove:hover { text-decoration: underline; }
 .insertedInput, .insertedHeading { width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font: inherit; font-size: 15px; line-height: 1.6; resize: vertical; }
 .insertedHeading { font-weight: 700; }
+
+.find { background: #fff3bf; color: #5f4b00; border-radius: 2px; box-shadow: 0 0 0 1px rgba(180,150,0,.35); }
