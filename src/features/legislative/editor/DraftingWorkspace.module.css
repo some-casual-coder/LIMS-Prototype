@@ -107,5 +107,7 @@
 
 /* Read-only historical version banner */
 .readonlyBar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 18px; background: var(--soft-gold); border-bottom: 1px solid var(--border); font-size: var(--fs-table); color: var(--on-gold); }
-.readonlyReturn { font-weight: 600; color: var(--green-700); }
-.readonlyReturn:hover { text-decoration: underline; }
+/* Match the app's compact secondary button (see Button.module.css .row) rather
+   than looking like a bare text link. */
+.readonlyReturn { height: 30px; padding: 0 12px; border: 1px solid var(--border-strong); border-radius: var(--r-button); background: var(--bg-card); color: var(--green-800); font-size: var(--fs-table); font-weight: var(--fw-semibold); }
+.readonlyReturn:hover { background: var(--soft-green); border-color: #b4d3bf; }
