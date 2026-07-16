@@ -16,10 +16,10 @@
 .list { display: grid; }
 .row {
   display: grid;
-  /* Fixed badge track (col 2) so every row's later columns align — each row is
-     its own grid, so an `auto` badge track would vary per row and break the
-     column alignment across the list. */
-  grid-template-columns: minmax(200px, 1.35fr) 162px minmax(170px, 1fr) 32px 110px auto;
+  /* Every column is a fixed/deterministic width (not `auto`) so all rows share
+     the same track sizes and align — each row is its own grid, so an `auto`
+     badge or button track would vary per row and skew everything after it. */
+  grid-template-columns: minmax(180px, 1.35fr) 158px minmax(150px, 1fr) 32px 112px 140px;
   align-items: center;
   gap: 16px;
   min-height: 72px;
@@ -43,6 +43,7 @@
 .reference { display: block; margin-top: 2px; color: var(--text-muted); font-size: var(--fs-meta); }
 .action { color: var(--text); font-size: var(--fs-table); line-height: 1.35; }
 .row > :nth-child(2) { justify-self: start; }
+.row > :last-child { justify-self: end; }
 .owner { display: inline-flex; }
 .due { color: var(--text); font-size: var(--fs-table); white-space: nowrap; }
 .urgent { color: var(--on-red); font-weight: var(--fw-semibold); }

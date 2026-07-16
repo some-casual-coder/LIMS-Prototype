@@ -62,20 +62,24 @@ ol {
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin { animation: spin 0.9s linear infinite; }
 
-/* Battery-charge fill for segmented bars: a filled segment starts at the track
-   colour and charges up to its fill colour. The full track is always present;
-   segments colour in one by one via a per-segment --charge-delay. */
-@keyframes chargeUp {
-  from { background-color: var(--charge-track); }
-  to { background-color: var(--charge-fill); }
-}
+/* Battery-charge fill for segmented bars. The full track is always present (grey
+   base); each filled segment layers a coloured overlay that fades in via opacity
+   — a GPU-composited property, so the reveal is buttery rather than paint-janky.
+   Segments charge one by one through a per-segment --charge-delay. */
+@keyframes chargeFill { to { opacity: 1; } }
 .charge-bar {
+  position: relative;
+  background-color: var(--charge-track);
+}
+.charge-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
   background-color: var(--charge-fill);
-  /* Gentle deceleration + generous overlap between staggered segments so the
-     fill reads as one fluid sweep rather than discrete pops. */
-  animation: chargeUp 0.75s cubic-bezier(0.33, 1, 0.68, 1) both;
+  opacity: 0;
+  animation: chargeFill 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
   animation-delay: var(--charge-delay, 0s);
-  will-change: background-color;
 }
 
 /* Respect reduced-motion preferences. */
@@ -87,7 +91,7 @@ ol {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
-  .charge-bar { animation: none !important; }
+  .charge-bar::after { animation: none !important; opacity: 1 !important; }
 }
 
 /* Screen-reader-only utility for icon-only controls and context. */
