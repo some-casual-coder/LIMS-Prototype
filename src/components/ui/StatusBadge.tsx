@@ -9,9 +9,11 @@ interface Props {
   icon?: ReactNode;
   size?: 'sm' | 'md';
   title?: string;
+  /** When true, the status dot emits an expanding beacon ring to signal urgency. */
+  pulse?: boolean;
 }
 
-export function StatusBadge({ tone, children, icon, size = 'md', title }: Props) {
+export function StatusBadge({ tone, children, icon, size = 'md', title, pulse }: Props) {
   const t = toneVars[tone];
   return (
     <span
@@ -22,7 +24,11 @@ export function StatusBadge({ tone, children, icon, size = 'md', title }: Props)
       {icon ? (
         <span className={styles.icon} aria-hidden>{icon}</span>
       ) : (
-        <span className={styles.dot} style={{ background: t.dot }} aria-hidden />
+        <span
+          className={`${styles.dot} ${pulse ? styles.pulse : ''}`}
+          style={{ background: t.dot, ['--dot' as string]: t.dot }}
+          aria-hidden
+        />
       )}
       <span className={styles.label}>{children}</span>
     </span>

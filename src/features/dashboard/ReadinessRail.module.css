@@ -4,36 +4,14 @@
   gap: 16px;
 }
 
+/* Tighter body padding so this panel's height sits closer to the left column. */
+.readinessBody { padding: 12px 18px 14px; }
+
 .nextLabel {
   font-size: var(--fs-meta);
   color: var(--text-muted);
 }
 .readinessLead { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.stageChart {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  align-items: end;
-  gap: 16px;
-  height: 118px;
-  margin: 16px 0 6px;
-  padding: 16px 18px 12px;
-  border-radius: var(--r-button);
-  background: var(--soft-grey);
-}
-.stageColumn {
-  height: 88px;
-  display: flex;
-  flex-direction: column-reverse;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
-.stageTick {
-  width: min(100%, 50px);
-  height: 7px;
-  flex: none;
-  border-radius: 3px;
-}
 .nextDate {
   font-size: 15px;
   font-weight: var(--fw-semibold);
@@ -41,8 +19,42 @@
   margin-top: 2px;
 }
 
+/* Readiness by stage — clickable columns, one segment per record. */
+.stageChart {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 16px 0 6px;
+  padding: 12px;
+  border-radius: var(--r-button);
+  background: var(--soft-grey);
+}
+.stageColumn {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 96px;
+  padding: 8px 4px;
+  border-radius: var(--r-button);
+}
+.stageColumn:hover { background: rgba(46, 125, 50, .07); }
+.stageBars {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  transform-origin: center bottom;
+}
+.stageTick {
+  width: min(100%, 50px);
+  height: 7px;
+  flex: none;
+  border-radius: 3px;
+}
+
 .readList {
-  margin-top: 14px;
+  margin-top: 12px;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -51,9 +63,12 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 7px 8px;
+  padding: 8px;
+  margin: 0 -8px;
   border-radius: var(--r-button);
+  color: var(--text);
 }
+.readItem:hover { background: #f6faf7; }
 .readDot {
   width: 10px;
   height: 10px;
@@ -69,22 +84,52 @@
   font-size: var(--fs-body);
   font-weight: var(--fw-bold);
   color: var(--text-strong);
+  font-variant-numeric: tabular-nums;
 }
+.readChev { color: var(--text-muted); flex: none; }
+
+/* Supporting inputs (PBO / participation) */
+.inputList { display: flex; flex-direction: column; gap: 4px; }
+.inputItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 8px;
+  margin: 0 -8px;
+  border-radius: var(--r-button);
+  color: var(--text);
+}
+.inputItem:hover { background: #f6faf7; }
+.inputCount {
+  flex: none;
+  min-width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  border-radius: var(--r-button);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}
+.inputText { flex: 1; min-width: 0; }
+.inputLabel { display: block; font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--text-strong); }
+.inputSub { display: block; margin-top: 2px; font-size: var(--fs-meta); color: var(--text-muted); }
 
 .panelLink {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 16px;
+  margin-top: 14px;
   font-size: var(--fs-table);
   font-weight: var(--fw-semibold);
   color: var(--green-700);
 }
-.panelLink:hover {
-  text-decoration: underline;
-}
+.panelLink:hover { text-decoration: underline; }
 
-/* Attention */
+/* Attention — a clean squared colour edge on the left (square left corners,
+   rounded right), integrated with the card. No rounded/floating accent. */
 .attnList {
   display: flex;
   flex-direction: column;
@@ -94,20 +139,16 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 11px 12px;
+  padding: 11px 13px;
   border: 1px solid var(--border);
-  border-left-width: 3px;
-  border-radius: var(--r-button);
+  border-left: 3px solid var(--border-strong);
+  border-radius: 0 var(--r-button) var(--r-button) 0;
   background: var(--bg-doc);
 }
 .attnItem:hover {
   background: #f6faf7;
-  border-color: var(--border-strong);
 }
-.attnText {
-  flex: 1;
-  min-width: 0;
-}
+.attnText { flex: 1; min-width: 0; }
 .attnTitle {
   display: block;
   font-size: var(--fs-table);
@@ -121,10 +162,15 @@
   color: var(--text-muted);
   margin-top: 2px;
 }
-.attnChev {
-  color: var(--text-muted);
+.impTag {
   flex: none;
+  font-size: 10.5px;
+  font-weight: var(--fw-semibold);
+  padding: 2px 7px;
+  border-radius: var(--r-pill);
+  letter-spacing: 0.01em;
 }
+.attnChev { color: var(--text-muted); flex: none; }
 
 /* Activity */
 .activity {
@@ -132,21 +178,38 @@
   flex-direction: column;
   gap: 2px;
 }
-.activityItem {
+.activityItem { display: flex; }
+.activityLink {
+  flex: 1;
   display: grid;
-  grid-template-columns: 30px 62px 1fr;
+  grid-template-columns: 30px 58px 1fr;
   align-items: center;
   gap: 8px;
-  padding: 6px 0;
+  padding: 6px 8px;
+  margin: 0 -8px;
+  border-radius: var(--r-button);
+  color: var(--text);
 }
+.activityLink:hover { background: #f6faf7; }
 .activityIcon { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--r-button); background: var(--soft-green); color: var(--green-700); }
 .activityTime {
   font-size: var(--fs-meta);
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
+.activityBody { min-width: 0; }
 .activityText {
+  display: block;
   font-size: var(--fs-table);
   color: var(--text);
-  line-height: 1.35;
+  line-height: 1.3;
+}
+.activityRef {
+  display: block;
+  margin-top: 1px;
+  font-size: var(--fs-meta);
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

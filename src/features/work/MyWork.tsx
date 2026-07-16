@@ -51,6 +51,8 @@ export function MyWork() {
     const initial = emptyFilters();
     const type = params.get('type');
     if (type) initial.types.add(type);
+    const stage = params.get('stage');
+    if (stage) initial.stages.add(stage);
     return initial;
   });
   const [groupBy, setGroupBy] = useState('work-state');

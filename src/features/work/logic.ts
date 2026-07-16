@@ -1,5 +1,5 @@
 import type { WorkItem } from '@/data/myWork';
-import { WORK_STATES } from '@/data/myWork';
+import { WORK_STATES, workItemMatchesStatus } from '@/data/myWork';
 import type { Tone } from '@/components/ui/tone';
 import { priorityTone } from '@/components/ui/tone';
 
@@ -26,23 +26,9 @@ export function filterCount(f: Filters): number {
     f.priorities.size + f.directorates.size + f.classifications.size + (f.due ? 1 : 0);
 }
 
-// Status shortcut (from indicators / saved views).
-function matchStatus(item: WorkItem, status: string): boolean {
-  switch (status) {
-    case '': case 'all': return true;
-    case 'active': return item.workState !== 'completed';
-    case 'requires-action': return item.workState === 'requires-action';
-    case 'in-progress': return item.workState === 'in-progress';
-    case 'awaiting-review': return item.workState === 'awaiting-review';
-    case 'waiting-on-others': return item.workState === 'waiting-on-others';
-    case 'completed': return item.workState === 'completed';
-    case 'due-week': return !!item.dueThisWeek;
-    case 'due-48': return !!item.dueUrgent;
-    case 'overdue': return !!item.overdue;
-    case 'returned': return item.stage === 'Revision Requested';
-    default: return true;
-  }
-}
+// Status shortcut (from indicators / saved views). Delegates to the shared
+// matcher in data/myWork so the filtered list always agrees with the counts.
+const matchStatus = workItemMatchesStatus;
 
 export function applyFilters(
   items: WorkItem[],

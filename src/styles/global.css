@@ -62,6 +62,22 @@ ol {
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin { animation: spin 0.9s linear infinite; }
 
+/* Battery-charge fill for segmented bars: a filled segment starts at the track
+   colour and charges up to its fill colour. The full track is always present;
+   segments colour in one by one via a per-segment --charge-delay. */
+@keyframes chargeUp {
+  from { background-color: var(--charge-track); }
+  to { background-color: var(--charge-fill); }
+}
+.charge-bar {
+  background-color: var(--charge-fill);
+  /* Gentle deceleration + generous overlap between staggered segments so the
+     fill reads as one fluid sweep rather than discrete pops. */
+  animation: chargeUp 0.75s cubic-bezier(0.33, 1, 0.68, 1) both;
+  animation-delay: var(--charge-delay, 0s);
+  will-change: background-color;
+}
+
 /* Respect reduced-motion preferences. */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -71,6 +87,7 @@ ol {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+  .charge-bar { animation: none !important; }
 }
 
 /* Screen-reader-only utility for icon-only controls and context. */

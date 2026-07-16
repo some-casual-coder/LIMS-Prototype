@@ -120,6 +120,30 @@ export const workItems: WorkItem[] = [
     currentTask: 'Confirm classification', progress: { done: 0, total: 2 },
     blockingIssues: [], assignedPeople: [GRACE], commentCount: 0, attachmentCount: 1,
   },
+  {
+    recordId: 'NA-BILL-2026-013', title: 'Digital Identity Framework Bill, 2026', reference: 'NA/BILL/2026/013', version: '3.2',
+    type: 'Bill', workState: 'requires-action', stage: 'Revision Requested', stageTone: 'red',
+    requiredAction: 'Rework Part IV after committee feedback', myRole: 'Drafter',
+    due: '11 July 2026', overdue: true, priority: 'High',
+    lastActivity: 'Returned 4 days ago by committee', actionLabel: 'Continue Revision', actionTo: '/legislative/NA-BILL-2026-013/draft?mode=revision',
+    confidentiality: 'Internal', directorate: 'DLS',
+    requiredActionLong: 'Rework Part IV of the Bill to reflect the departmental committee’s feedback and resubmit for review.',
+    previousStage: 'Legal Review', currentStageSince: 'Since 11 July 2026 (4 days)', nextStage: 'Legal Review',
+    currentTask: 'Rework Part IV', progress: { done: 1, total: 5 },
+    blockingIssues: [{ severity: 'error', text: '2 committee change requests' }], assignedPeople: [GRACE, DAVID], commentCount: 5, attachmentCount: 3,
+  },
+  {
+    recordId: 'NA-BILL-2026-021', title: 'Consumer Protection (Digital Commerce) Bill, 2026', reference: 'NA/BILL/2026/021', version: '1.4',
+    type: 'Bill', workState: 'requires-action', stage: 'Legal Review', stageTone: 'green',
+    requiredAction: 'Resolve cross-reference conflicts in Clauses 5–7', myRole: 'Drafter',
+    due: '14 July 2026', overdue: true, priority: 'Medium',
+    lastActivity: 'Validation flagged 3 conflicts yesterday', actionLabel: 'Open Draft', actionTo: '/legislative/NA-BILL-2026-021/draft',
+    confidentiality: 'Internal', directorate: 'DLS',
+    requiredActionLong: 'Resolve the cross-reference conflicts flagged by validation in Clauses 5–7 before the next review.',
+    previousStage: 'Drafting', currentStageSince: 'Since 10 July 2026', nextStage: 'Legal Approval',
+    currentTask: 'Resolve cross-references', progress: { done: 2, total: 4 },
+    blockingIssues: [{ severity: 'warning', text: '3 cross-reference conflicts' }], assignedPeople: [GRACE], commentCount: 1, attachmentCount: 0,
+  },
   // ---- In Progress ----
   {
     recordId: 'NA-SI-2026-027', title: 'Statutory Instruments Tracking Regulations, 2026', reference: 'NA/SI/2026/027', version: '2.0',
@@ -157,6 +181,42 @@ export const workItems: WorkItem[] = [
     currentTask: 'Admissibility assessment', progress: { done: 2, total: 3 },
     blockingIssues: [{ severity: 'warning', text: '2 unresolved comments' }], assignedPeople: [GRACE], commentCount: 2, attachmentCount: 0,
   },
+  {
+    recordId: 'NA-BILL-2026-019', title: 'Electronic Transactions Bill, 2026', reference: 'NA/BILL/2026/019', version: '1.0',
+    type: 'Bill', workState: 'in-progress', stage: 'Drafting', stageTone: 'blue',
+    requiredAction: 'Draft Part II on electronic contracts', myRole: 'Drafter',
+    due: '19 July 2026', dueThisWeek: true, priority: 'Medium',
+    lastActivity: 'Edited this morning', actionLabel: 'Continue Drafting', actionTo: '/legislative/NA-BILL-2026-019/draft',
+    confidentiality: 'Internal', directorate: 'DLS',
+    requiredActionLong: 'Draft Part II covering the formation and validity of electronic contracts.',
+    previousStage: 'Intake and Assignment', currentStageSince: 'Since 8 July 2026', nextStage: 'Legal Review',
+    currentTask: 'Draft Part II', progress: { done: 1, total: 4 },
+    blockingIssues: [], assignedPeople: [GRACE], commentCount: 0, attachmentCount: 1,
+  },
+  {
+    recordId: 'NA-SI-2026-031', title: 'Data Protection (General) Regulations, 2026', reference: 'NA/SI/2026/031', version: '1.1',
+    type: 'Statutory Instrument', workState: 'in-progress', stage: 'Drafting', stageTone: 'blue',
+    requiredAction: 'Align schedules with the parent Act', myRole: 'Drafter',
+    due: '20 July 2026', dueThisWeek: true, priority: 'Medium',
+    lastActivity: 'Edited yesterday', actionLabel: 'Continue Drafting', actionTo: '/legislative/NA-SI-2026-031/draft',
+    confidentiality: 'Internal', directorate: 'DLS',
+    requiredActionLong: 'Align the regulation schedules with the definitions in the parent Act.',
+    previousStage: 'Internal Review', currentStageSince: 'Since 9 July 2026', nextStage: 'Legal Review',
+    currentTask: 'Align schedules', progress: { done: 3, total: 5 },
+    blockingIssues: [], assignedPeople: [GRACE, DAVID], commentCount: 2, attachmentCount: 1,
+  },
+  {
+    recordId: 'NA-BILL-2026-023', title: 'Public Records Digitisation Bill, 2026', reference: 'NA/BILL/2026/023', version: '2.1',
+    type: 'Bill', workState: 'in-progress', stage: 'Legal Review', stageTone: 'green',
+    requiredAction: 'Incorporate records-office comments', myRole: 'Reviewer',
+    due: '21 July 2026', priority: 'Low',
+    lastActivity: 'Comments received from records office', actionLabel: 'Open Draft', actionTo: '/legislative/NA-BILL-2026-023/draft',
+    confidentiality: 'Internal', directorate: 'Joint',
+    requiredActionLong: 'Incorporate the records office comments on retention schedules into the working draft.',
+    previousStage: 'Drafting', currentStageSince: 'Since 7 July 2026', nextStage: 'Procedural Review',
+    currentTask: 'Incorporate comments', progress: { done: 2, total: 3 },
+    blockingIssues: [], assignedPeople: [GRACE, P('records-officer', 'Lydia Mutua', 'Records Officer')], commentCount: 4, attachmentCount: 2,
+  },
   // ---- Awaiting Review ----
   {
     recordId: 'NA-BILL-2026-017', title: 'Public Service Delivery Amendment Bill, 2026', reference: 'NA/BILL/2026/017', version: '2.0',
@@ -181,6 +241,30 @@ export const workItems: WorkItem[] = [
     previousStage: 'Drafting', currentStageSince: 'Since 13 July 2026', nextStage: 'Finalisation',
     currentTask: 'Awaiting review', progress: { done: 3, total: 3 },
     blockingIssues: [], assignedPeople: [GRACE, DAVID], commentCount: 1, attachmentCount: 1,
+  },
+  {
+    recordId: 'NA-BILL-2026-016', title: 'E-Government Services Bill, 2026', reference: 'NA/BILL/2026/016', version: '2.0',
+    type: 'Bill', workState: 'awaiting-review', stage: 'Legal Review', stageTone: 'green',
+    requiredAction: 'Await reviewer decision', myRole: 'Drafter',
+    due: '22 July 2026', priority: 'Medium',
+    lastActivity: 'Submitted this morning', actionLabel: 'View Review Status', actionTo: '/legislative/NA-BILL-2026-016',
+    confidentiality: 'Internal', directorate: 'DLS',
+    requiredActionLong: 'Awaiting the reviewer’s decision on the submitted draft.',
+    previousStage: 'Drafting', currentStageSince: 'Since 15 July 2026', nextStage: 'Legal Approval',
+    currentTask: 'Awaiting review', progress: { done: 4, total: 4 },
+    blockingIssues: [], assignedPeople: [GRACE, DAVID], commentCount: 0, attachmentCount: 2,
+  },
+  {
+    recordId: 'NA-MOT-2026-052', title: 'Motion on ICT Skills in the Public Service', reference: 'NA/MOT/2026/052', version: '1.0',
+    type: 'Motion', workState: 'awaiting-review', stage: 'Directorate Review', stageTone: 'grey',
+    requiredAction: 'Await directorate review', myRole: 'Author',
+    due: '23 July 2026', priority: 'Low',
+    lastActivity: 'Assigned to David Otieno', actionLabel: 'View', actionTo: '/legislative/NA-MOT-2026-052',
+    confidentiality: 'Public', directorate: 'DLS',
+    requiredActionLong: 'Awaiting directorate review of the motion before it proceeds.',
+    previousStage: 'Drafting', currentStageSince: 'Since 14 July 2026', nextStage: 'Procedural Review',
+    currentTask: 'Awaiting review', progress: { done: 2, total: 2 },
+    blockingIssues: [], assignedPeople: [GRACE, DAVID], commentCount: 1, attachmentCount: 0,
   },
   // ---- Waiting on Another Officer ----
   {
@@ -218,6 +302,30 @@ export const workItems: WorkItem[] = [
     previousStage: 'Procedural Review', currentStageSince: 'Since 14 July 2026', nextStage: 'Published',
     currentTask: 'Awaiting sign-off', progress: { done: 4, total: 4 },
     blockingIssues: [], assignedPeople: [P('clerk', 'Office of the Clerk', 'Authoriser'), RUTH], commentCount: 0, attachmentCount: 0,
+  },
+  {
+    recordId: 'NA-BILL-2026-012', title: 'Cyber Harassment Prevention Bill, 2026', reference: 'NA/BILL/2026/012', version: '5.0',
+    type: 'Bill', workState: 'waiting-on-others', stage: 'Awaiting Signature', stageTone: 'amber',
+    requiredAction: 'Awaiting Clerk signature routing', myRole: 'Drafter',
+    due: '17 July 2026', dueThisWeek: true, priority: 'High',
+    lastActivity: 'Routed for signature by Ruth Naliaka', actionLabel: 'View Status', actionTo: '/legislative/NA-BILL-2026-012',
+    confidentiality: 'Internal', directorate: 'DLPS',
+    requiredActionLong: 'Awaiting the Clerk’s signature routing before publication can proceed.',
+    previousStage: 'Legal Approval', currentStageSince: 'Since 13 July 2026', nextStage: 'Signed and Sealed',
+    currentTask: 'Awaiting signature', progress: { done: 4, total: 4 },
+    blockingIssues: [], assignedPeople: [P('clerk', 'Office of the Clerk', 'Authoriser'), GRACE], commentCount: 0, attachmentCount: 1,
+  },
+  {
+    recordId: 'NA-PET-2026-078', title: 'Petition on Digital Literacy Programmes', reference: 'NA/PET/2026/078', version: '1.0',
+    type: 'Petition', workState: 'waiting-on-others', stage: 'Awaiting Supporting Information', stageTone: 'amber',
+    requiredAction: 'Awaiting departmental response', myRole: 'Legal reviewer',
+    due: '24 July 2026', priority: 'Low',
+    lastActivity: 'Information request sent to department', actionLabel: 'View Request', actionTo: '/legislative/NA-PET-2026-078',
+    confidentiality: 'Public', directorate: 'DLS',
+    requiredActionLong: 'Awaiting the responsible department’s response before the petition can be classified.',
+    previousStage: 'Intake Verification', currentStageSince: 'Since 12 July 2026', nextStage: 'Assignment',
+    currentTask: 'Awaiting information', progress: { done: 1, total: 3 },
+    blockingIssues: [{ severity: 'warning', text: 'Departmental response pending' }], assignedPeople: [GRACE], commentCount: 0, attachmentCount: 1,
   },
   // ---- Recently Completed ----
   {
@@ -268,7 +376,68 @@ export const workItems: WorkItem[] = [
     currentTask: 'Complete', progress: { done: 2, total: 2 },
     blockingIssues: [], assignedPeople: [GRACE], commentCount: 0, attachmentCount: 0,
   },
+  {
+    recordId: 'NA-BILL-2026-003', title: 'National Broadband Strategy Bill, 2026', reference: 'NA/BILL/2026/003', version: '6.0',
+    type: 'Bill', workState: 'completed', stage: 'Published', stageTone: 'green',
+    requiredAction: 'Completed', myRole: 'Drafter',
+    due: '20 May 2026', priority: 'Medium',
+    lastActivity: 'Published 22 May 2026', actionLabel: 'View', actionTo: '/legislative/NA-BILL-2026-003',
+    confidentiality: 'Public', directorate: 'DLS',
+    requiredActionLong: 'This Bill has completed its legislative journey and is published.',
+    previousStage: 'Signed and Sealed', currentStageSince: 'Since 22 May 2026', nextStage: 'Archived',
+    currentTask: 'Complete', progress: { done: 4, total: 4 },
+    blockingIssues: [], assignedPeople: [GRACE, DAVID], commentCount: 0, attachmentCount: 4,
+  },
+  {
+    recordId: 'NA-SI-2026-014', title: 'Electronic Signatures Regulations, 2026', reference: 'NA/SI/2026/014', version: '2.0',
+    type: 'Statutory Instrument', workState: 'completed', stage: 'Published', stageTone: 'green',
+    requiredAction: 'Completed', myRole: 'Drafter',
+    due: '5 June 2026', priority: 'Low',
+    lastActivity: 'Published 6 June 2026', actionLabel: 'View', actionTo: '/legislative/NA-SI-2026-014',
+    confidentiality: 'Public', directorate: 'DLS',
+    requiredActionLong: 'These regulations have been published.',
+    previousStage: 'Signed and Sealed', currentStageSince: 'Since 6 June 2026', nextStage: 'Archived',
+    currentTask: 'Complete', progress: { done: 3, total: 3 },
+    blockingIssues: [], assignedPeople: [GRACE], commentCount: 0, attachmentCount: 2,
+  },
+  {
+    recordId: 'NA-STMT-2026-041', title: 'Statement on Digital Inclusion Progress', reference: 'NA/STMT/2026/041', version: '1.0',
+    type: 'Statement', workState: 'completed', stage: 'Published', stageTone: 'green',
+    requiredAction: 'Completed', myRole: 'Reviewer',
+    due: '25 June 2026', priority: 'Low',
+    lastActivity: 'Published 26 June 2026', actionLabel: 'View', actionTo: '/legislative/NA-STMT-2026-041',
+    confidentiality: 'Public', directorate: 'DLPS',
+    requiredActionLong: 'This statement has been published.',
+    previousStage: 'Procedural Review', currentStageSince: 'Since 26 June 2026', nextStage: 'Archived',
+    currentTask: 'Complete', progress: { done: 3, total: 3 },
+    blockingIssues: [], assignedPeople: [DAVID], commentCount: 0, attachmentCount: 1,
+  },
 ];
+
+// ---- Status matching (single source of truth) ----
+// Shared by the My Work filter (see features/work/logic.ts) and every count
+// below so a metric and the list it links to can never disagree.
+export function workItemMatchesStatus(item: WorkItem, status: string): boolean {
+  switch (status) {
+    case '':
+    case 'all': return true;
+    case 'active': return item.workState !== 'completed';
+    case 'requires-action': return item.workState === 'requires-action';
+    case 'in-progress': return item.workState === 'in-progress';
+    case 'awaiting-review': return item.workState === 'awaiting-review';
+    case 'waiting-on-others': return item.workState === 'waiting-on-others';
+    case 'completed': return item.workState === 'completed';
+    case 'due-week': return !!item.dueThisWeek;
+    case 'due-48': return !!item.dueUrgent;
+    case 'overdue': return !!item.overdue;
+    case 'returned': return item.stage === 'Revision Requested';
+    default: return false;
+  }
+}
+
+export function countByStatus(status: string): number {
+  return workItems.reduce((n, item) => n + (workItemMatchesStatus(item, status) ? 1 : 0), 0);
+}
 
 // ---- Workload indicators ----
 export interface Indicator {
@@ -282,11 +451,11 @@ export interface Indicator {
 }
 
 export const indicators: Indicator[] = [
-  { id: 'active', label: 'Active Work', value: 24, sub: 'All ongoing items', tone: 'green', icon: 'active', filter: 'active' },
-  { id: 'requires-action', label: 'Requires My Action', value: 7, sub: 'Needs immediate attention', tone: 'red', icon: 'action', filter: 'requires-action' },
-  { id: 'due-week', label: 'Due This Week', value: 6, sub: 'Due by 20 July 2026', tone: 'gold', icon: 'due', filter: 'due-week' },
-  { id: 'waiting', label: 'Waiting on Others', value: 9, sub: 'Awaiting other officers', tone: 'blue', icon: 'waiting', filter: 'waiting-on-others' },
-  { id: 'overdue', label: 'Overdue', value: 2, sub: 'Past due date', tone: 'red', icon: 'overdue', filter: 'overdue' },
+  { id: 'active', label: 'Active Work', value: countByStatus('active'), sub: 'All ongoing items', tone: 'green', icon: 'active', filter: 'active' },
+  { id: 'requires-action', label: 'Requires My Action', value: countByStatus('requires-action'), sub: 'Needs immediate attention', tone: 'red', icon: 'action', filter: 'requires-action' },
+  { id: 'due-week', label: 'Due This Week', value: countByStatus('due-week'), sub: 'Due by 20 July 2026', tone: 'gold', icon: 'due', filter: 'due-week' },
+  { id: 'waiting', label: 'Waiting on Others', value: countByStatus('waiting-on-others'), sub: 'Awaiting other officers', tone: 'blue', icon: 'waiting', filter: 'waiting-on-others' },
+  { id: 'overdue', label: 'Overdue', value: countByStatus('overdue'), sub: 'Past due date', tone: 'red', icon: 'overdue', filter: 'overdue' },
 ];
 
 // ---- Saved views ----
@@ -299,11 +468,11 @@ export interface SavedView {
 
 export const savedViews: SavedView[] = [
   { id: 'all', label: 'All My Work' },
-  { id: 'requires-action', label: 'Requires My Action', count: 7 },
-  { id: 'due-48', label: 'Due Within 48 Hours', count: 3 },
-  { id: 'awaiting-review', label: 'Awaiting Review', count: 4 },
-  { id: 'returned', label: 'Returned to Me', count: 2 },
-  { id: 'waiting-on-others', label: 'Waiting on Others', count: 9 },
+  { id: 'requires-action', label: 'Requires My Action', count: countByStatus('requires-action') },
+  { id: 'due-48', label: 'Due Within 48 Hours', count: countByStatus('due-48') },
+  { id: 'awaiting-review', label: 'Awaiting Review', count: countByStatus('awaiting-review') },
+  { id: 'returned', label: 'Returned to Me', count: countByStatus('returned') },
+  { id: 'waiting-on-others', label: 'Waiting on Others', count: countByStatus('waiting-on-others') },
 ];
 
 export const moreSavedViews: SavedView[] = [

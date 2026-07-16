@@ -16,7 +16,10 @@
 .list { display: grid; }
 .row {
   display: grid;
-  grid-template-columns: minmax(220px, 1.35fr) minmax(120px, auto) minmax(190px, 1fr) 32px 110px auto;
+  /* Fixed badge track (col 2) so every row's later columns align — each row is
+     its own grid, so an `auto` badge track would vary per row and break the
+     column alignment across the list. */
+  grid-template-columns: minmax(200px, 1.35fr) 162px minmax(170px, 1fr) 32px 110px auto;
   align-items: center;
   gap: 16px;
   min-height: 72px;

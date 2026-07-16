@@ -1,10 +1,80 @@
-.overview { position:relative; min-width:0; display:grid; grid-template-columns:minmax(250px,.9fr) minmax(330px,1.1fr); border:1px solid var(--border); border-radius:var(--r-card); background:var(--bg-card); overflow:hidden; }
-.pipeline,.workflow { min-width:0; padding:16px; }.pipeline { border-right:1px solid var(--border); }
-.heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }.heading h2 { margin:0; font-size:15px; color:var(--text-strong); }.heading span { font-size:10px; color:var(--text-muted); }
-.pipelineChart { height:178px; margin-top:8px; display:grid; grid-template-columns:repeat(4,1fr); align-items:end; gap:8px; }
-.pipelineGroup { height:154px; display:grid; grid-template-rows:22px 1fr 26px; text-align:center; align-items:end; }.pipelineGroup strong { align-self:start; font-size:13px; }.lines { height:94px; display:flex; flex-direction:column-reverse; align-items:center; justify-content:center; gap:4px; }.lines i { width:min(100%,52px); height:7px; flex:none; border-radius:3px; }.pipelineGroup small { align-self:center; font-size:9px; color:var(--text-muted); }
-.progressValue { margin-top:17px; display:flex; align-items:baseline; gap:8px; }.progressValue strong { font-size:30px; color:var(--text-strong); }.progressValue span { font-size:11px; color:var(--text-muted); }
-.progressTicks { height:32px; display:flex; align-items:center; gap:3px; }.progressTicks i { flex:1; max-width:9px; height:25px; border-radius:3px; background:var(--soft-grey); }.progressTicks .done { background:var(--green-700); }
-.recordCards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:12px; }.recordCard { min-width:0; min-height:70px; display:grid; grid-template-columns:34px minmax(0,1fr) auto; align-items:center; gap:8px; padding:9px; border:1px solid var(--border); border-radius:var(--r-button); color:var(--text); }.recordCard:hover { border-color:var(--border-strong); background:#f8fbf8; }.fileIcon { width:34px;height:38px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;background:var(--soft-green);color:var(--green-700); }.goldIcon { background:var(--soft-gold); color:#7a6200; }.recordCard strong,.recordCard small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.recordCard strong { font-size:10px; color:var(--text-strong); }.recordCard small { margin-top:3px; font-size:9px; color:var(--text-muted); }.recordCard b { font-size:11px; color:var(--text-strong); }
-.portfolioLink { position:absolute; right:16px; bottom:10px; display:inline-flex; align-items:center; gap:5px; font-size:10px; font-weight:var(--fw-semibold); color:var(--green-700); }
-@media(max-width:760px){.overview{grid-template-columns:1fr}.pipeline{border-right:0;border-bottom:1px solid var(--border)}.recordCards{grid-template-columns:1fr}.portfolioLink{position:static;margin:0 16px 14px}}
+.overview {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  background: var(--bg-card);
+  overflow: hidden;
+}
+.panel { min-width: 0; padding: 16px 18px 18px; display: flex; flex-direction: column; }
+.panelRight { border-left: 1px solid var(--border); }
+
+.heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.heading h2 { margin: 0; display: inline-flex; align-items: center; gap: 7px; font-size: 14px; font-weight: var(--fw-semibold); color: var(--text-strong); }
+.heading h2 svg { color: var(--text-muted); }
+.heading span { font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+/* Left — workflow progress */
+.progressValue { display: flex; align-items: baseline; gap: 8px; color: var(--text); }
+.progressValue strong { font-size: 30px; font-weight: var(--fw-bold); color: var(--text-strong); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.progressValue span { font-size: 11px; color: var(--text-muted); }
+.progressValue:hover strong { color: var(--green-700); }
+.progressTicks { height: 30px; margin-top: 8px; display: flex; align-items: center; gap: 3px; }
+.progressTicks i { flex: 1; max-width: 12px; height: 22px; border-radius: 3px; background: var(--soft-grey); transform-origin: center bottom; }
+.progressTicks .done { background: var(--green-700); }
+.recordCards { display: grid; gap: 8px; margin-top: 14px; }
+.recordCard {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-button);
+  color: var(--text);
+}
+.recordCard:hover { border-color: var(--border-strong); background: #f8fbf8; }
+.fileIcon { width: 34px; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; }
+.recordText { min-width: 0; }
+.recordText strong, .recordText small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recordText strong { font-size: var(--fs-table); color: var(--text-strong); }
+.recordText small { margin-top: 2px; font-size: var(--fs-meta); color: var(--text-muted); }
+.recordCard b { font-size: var(--fs-body); font-weight: var(--fw-bold); color: var(--text-strong); font-variant-numeric: tabular-nums; }
+
+/* Right — active work by stage */
+.rows { flex: 1; display: flex; flex-direction: column; justify-content: space-evenly; gap: 2px; }
+.row {
+  display: grid;
+  grid-template-columns: minmax(96px, 1.05fr) minmax(64px, 1.5fr) 22px 15px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  margin: 0 -8px;
+  border-radius: var(--r-button);
+  color: var(--text);
+}
+.row:hover { background: #f7faf7; }
+.rowLabel { min-width: 0; font-size: var(--fs-table); color: var(--text-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rowBar { display: flex; align-items: center; gap: 3px; height: 12px; }
+.rowBar i { flex: 1; height: 8px; border-radius: 2px; transform-origin: left center; }
+.rowCount { justify-self: end; font-size: var(--fs-body); font-weight: var(--fw-bold); color: var(--text-strong); font-variant-numeric: tabular-nums; }
+.rowChev { color: var(--text-muted); }
+
+.portfolioLink {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: var(--fw-semibold);
+  color: var(--green-700);
+}
+.portfolioLink:hover { text-decoration: underline; }
+
+@media (max-width: 760px) {
+  .overview { grid-template-columns: 1fr; }
+  .panelRight { border-left: 0; border-top: 1px solid var(--border); }
+}

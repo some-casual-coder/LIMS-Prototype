@@ -62,8 +62,10 @@
   font-size: var(--fs-meta);
   color: var(--text-muted);
 }
-.miniTicks { flex: 1; min-width: 80px; height: 30px; display: flex; align-items: end; justify-content: flex-end; gap: 2px; }
-.miniTicks i { width: 3px; border-radius: 2px; }
+/* Thin equalizer: crisp 3px bars; exactly `value` bars are lit (see .tsx) so
+   the picture matches the number. Heights are a stylised ascending silhouette. */
+.miniTicks { flex: 1; min-width: 80px; height: 30px; display: flex; align-items: flex-end; justify-content: flex-end; gap: 2px; }
+.miniTicks i { width: 3px; border-radius: 2px; transform-origin: center bottom; }
 .miniTicks i:nth-child(3n+1) { height: 12px; }
 .miniTicks i:nth-child(3n+2) { height: 20px; }
 .miniTicks i:nth-child(3n) { height: 27px; }
