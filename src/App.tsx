@@ -1,4 +1,5 @@
-import { HashRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import { HashRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { useDemoStore } from '@/store/demoStore';
 import { Presenter } from '@/components/presenter/Presenter';
 import { Login } from '@/features/auth/Login';
@@ -30,6 +31,14 @@ import { BillTasksControl } from '@/features/legislative/tasks/BillTasksControl'
 import { BillWorkflowControl } from '@/features/legislative/tasks/BillWorkflowControl';
 import { PublicationCentre } from '@/features/legislative/publication/PublicationCentre';
 
+// Reset scroll to the top of the window whenever the route path changes, so a
+// page never opens mid-content (search-param-only changes are ignored on purpose).
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
+
 function RootRedirect() {
   const role = useDemoStore((s) => s.currentRole);
   return <Navigate to={role && role !== 'citizen' ? '/dashboard' : '/login'} replace />;
@@ -50,6 +59,7 @@ function NotFound() {
 export default function App() {
   return (
     <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<RootRedirect />} />
         <Route path="/login" element={<Login />} />
