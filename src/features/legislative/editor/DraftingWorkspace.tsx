@@ -12,7 +12,7 @@ import { CompareSheet } from './CompareSheet';
 import { SubmitSheet } from './SubmitSheet';
 import { AddCommentSheet } from './AddCommentSheet';
 import { Button, Popover } from '@/components/ui';
-import { changeSummary, clause14Changes } from '@/data/draftContent';
+import { changeSummary, clause14Changes, clause14Draft } from '@/data/draftContent';
 import { useDemoStore } from '@/store/demoStore';
 import { recordAudit } from '@/mocks/mockApi';
 import styles from './DraftingWorkspace.module.css';
@@ -35,6 +35,7 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
   const [changeStatus, setChangeStatus] = useState<ChangeStatus>({});
   const [sheet, setSheet] = useState<'' | 'compare' | 'submit' | 'comment'>('');
   const [toast, setToast] = useState('');
+  const [inserted, setInserted] = useState<Array<{ id: string; clause: number; type: string; text: string }>>([]);
   const currentRole = useDemoStore((s) => s.currentRole);
   const record = useDemoStore((s) => s.records.find((item) => item.id === id));
 
@@ -47,6 +48,40 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
     showToast(`Comment ${cid} resolved.`);
   }
   function openClause(n: number) { setActiveClause(n); showToast(`Jumped to Clause ${n}.`); }
+
+  const INSERT_DEFAULTS: Record<string, string> = {
+    Clause: 'Enter the legislative provision.', Subclause: 'Enter the subclause text.', Paragraph: 'Enter text.',
+    Definition: '“defined term” means ', Heading: 'Enter heading', 'Cross-reference': 'Refer to section ',
+    Table: 'Column 1 | Column 2', Schedule: 'Schedule title', Annotation: 'Drafting note',
+  };
+  function insertBlock(itemType: string) {
+    const blockId = `ins-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+    setInserted((list) => [...list, { id: blockId, clause: activeClause, type: itemType, text: INSERT_DEFAULTS[itemType] ?? '' }]);
+    recordAudit({ recordId: id, actorId: currentRole ?? 'dls-drafter', actionType: 'Edit', description: `Inserted a new ${itemType.toLowerCase()} into Clause ${activeClause}.` });
+    showToast(`Inserted a new ${itemType.toLowerCase()} in Clause ${activeClause} — edit it inline.`);
+  }
+  function exportWorkingCopy() {
+    const lines = ['Digital Public Services Bill, 2026', `${id.replace(/-/g, '/')} · Version 4.0`, '', 'CLAUSE 14 — Protection of vulnerable users', ''];
+    clause14Draft.forEach((p) => {
+      const text = p.runs.filter((r) => r.type !== 'del').map((r) => r.text).join('');
+      lines.push(`${p.label ?? ''} ${text}`.trim());
+    });
+    const ins = inserted.filter((b) => b.clause === activeClause);
+    if (ins.length) { lines.push('', 'INSERTED (working):'); ins.forEach((b) => lines.push(`[${b.type}] ${b.text}`)); }
+    const url = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = `${id}-working-copy.txt`; a.click();
+    URL.revokeObjectURL(url);
+    showToast('Working copy downloaded.');
+  }
+  function editInserted(bid: string, text: string) { setInserted((list) => list.map((b) => (b.id === bid ? { ...b, text } : b))); }
+  function removeInserted(bid: string) { setInserted((list) => list.filter((b) => b.id !== bid)); showToast('Inserted block removed.'); }
+  function undoInsert() {
+    if (!inserted.length) { showToast('Nothing to undo.'); return; }
+    const last = inserted[inserted.length - 1];
+    setInserted((list) => list.slice(0, -1));
+    showToast(`Removed inserted ${last.type.toLowerCase()}.`);
+  }
 
   const effectiveMode: EditorMode = mode === 'edit' && !trackChanges ? 'preview' : mode;
   const reviewedCount = clause14Changes.filter((c) => changeStatus[c.id] && changeStatus[c.id] !== 'pending').length;
@@ -124,7 +159,7 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
       {/* Toolbar */}
       {mode !== 'preview' && <div className={styles.toolbar}>
         <div className={styles.toolGroup}>
-          <button className={styles.tool} aria-label="Undo" onClick={() => showToast('Nothing to undo.')}><Undo2 width={16} height={16} /></button>
+          <button className={styles.tool} aria-label="Undo" onClick={undoInsert}><Undo2 width={16} height={16} /></button>
           <button className={styles.tool} aria-label="Redo" disabled><Redo2 width={16} height={16} /></button>
         </div>
         <span className={styles.toolSep} />
@@ -132,7 +167,7 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
           <Popover label="Insert" trigger={({ toggle, ref }) => (
             <button ref={ref} className={styles.toolText} onClick={toggle}><Plus width={15} height={15} /> Insert <ChevronDown width={13} height={13} /></button>
           )}>
-            {(close) => (<div className={styles.menu} onClick={close}>{INSERT_ITEMS.map((it) => <button key={it} className={styles.menuItem} onClick={() => showToast(`Inserted a new ${it.toLowerCase()} in Clause ${activeClause}.`)}>{it}</button>)}</div>)}
+            {(close) => (<div className={styles.menu} onClick={close}>{INSERT_ITEMS.map((it) => <button key={it} className={styles.menuItem} onClick={() => insertBlock(it)}>{it}</button>)}</div>)}
           </Popover>
         )}
         <button className={`${styles.toolText} ${trackChanges ? styles.toolActive : ''}`} onClick={() => { setTrackChanges((t) => !t); showToast(trackChanges ? 'Tracked changes hidden.' : 'Tracked changes shown.'); }} aria-pressed={trackChanges}><PenLine width={15} height={15} /> Track Changes</button>
@@ -165,7 +200,7 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
               <button className={styles.menuItem} onClick={() => showToast('Numbering settings updated.')}>Numbering settings</button>
               <button className={styles.menuItem} onClick={() => showToast('Keyboard: ⌘S Save · ⌘F Find · ⌘⇧C Comment.')}>Keyboard shortcuts</button>
               <button className={styles.menuItem} onClick={() => { setPanelTab('References'); showToast('Accessibility outline: heading structure valid.'); }}>View accessibility outline</button>
-              <button className={styles.menuItem} onClick={() => showToast('Exporting a working copy…')}>Export working copy</button>
+              <button className={styles.menuItem} onClick={exportWorkingCopy}>Export working copy</button>
             </div>
           )}
         </Popover>
@@ -190,6 +225,9 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
           mode={effectiveMode}
           activeClause={activeClause}
           changeStatus={changeStatus}
+          inserted={inserted.filter((b) => b.clause === activeClause)}
+          onEditInserted={editInserted}
+          onRemoveInserted={removeInserted}
           onAccept={(cid) => setChange(cid, 'accepted')}
           onReject={(cid) => setChange(cid, 'rejected')}
           onComment={() => setSheet('comment')}

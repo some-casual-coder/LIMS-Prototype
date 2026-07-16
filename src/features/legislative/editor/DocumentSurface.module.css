@@ -79,3 +79,13 @@
 .floatMenu { display: flex; flex-direction: column; gap: 1px; min-width: 160px; font-family: var(--font-ui); }
 .floatMenu button { padding: 9px 10px; border: none; background: transparent; border-radius: var(--r-button); font-size: var(--fs-table); color: var(--text-strong); text-align: left; }
 .floatMenu button:hover { background: var(--soft-grey); }
+
+/* Inserted blocks (functional Insert on the primary editor) */
+.insertedGroup { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--border-strong); display: flex; flex-direction: column; gap: 12px; }
+.insertedBlock { border: 1px solid var(--border); border-left: 3px solid var(--green-700); border-radius: 0 var(--r-button) var(--r-button) 0; padding: 10px 12px; background: #f8fbf8; }
+.insertedMeta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.insertedTag { font-size: 11px; font-weight: 700; color: var(--green-700); text-transform: uppercase; letter-spacing: 0.02em; }
+.insertedRemove { font-size: 12px; color: var(--on-red); font-weight: 600; }
+.insertedRemove:hover { text-decoration: underline; }
+.insertedInput, .insertedHeading { width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font: inherit; font-size: 15px; line-height: 1.6; resize: vertical; }
+.insertedHeading { font-weight: 700; }

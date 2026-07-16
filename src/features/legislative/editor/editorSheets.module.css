@@ -63,3 +63,20 @@
 .cmpMeta > div { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
 .cmpMeta dt { font-size: var(--fs-table); color: var(--text-muted); }
 .cmpMeta dd { font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--text-strong); }
+
+/* ---- Compare view: redline + inline + side-by-side (added 16 Jul 2026) ---- */
+.csAdd { color: var(--status-success); }
+.csDel { color: var(--status-danger); }
+.csMod { color: var(--gold-strong); }
+.cmpExpanded { padding: 4px 12px 12px 40px; }
+.cmpRedline { font-size: var(--fs-table); line-height: 1.6; color: var(--text); white-space: pre-wrap; margin: 0; }
+.cmpRlAdd { background: rgba(46, 125, 50, .16); color: var(--on-green); border-radius: 2px; }
+.cmpRlDel { background: rgba(198, 40, 40, .12); color: var(--on-red); text-decoration: line-through; border-radius: 2px; }
+.cmpInline { display: flex; flex-direction: column; gap: 12px; }
+.cmpInlineItem { border: 1px solid var(--border); border-radius: var(--r-button); padding: 12px 14px; }
+.cmpInlineName { display: block; font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--text-strong); margin-bottom: 8px; }
+.cmpSbs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.cmpSbsCol { border: 1px solid var(--border); border-radius: var(--r-button); padding: 10px 12px; background: var(--bg-doc); }
+.cmpSbsCol p { margin: 6px 0 0; font-size: var(--fs-table); line-height: 1.55; color: var(--text); }
+.cmpSbsNew { border-color: var(--green-700); background: var(--soft-green); }
+.cmpSbsLabel { font-size: var(--fs-meta); font-weight: var(--fw-semibold); text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted); }

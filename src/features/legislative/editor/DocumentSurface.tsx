@@ -12,10 +12,14 @@ export const LONG_TITLE = -1;
 export const PREAMBLE = -2;
 export const SCHEDULES = -3;
 
+interface InsertedBlock { id: string; type: string; text: string }
 interface Props {
   mode: EditorMode;
   activeClause: number;
   changeStatus: ChangeStatus;
+  inserted?: InsertedBlock[];
+  onEditInserted?: (id: string, text: string) => void;
+  onRemoveInserted?: (id: string) => void;
   onAccept?: (changeId: string) => void;
   onReject?: (changeId: string) => void;
   onComment?: () => void;
@@ -65,7 +69,7 @@ function FloatingToolbar({ onComment, onSuggest, onCrossRef, onToast, clauseNo }
   );
 }
 
-export function DocumentSurface({ mode, activeClause, changeStatus, onAccept, onReject, onComment, onSuggest, onCrossRef, onToast, zoom = 100 }: Props) {
+export function DocumentSurface({ mode, activeClause, changeStatus, inserted = [], onEditInserted, onRemoveInserted, onAccept, onReject, onComment, onSuggest, onCrossRef, onToast, zoom = 100 }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -125,6 +129,24 @@ export function DocumentSurface({ mode, activeClause, changeStatus, onAccept, on
             ))}
             {mode === 'edit' && <p className={styles.cleanNote}>This clause has no tracked changes in the current version.</p>}
           </>
+        )}
+
+        {mode !== 'preview' && inserted.length > 0 && (
+          <div className={styles.insertedGroup}>
+            {inserted.map((b) => (
+              <div key={b.id} className={styles.insertedBlock}>
+                <div className={styles.insertedMeta}>
+                  <span className={styles.insertedTag}>Inserted · {b.type}</span>
+                  <button className={styles.insertedRemove} onClick={() => onRemoveInserted?.(b.id)}>Remove</button>
+                </div>
+                {b.type === 'Heading' || b.type === 'Schedule' ? (
+                  <input className={styles.insertedHeading} value={b.text} onChange={(e) => onEditInserted?.(b.id, e.target.value)} aria-label={`${b.type} text`} />
+                ) : (
+                  <textarea className={styles.insertedInput} value={b.text} onChange={(e) => onEditInserted?.(b.id, e.target.value)} rows={2} aria-label={`${b.type} text`} />
+                )}
+              </div>
+            ))}
+          </div>
         )}
       </article>
     </div>

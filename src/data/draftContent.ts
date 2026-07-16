@@ -117,6 +117,47 @@ export const clause14Changes: TrackChange[] = [
 // Whole-document change summary (curated totals across all clauses).
 export const changeSummary = { additions: 8, deletions: 3, modified: 4, metadata: 2, totalClauses: 37, reviewedClause: 14 };
 
+// ---- Version comparison seed (v4.0 → v4.1) for the Compare view ----
+export interface CompareProvision {
+  id: string;
+  clause: string;
+  kind: 'added' | 'modified' | 'multi';
+  changeCount?: string;
+  oldText: string; // Version 4.0 ('' when the provision is new)
+  newText: string; // Version 4.1 ('' when the provision was removed)
+}
+export const versionCompare = {
+  from: { version: '4.0', savedAt: 'Saved on 12 May, 09:12 AM' },
+  to: { version: '4.1', note: 'Current under review' },
+  summary: { additions: 8, deletions: 3, modified: 4, metadata: 2 },
+  provisions: [
+    {
+      id: 'c6', clause: 'Clause 6 — Digital service standards', kind: 'modified', changeCount: '2 changes',
+      oldText: 'A public service provider shall design digital public services to meet the minimum standards prescribed by the Cabinet Secretary.',
+      newText: 'A public service provider shall design and operate digital public services to meet the minimum standards for accessibility, security and usability prescribed by the Cabinet Secretary.',
+    },
+    {
+      id: 'c9', clause: 'Clause 9 — Data minimisation', kind: 'added', changeCount: '1 change',
+      oldText: '',
+      newText: 'A public service provider shall collect only the personal data that is necessary to deliver the requested digital public service, and shall not retain that data for longer than is necessary for that purpose.',
+    },
+    {
+      id: 'c14', clause: 'Clause 14 — Protection of vulnerable users', kind: 'multi', changeCount: '3 changes',
+      oldText: 'A public service provider shall provide reasonable accommodations and assistive support where identity verification fails.',
+      newText: 'A public service provider shall provide reasonable accommodations and assistive support, including through human assistance, where identity verification is not successful, or cannot be completed.',
+    },
+    {
+      id: 's1', clause: 'Schedule 1 — Inclusion and accessibility', kind: 'modified', changeCount: '1 change',
+      oldText: 'Digital public services shall conform to WCAG 2.0 Level AA.',
+      newText: 'Digital public services shall conform to WCAG 2.2 Level AA and provide an equivalent assisted or non-digital alternative.',
+    },
+  ] as CompareProvision[],
+  metadataChanges: [
+    { field: 'Version note', from: 'Draft for internal review', to: 'Legal review revisions incorporated' },
+    { field: 'Review status', from: 'Drafting', to: 'Under Legal Review' },
+  ],
+};
+
 // Editor comments panel (Clause 14).
 export interface EditorComment {
   id: string;
