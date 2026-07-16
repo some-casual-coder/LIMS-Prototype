@@ -192,8 +192,7 @@ export function OcrProcessing() {
           <section className={styles.scanCol}>
             <ScanPage lines={lines} pageNumber={7} band={band} scanning={!done && stageIdx === 2} showRegions={done} />
             <div className={styles.scanToolbar}>
-              <span>100%</span><span className={styles.tbDivider} />
-              <button onClick={() => {}} aria-label="Fit">Fit</button>
+              <span>Live capture · 100%</span><span className={styles.tbDivider} />
               <span className={styles.tbToggle}><button className={styles.tbActive}>Enhanced</button></span>
             </div>
           </section>

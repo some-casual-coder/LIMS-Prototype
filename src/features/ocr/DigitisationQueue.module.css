@@ -115,7 +115,9 @@
 .searchWrap svg { color: var(--text-muted); flex: none; }
 .searchInput { flex: 1; border: none; outline: none; background: transparent; font-family: var(--font-ui); font-size: 13.5px; color: var(--text-strong); }
 .control { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: var(--fw-medium); color: var(--text-strong); background: var(--bg-card); border: 1px solid var(--border-strong); border-radius: var(--r-button); padding: 8px 11px; }
-.control:hover { border-color: var(--text-muted); }
+.control:hover { border-color: var(--green-700); background: rgba(11, 107, 58, 0.05); }
+.clearFilters { font-size: 13px; font-weight: var(--fw-medium); color: var(--green-700); background: none; border: none; padding: 8px 6px; }
+.clearFilters:hover { text-decoration: underline; }
 
 /* Queue groups */
 .queue { display: grid; gap: 16px; }

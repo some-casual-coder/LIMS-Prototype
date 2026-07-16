@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ScanLine, Archive, Clock, Loader2, UserCheck, CheckCircle2, AlertTriangle, ChevronDown,
-  Search as SearchIcon, SlidersHorizontal, Save, MoreVertical, FileText, Lock, Files,
+  Search as SearchIcon, MoreVertical, FileText, Lock, Files,
   Database, Gauge, CircleAlert, History, FolderArchive,
 } from 'lucide-react';
 import { AppShell } from '@/components/shell';
@@ -52,6 +52,9 @@ export function DigitisationQueue() {
     : statusParam === 'ready-to-archive' ? 'ready' : statusParam === 'failed' ? 'attention' : null;
   const [tab, setTab] = useState(tabFromStatus ?? (currentRole === 'records-officer' ? 'mine' : 'all'));
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All statuses');
+  const [typeFilter, setTypeFilter] = useState('All types');
+  const [archiveFilter, setArchiveFilter] = useState('All archives');
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({ Verified: true });
   const sheet = params.get('sheet') ?? '';
 
@@ -68,12 +71,15 @@ export function DigitisationQueue() {
     else if (tab === 'attention') list = list.filter((j) => j.status === 'Attention Required');
     else if (tab === 'ready') list = list.filter((j) => j.status === 'Ready to Archive');
     else if (tab === 'completed') list = list.filter((j) => j.status === 'Verified');
+    if (statusFilter !== 'All statuses') list = list.filter((j) => j.status === statusFilter);
+    if (typeFilter !== 'All types') list = list.filter((j) => j.recordType === typeFilter);
+    if (archiveFilter !== 'All archives') list = list.filter((j) => j.sourceArchive === archiveFilter);
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter((j) => `${j.title} ${j.reference} ${j.dateLabel} ${j.sourceArchive}`.toLowerCase().includes(q));
     }
     return list;
-  }, [jobs, tab, currentRole, search]);
+  }, [jobs, tab, currentRole, search, statusFilter, typeFilter, archiveFilter]);
 
   const groups = useMemo(() => {
     const byStatus = new Map<OcrStatus, OcrJob[]>();
@@ -143,11 +149,12 @@ export function DigitisationQueue() {
           <SearchIcon width={16} height={16} aria-hidden />
           <input className={styles.searchInput} value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search title, archival reference, year or source" aria-label="Search historical records" />
         </div>
-        <MenuControl label="Status" onPick={showToast} options={['All statuses', 'Processing', 'Needs Verification', 'Quality Review', 'Ready to Archive', 'Attention Required']} />
-        <MenuControl label="Record Type" onPick={showToast} options={['All types', 'Order Paper', 'Votes and Proceedings', 'Committee Report', 'Gazette', 'Petition', 'Question']} />
-        <MenuControl label="Source Archive" onPick={showToast} options={['All archives', 'Parliamentary Archives', 'National Archives']} />
-        <Button variant="secondary" size="sm" leftIcon={<SlidersHorizontal width={15} height={15} />} onClick={() => showToast('Filter panel — refine by year range, scan quality and assigned officer.')}>Filters</Button>
-        <Button variant="secondary" size="sm" leftIcon={<Save width={15} height={15} />} onClick={() => showToast('Saved view created for this queue.')}>Save View</Button>
+        <MenuControl label="Status" onPick={setStatusFilter} options={['All statuses', 'Processing', 'Needs Verification', 'Quality Review', 'Ready to Archive', 'Attention Required']} />
+        <MenuControl label="Record Type" onPick={setTypeFilter} options={['All types', 'Order Paper', 'Votes and Proceedings', 'Committee Report', 'Gazette', 'Petition', 'Question']} />
+        <MenuControl label="Source Archive" onPick={setArchiveFilter} options={['All archives', 'Parliamentary Archives', 'National Archives']} />
+        {(statusFilter !== 'All statuses' || typeFilter !== 'All types' || archiveFilter !== 'All archives') && (
+          <button className={styles.clearFilters} onClick={() => { setStatusFilter('All statuses'); setTypeFilter('All types'); setArchiveFilter('All archives'); }}>Clear filters</button>
+        )}
       </div>
 
       {/* Grouped queue */}
@@ -354,7 +361,7 @@ function MenuControl({ label, options, onPick }: { label: string; options: strin
     )}>
       {(close) => (
         <div className={styles.menu} onClick={close}>
-          {options.map((o) => <button key={o} className={`${styles.menuItem} ${sel === o ? styles.menuItemActive : ''}`} onClick={() => { setSel(o); if (o !== options[0]) onPick(`Filtered by ${label}: ${o}.`); }}>{o}</button>)}
+          {options.map((o) => <button key={o} className={`${styles.menuItem} ${sel === o ? styles.menuItemActive : ''}`} onClick={() => { setSel(o); onPick(o); }}>{o}</button>)}
         </div>
       )}
     </Popover>
