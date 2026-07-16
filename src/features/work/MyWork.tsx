@@ -79,6 +79,7 @@ export function MyWork() {
   const [compact, setCompact] = useState(false);
   const [hiddenCols, setHiddenCols] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [priorityOverrides, setPriorityOverrides] = useState<Record<string, string>>({});
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({ completed: true });
   const [pending, setPending] = useState<PendingTransition | null>(null);
   const { showToast, ToastHost } = useToast();
@@ -121,7 +122,10 @@ export function MyWork() {
   const indicators = useMemo(() => indicatorsFor(role), [role]);
   // Runtime-created instructions (from the New Instruction wizard) surface here too.
   const createdWork = useDemoStore((s) => s.createdWorkItems);
-  const allWork = useMemo(() => [...createdWork, ...roleWork], [createdWork, roleWork]);
+  const allWork = useMemo(
+    () => [...createdWork, ...roleWork].map((it) => (priorityOverrides[it.recordId] ? { ...it, priority: priorityOverrides[it.recordId] as typeof it.priority } : it)),
+    [createdWork, roleWork, priorityOverrides],
+  );
 
   const filtered = useMemo(() => sortItems(applyFilters(allWork, { search, status, filters }), sort), [allWork, search, status, filters, sort]);
   const groups = useMemo(() => groupItems(filtered, groupBy), [filtered, groupBy]);
@@ -140,19 +144,33 @@ export function MyWork() {
 
   const savedViewActive = (id: string) => (id === 'all' ? status === 'all' : status === id);
 
-  function exportWorklist() {
-    const quote = (value: string) => `"${value.replaceAll('"', '""')}"`;
-    const rows = filtered.map((item) => [item.reference, item.title, item.type, item.stage, item.requiredAction, item.due, item.priority]);
+  function downloadCsv(items: typeof filtered, name: string) {
+    const quote = (value: string) => `"${String(value).replaceAll('"', '""')}"`;
+    const rows = items.map((item) => [item.reference, item.title, item.type, item.stage, item.requiredAction, item.due, item.priority]);
     const csv = [['Reference', 'Title', 'Type', 'Stage', 'Required action', 'Due', 'Priority'], ...rows]
       .map((row) => row.map(quote).join(','))
       .join('\n');
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = 'lims-my-work.csv';
+    anchor.download = name;
     anchor.click();
     URL.revokeObjectURL(url);
+  }
+  function exportWorklist() {
+    downloadCsv(filtered, 'lims-my-work.csv');
     showToast(`${filtered.length} work items exported.`);
+  }
+  function exportSelected() {
+    const items = filtered.filter((i) => selected.has(i.recordId));
+    downloadCsv(items, 'lims-my-work-selection.csv');
+    showToast(`${items.length} item${items.length === 1 ? '' : 's'} exported.`);
+    setSelected(new Set());
+  }
+  function setPriorityForSelected(p: string) {
+    setPriorityOverrides((o) => { const next = { ...o }; selected.forEach((id) => { next[id] = p; }); return next; });
+    showToast(`${selected.size} item${selected.size === 1 ? '' : 's'} set to ${p} priority.`);
+    setSelected(new Set());
   }
 
   const ScopeIcon = scope?.icon;
@@ -291,19 +309,19 @@ export function MyWork() {
           <span className={styles.bulkDivider} />
           <button className={styles.bulkAction} onClick={() => openSheet('assignment')}><UserPlus width={15} height={15} /> Assign</button>
           <button className={styles.bulkAction} onClick={() => openSheet('reminder')}><BellPlus width={15} height={15} /> Add reminder</button>
-          <Popover label="Change priority" align="left" trigger={({ toggle, ref }) => (
+          <Popover label="Change priority" align="left" up trigger={({ toggle, ref }) => (
             <button ref={ref} className={styles.bulkAction} onClick={toggle}><Flag width={15} height={15} /> Change priority <ChevronDown width={13} height={13} /></button>
           )}>
             {(close) => (
               <div className={styles.menu} onClick={close}>
                 {['High', 'Medium', 'Low'].map((p) => (
-                  <button key={p} className={styles.menuItem} onClick={() => setSelected(new Set())}>Set to {p}</button>
+                  <button key={p} className={styles.menuItem} onClick={() => setPriorityForSelected(p)}>Set to {p}</button>
                 ))}
               </div>
             )}
           </Popover>
           <button className={styles.bulkAction} onClick={() => openSheet('save-view')}><BookmarkPlus width={15} height={15} /> Add to saved view</button>
-          <button className={styles.bulkAction} onClick={() => setSelected(new Set())}><FileDown width={15} height={15} /> Export selected</button>
+          <button className={styles.bulkAction} onClick={exportSelected}><FileDown width={15} height={15} /> Export selected</button>
           <button className={styles.bulkClose} onClick={() => setSelected(new Set())} aria-label="Dismiss"><X width={16} height={16} /></button>
         </div>
       )}

@@ -5,11 +5,13 @@ interface Props {
   trigger: (props: { open: boolean; toggle: () => void; ref: React.Ref<HTMLButtonElement> }) => ReactNode;
   children: (close: () => void) => ReactNode;
   align?: 'left' | 'right';
+  /** Open the panel upward (for triggers pinned near the bottom of the viewport). */
+  up?: boolean;
   label: string;
 }
 
 // Lightweight click-outside popover used for filters and menus.
-export function Popover({ trigger, children, align = 'right', label }: Props) {
+export function Popover({ trigger, children, align = 'right', up = false, label }: Props) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -34,7 +36,7 @@ export function Popover({ trigger, children, align = 'right', label }: Props) {
     <div className={styles.wrap} ref={wrapRef}>
       {trigger({ open, toggle: () => setOpen((o) => !o), ref: btnRef })}
       {open && (
-        <div className={`${styles.panel} ${align === 'left' ? styles.left : styles.right}`} role="dialog" aria-label={label}>
+        <div className={`${styles.panel} ${align === 'left' ? styles.left : styles.right} ${up ? styles.up : ''}`} role="dialog" aria-label={label}>
           {children(() => setOpen(false))}
         </div>
       )}
