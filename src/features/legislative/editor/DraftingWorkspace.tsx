@@ -82,6 +82,21 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
   }
   function editInserted(bid: string, text: string) { setInserted((list) => list.map((b) => (b.id === bid ? { ...b, text } : b))); }
   function removeInserted(bid: string) { setInserted((list) => list.filter((b) => b.id !== bid)); showToast('Inserted block removed.'); }
+  function moveInserted(bid: string, direction: 'up' | 'down') {
+    setInserted((list) => {
+      const item = list.find((b) => b.id === bid);
+      if (!item) return list;
+      const peers = list.filter((b) => b.clause === item.clause); // reorder within the same clause
+      const pos = peers.findIndex((b) => b.id === bid);
+      const target = direction === 'up' ? pos - 1 : pos + 1;
+      if (target < 0 || target >= peers.length) return list;
+      const iA = list.indexOf(peers[pos]);
+      const iB = list.indexOf(peers[target]);
+      const next = [...list];
+      [next[iA], next[iB]] = [next[iB], next[iA]];
+      return next;
+    });
+  }
   function undoInsert() {
     if (!inserted.length) { showToast('Nothing to undo.'); return; }
     const last = inserted[inserted.length - 1];
@@ -281,6 +296,7 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
           inserted={inserted.filter((b) => b.clause === activeClause)}
           onEditInserted={editInserted}
           onRemoveInserted={removeInserted}
+          onMoveInserted={moveInserted}
           highlight={mode === 'preview' ? '' : find}
           onRef={(t) => navigate(`/search?q=${encodeURIComponent(t)}`)}
           onAccept={(cid) => setChange(cid, 'accepted')}

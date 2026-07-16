@@ -88,7 +88,11 @@
 .insertedBlock { position: relative; padding: 2px 0 2px 16px; border-left: 3px solid var(--green-700); }
 .insertedMeta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
 .insertedTag { font-family: var(--font-ui); font-size: 10px; font-weight: 700; color: var(--green-700); text-transform: uppercase; letter-spacing: 0.04em; }
-.insertedRemove { font-family: var(--font-ui); font-size: 12px; font-weight: 500; color: var(--text-muted); }
+.insertedActions { display: flex; align-items: center; gap: 4px; }
+.insertedMove { display: grid; place-items: center; width: 24px; height: 22px; border: 1px solid var(--border); border-radius: 5px; background: var(--bg-card); color: var(--text-muted); }
+.insertedMove:hover:not(:disabled) { background: var(--soft-grey); color: var(--text); border-color: var(--border-strong); }
+.insertedMove:disabled { color: #dbe0dc; cursor: default; }
+.insertedRemove { font-family: var(--font-ui); font-size: 12px; font-weight: 500; color: var(--text-muted); padding-left: 4px; }
 .insertedRemove:hover { color: var(--on-red); text-decoration: underline; }
 .insertedInput, .insertedHeading { width: 100%; border: 1px solid transparent; border-radius: 5px; padding: 6px 8px; font-family: var(--font-serif); font-size: 16px; line-height: 1.7; color: var(--text-strong); background: transparent; resize: vertical; transition: border-color 0.12s ease, box-shadow 0.12s ease; }
 .insertedInput { min-height: 52px; }

@@ -80,6 +80,9 @@
 .findField:focus-within { border-color: var(--green-700); box-shadow: var(--focus-ring); }
 .findFieldActive { width: 320px; }
 .findInput { min-width: 0; flex: 1; height: 100%; border: none; outline: none; background: transparent; color: var(--text); font-size: var(--fs-table); }
+/* The field container already shows the focus ring (:focus-within); suppress the
+   global per-element focus ring on the inner input to avoid a nested double border. */
+.findInput:focus-visible { box-shadow: none; }
 .findCtrls { display: flex; flex: none; align-items: center; gap: 1px; padding-left: 4px; border-left: 1px solid var(--border); }
 .findCount { padding: 0 6px 0 4px; color: var(--text-muted); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .findNav { display: grid; place-items: center; width: 24px; height: 24px; border: none; border-radius: 5px; background: transparent; color: var(--text-muted); }

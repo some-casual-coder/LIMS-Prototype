@@ -58,6 +58,7 @@ export function AknBuilderWorkspace({ record, mode }: Props) {
   const addSection = useDemoStore((state) => state.addStructuredDraftSection);
   const addBlock = useDemoStore((state) => state.addStructuredDraftBlock);
   const updateBlock = useDemoStore((state) => state.updateStructuredDraftBlock);
+  const moveBlock = useDemoStore((state) => state.moveStructuredDraftBlock);
   const removeBlock = useDemoStore((state) => state.removeStructuredDraftBlock);
   const saveRevision = useDemoStore((state) => state.saveStructuredDraftRevision);
   const currentRole = useDemoStore((state) => state.currentRole);
@@ -157,7 +158,12 @@ export function AknBuilderWorkspace({ record, mode }: Props) {
   useEffect(() => {
     if (!activeBlockId) return;
     const node = blockRefs.current[activeBlockId];
-    if (node) node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (!node) return;
+    // Only scroll when the block isn't already comfortably in view, so simply
+    // clicking a visible block to target it doesn't jump the canvas.
+    const r = node.getBoundingClientRect();
+    const inView = r.top >= 80 && r.bottom <= window.innerHeight - 40;
+    if (!inView) node.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [activeBlockId, draft.activeSectionId]);
 
   function goToBlock(sectionId: string, blockId: string) {
@@ -214,7 +220,10 @@ export function AknBuilderWorkspace({ record, mode }: Props) {
     checkpoint();
     const ordinal = target.blocks.filter((block) => block.type === type).length + 1;
     const block = makeDraftBlock(type, ordinal);
-    addBlock(record.id, target.id, initialText ? { ...block, text: initialText } : block);
+    // Place the new block right after the currently selected block (so a
+    // provision lands inside the section at the right spot); otherwise append.
+    const afterId = activeBlockId && target.blocks.some((b) => b.id === activeBlockId) ? activeBlockId : undefined;
+    addBlock(record.id, target.id, initialText ? { ...block, text: initialText } : block, afterId);
     // Make sure the section receiving the block is the one on screen, then
     // scroll to + accent the new block so the insert is visibly confirmed.
     if (target.id !== draft.activeSectionId) setActiveSection(record.id, target.id);
@@ -227,6 +236,13 @@ export function AknBuilderWorkspace({ record, mode }: Props) {
     checkpoint();
     removeBlock(record.id, block.id);
     announce(`${blockLabel(block)} removed.`);
+  }
+
+  function moveBlockBy(block: StructuredDraftBlock, direction: 'up' | 'down') {
+    checkpoint();
+    moveBlock(record.id, block.id, direction);
+    setActiveBlockId(block.id); // keep the moved block accented + in view
+    announce(`${blockLabel(block)} moved ${direction}.`);
   }
 
   function beginBlockEdit(blockId: string) {
@@ -430,14 +446,18 @@ export function AknBuilderWorkspace({ record, mode }: Props) {
                   <p>{activeSection.required ? 'Required document structure' : 'Optional document structure'}</p>
                 </div>
                 <div className={styles.blocks}>
-                  {activeSection.blocks.map((block) => {
+                  {activeSection.blocks.map((block, blockIndex) => {
                     const mark = trackMarks[block.id];
                     const matchCount = find.perBlock[block.id] ?? 0;
                     const isCurrentHit = currentHit?.blockId === block.id;
                     const findClass = isCurrentHit ? styles.blockFindCurrent : matchCount ? styles.blockFindMatch : '';
                     return (
-                    <div key={block.id} ref={(el) => { blockRefs.current[block.id] = el; }} className={`${styles.block} ${mark ? styles.blockChanged : ''} ${activeBlockId === block.id ? styles.blockActive : ''} ${findClass}`} data-change={mark ?? undefined}>
-                      <GripVertical width={16} height={16} className={styles.grip} aria-hidden />
+                    <div key={block.id} ref={(el) => { blockRefs.current[block.id] = el; }} onFocusCapture={() => setActiveBlockId(block.id)} className={`${styles.block} ${mark ? styles.blockChanged : ''} ${activeBlockId === block.id ? styles.blockActive : ''} ${findClass}`} data-change={mark ?? undefined}>
+                      <div className={styles.blockGutter}>
+                        <button type="button" className={styles.moveBtn} disabled={blockIndex === 0} aria-label={`Move ${blockLabel(block)} up`} title="Move up" onClick={() => moveBlockBy(block, 'up')}><ChevronUp width={15} height={15} /></button>
+                        <GripVertical width={15} height={15} className={styles.grip} aria-hidden />
+                        <button type="button" className={styles.moveBtn} disabled={blockIndex === activeSection.blocks.length - 1} aria-label={`Move ${blockLabel(block)} down`} title="Move down" onClick={() => moveBlockBy(block, 'down')}><ChevronDown width={15} height={15} /></button>
+                      </div>
                       <div className={styles.blockContent}>
                         <div className={styles.blockMeta}>
                           <span>&lt;{block.type}&gt;</span>

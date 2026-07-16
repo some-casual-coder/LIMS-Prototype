@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { MessageSquarePlus, Sparkles, Link2, MoreHorizontal, Check, X } from 'lucide-react';
+import { MessageSquarePlus, Sparkles, Link2, MoreHorizontal, Check, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { Popover } from '@/components/ui';
 import { clause14Draft, clauseTitle, type DraftPara, type Run } from '@/data/draftContent';
 import { primaryBillContent } from '@/data/billContent';
@@ -20,6 +20,7 @@ interface Props {
   inserted?: InsertedBlock[];
   onEditInserted?: (id: string, text: string) => void;
   onRemoveInserted?: (id: string) => void;
+  onMoveInserted?: (id: string, direction: 'up' | 'down') => void;
   highlight?: string;
   onRef?: (text: string) => void;
   onAccept?: (changeId: string) => void;
@@ -91,7 +92,7 @@ function FloatingToolbar({ onComment, onSuggest, onCrossRef, onToast, clauseNo }
   );
 }
 
-export function DocumentSurface({ mode, activeClause, changeStatus, inserted = [], onEditInserted, onRemoveInserted, highlight, onRef, onAccept, onReject, onComment, onSuggest, onCrossRef, onToast, zoom = 100 }: Props) {
+export function DocumentSurface({ mode, activeClause, changeStatus, inserted = [], onEditInserted, onRemoveInserted, onMoveInserted, highlight, onRef, onAccept, onReject, onComment, onSuggest, onCrossRef, onToast, zoom = 100 }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const insertedRef = useRef<HTMLDivElement>(null);
@@ -158,11 +159,15 @@ export function DocumentSurface({ mode, activeClause, changeStatus, inserted = [
 
         {mode !== 'preview' && inserted.length > 0 && (
           <div className={styles.insertedGroup} ref={insertedRef}>
-            {inserted.map((b) => (
+            {inserted.map((b, i) => (
               <div key={b.id} className={styles.insertedBlock}>
                 <div className={styles.insertedMeta}>
                   <span className={styles.insertedTag}>Inserted · {b.type}</span>
-                  <button className={styles.insertedRemove} onClick={() => onRemoveInserted?.(b.id)}>Remove</button>
+                  <div className={styles.insertedActions}>
+                    <button className={styles.insertedMove} disabled={i === 0} aria-label={`Move ${b.type} up`} title="Move up" onClick={() => onMoveInserted?.(b.id, 'up')}><ChevronUp width={14} height={14} /></button>
+                    <button className={styles.insertedMove} disabled={i === inserted.length - 1} aria-label={`Move ${b.type} down`} title="Move down" onClick={() => onMoveInserted?.(b.id, 'down')}><ChevronDown width={14} height={14} /></button>
+                    <button className={styles.insertedRemove} onClick={() => onRemoveInserted?.(b.id)}>Remove</button>
+                  </div>
                 </div>
                 {b.type === 'Heading' || b.type === 'Schedule' ? (
                   <input className={styles.insertedHeading} value={b.text} onChange={(e) => onEditInserted?.(b.id, e.target.value)} aria-label={`${b.type} text`} />

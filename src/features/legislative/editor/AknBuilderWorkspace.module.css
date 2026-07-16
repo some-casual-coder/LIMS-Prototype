@@ -29,6 +29,9 @@
 .search { display: flex; align-items: center; gap: 7px; width: min(320px, 24vw); height: 34px; margin-left: auto; padding: 0 10px; border: 1px solid var(--border); border-radius: var(--r-button); background: var(--bg-doc); color: var(--text-muted); }
 .search:focus-within { border-color: var(--green-700); box-shadow: var(--focus-ring); }
 .search input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: var(--text); font: inherit; font-size: var(--fs-table); }
+/* The field already shows the focus ring (:focus-within); suppress the global
+   per-element focus ring on the inner input to avoid a nested double border. */
+.search input:focus-visible { box-shadow: none; }
 .searchActive { width: min(420px, 34vw); }
 .findControls { display: flex; flex: none; align-items: center; gap: 1px; padding-left: 4px; margin-left: 2px; border-left: 1px solid var(--border); }
 .findCount { padding: 0 6px 0 4px; color: var(--text-muted); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -72,7 +75,7 @@
 .documentHead h2 { margin-top: 8px; color: var(--text-strong); font-size: 25px; font-weight: var(--fw-semibold); }
 .documentHead p { margin-top: 5px; color: var(--text-muted); font-size: var(--fs-table); }
 .blocks { display: flex; flex-direction: column; }
-.block { position: relative; display: grid; grid-template-columns: 24px minmax(0, 1fr) 32px; gap: 8px; padding: 22px 0 22px 14px; border-bottom: 1px solid var(--border); transition: background .2s ease; }
+.block { position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr) 32px; gap: 8px; padding: 22px 0 22px 14px; border-bottom: 1px solid var(--border); transition: background .2s ease; }
 .block:focus-within { background: linear-gradient(90deg, transparent, #f8faf8 8%, #f8faf8 92%, transparent); }
 /* Active block: gold left accent + subtle wash so the drafter sees where they
    are after navigating from the structure tree or inserting a block. The bar is
@@ -85,7 +88,12 @@
 .blockFindCurrent { background: #fff3bf; }
 .blockFindCurrent::before { content: ''; position: absolute; top: 8px; bottom: 8px; left: 0; width: 4px; border-radius: 0 3px 3px 0; background: #f0b429; }
 .chipFind { background: #fff3bf; color: #8a5a00; }
-.grip { margin-top: 31px; color: var(--border-strong); }
+/* Left gutter: move-up / grip / move-down reorder controls. */
+.blockGutter { display: flex; flex-direction: column; align-items: center; gap: 1px; margin-top: 15px; }
+.moveBtn { display: grid; place-items: center; width: 24px; height: 20px; border: 0; border-radius: 5px; background: transparent; color: var(--text-muted); }
+.moveBtn:hover:not(:disabled) { background: var(--soft-grey); color: var(--text); }
+.moveBtn:disabled { color: #dbe0dc; cursor: default; }
+.grip { color: var(--border-strong); }
 .blockContent { min-width: 0; }
 .blockMeta { display: flex; align-items: center; justify-content: flex-start; gap: 10px; margin-bottom: 8px; }
 .blockMeta label { margin-left: auto; }

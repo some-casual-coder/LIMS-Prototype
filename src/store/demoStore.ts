@@ -109,8 +109,9 @@ interface DemoState {
   updateStructuredDraftMeta: (recordId: string, patch: Partial<StructuredBillDraft>) => void;
   setStructuredDraftActiveSection: (recordId: string, sectionId: string) => void;
   addStructuredDraftSection: (recordId: string, section: StructuredDraftSection) => void;
-  addStructuredDraftBlock: (recordId: string, sectionId: string, block: StructuredDraftBlock) => void;
+  addStructuredDraftBlock: (recordId: string, sectionId: string, block: StructuredDraftBlock, afterBlockId?: string) => void;
   updateStructuredDraftBlock: (recordId: string, blockId: string, patch: Partial<StructuredDraftBlock>) => void;
+  moveStructuredDraftBlock: (recordId: string, blockId: string, direction: 'up' | 'down') => void;
   removeStructuredDraftBlock: (recordId: string, blockId: string) => void;
   saveStructuredDraftRevision: (recordId: string, actorId: string, note: string) => void;
 
@@ -335,7 +336,7 @@ export const useDemoStore = create<DemoState>()(
             },
           };
         }),
-      addStructuredDraftBlock: (recordId, sectionId, block) =>
+      addStructuredDraftBlock: (recordId, sectionId, block, afterBlockId) =>
         set((s) => {
           const draft = s.structuredDrafts[recordId];
           if (!draft) return {};
@@ -346,9 +347,17 @@ export const useDemoStore = create<DemoState>()(
                 ...draft,
                 activeSectionId: sectionId,
                 updatedAt: new Date().toISOString(),
-                sections: draft.sections.map((section) => section.id === sectionId
-                  ? { ...section, blocks: [...section.blocks, block] }
-                  : section),
+                sections: draft.sections.map((section) => {
+                  if (section.id !== sectionId) return section;
+                  // Position the new block after `afterBlockId` when given, so a
+                  // provision can be inserted inside a section at the right spot
+                  // rather than always at the end.
+                  const at = afterBlockId ? section.blocks.findIndex((b) => b.id === afterBlockId) : -1;
+                  if (at === -1) return { ...section, blocks: [...section.blocks, block] };
+                  const blocks = [...section.blocks];
+                  blocks.splice(at + 1, 0, block);
+                  return { ...section, blocks };
+                }),
               },
             },
           };
@@ -367,6 +376,29 @@ export const useDemoStore = create<DemoState>()(
                   ...section,
                   blocks: section.blocks.map((block) => block.id === blockId ? { ...block, ...patch } : block),
                 })),
+              },
+            },
+          };
+        }),
+      moveStructuredDraftBlock: (recordId, blockId, direction) =>
+        set((s) => {
+          const draft = s.structuredDrafts[recordId];
+          if (!draft) return {};
+          return {
+            structuredDrafts: {
+              ...s.structuredDrafts,
+              [recordId]: {
+                ...draft,
+                updatedAt: new Date().toISOString(),
+                sections: draft.sections.map((section) => {
+                  const idx = section.blocks.findIndex((b) => b.id === blockId);
+                  if (idx === -1) return section;
+                  const target = direction === 'up' ? idx - 1 : idx + 1;
+                  if (target < 0 || target >= section.blocks.length) return section; // at an end
+                  const blocks = [...section.blocks];
+                  [blocks[idx], blocks[target]] = [blocks[target], blocks[idx]];
+                  return { ...section, blocks };
+                }),
               },
             },
           };
