@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Search as SearchIcon, ScanLine, LayoutList, LayoutGrid, ChevronDown, SlidersHorizontal,
@@ -28,6 +28,23 @@ const COLLECTION_MAP: Record<string, { tab: string; type?: string; label: string
 
 const IMPORT_ROLES = ['clerk', 'dlps-officer', 'ict-admin'];
 
+// Saved-collection chips are real quick filters (predicate over the record set).
+// Only collections we can honestly derive from the seed are surfaced.
+const QUICK_FILTERS: Record<string, (r: LegislativeRecord) => boolean> = {
+  'recently-published': (r) => r.stage === 'Published',
+  'awaiting-signature': (r) => r.stage === 'Awaiting Signature',
+  'signed-sealed': (r) => r.stage === 'Signed and Sealed',
+};
+
+// Real (text) download of a record's official output.
+function downloadRecordText(r: LegislativeRecord) {
+  const lines = [r.title, `${r.citation ?? r.reference} · ${r.workflowType} · Version ${r.currentVersion}`, `Stage: ${r.stage} · ${r.year} · ${r.directorate}`];
+  const url = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' }));
+  const a = document.createElement('a');
+  a.href = url; a.download = `${(r.citation ?? r.reference).replace(/[/\s]+/g, '-')}.txt`; a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function Repository() {
   const { collection } = useParams();
   const [params, setParams] = useSearchParams();
@@ -49,6 +66,7 @@ export function Repository() {
   const [statusFilter, setStatusFilter] = useState('');
   const [dirFilter, setDirFilter] = useState('');
   const [classFilter, setClassFilter] = useState('');
+  const [quickFilter, setQuickFilter] = useState('');
   const [sort, setSort] = useState('updated');
 
   const setView = (v: string) => setParams((p) => { p.set('view', v); return p; }, { replace: true });
@@ -69,17 +87,18 @@ export function Repository() {
       if (statusFilter && statusBucket(r) !== statusFilter) return false;
       if (dirFilter && dirShort(r.directorate) !== dirFilter) return false;
       if (classFilter && visibilityOf(r) !== classFilter) return false;
+      if (quickFilter && !QUICK_FILTERS[quickFilter]?.(r)) return false;
       return true;
     });
     if (sort === 'updated') list = [...list].sort((a, b) => +new Date(b.lastUpdated) - +new Date(a.lastUpdated));
     else if (sort === 'title') list = [...list].sort((a, b) => a.title.localeCompare(b.title));
     else if (sort === 'year') list = [...list].sort((a, b) => b.year - a.year);
     return list;
-  }, [records, tab, typeFilter, yearFilter, statusFilter, dirFilter, classFilter, sort]);
+  }, [records, tab, typeFilter, yearFilter, statusFilter, dirFilter, classFilter, quickFilter, sort]);
 
   const years = useMemo(() => [...new Set(records.map((r) => r.year))].sort((a, b) => b - a), [records]);
-  const anyFilter = typeFilter || yearFilter || statusFilter || dirFilter || classFilter;
-  const clearFilters = () => { setTypeFilter(''); setYearFilter(''); setStatusFilter(''); setDirFilter(''); setClassFilter(''); };
+  const anyFilter = typeFilter || yearFilter || statusFilter || dirFilter || classFilter || quickFilter;
+  const clearFilters = () => { setTypeFilter(''); setYearFilter(''); setStatusFilter(''); setDirFilter(''); setClassFilter(''); setQuickFilter(''); };
   const canImport = IMPORT_ROLES.includes(currentRole ?? '');
 
   return (
@@ -108,11 +127,17 @@ export function Repository() {
         ))}
       </div>
 
-      {/* Saved collections strip */}
+      {/* Quick filters (real predicates over the record set) */}
       <div className={styles.savedStrip}>
-        <span className={styles.savedLabel}>Collections</span>
-        {repositorySavedCollections.map((c) => (
-          <button key={c.id} className={styles.savedChip} title={c.filter} onClick={() => showToast(`Collection: ${c.label} — ${c.filter}.`)}>{c.label}</button>
+        <span className={styles.savedLabel}>Quick filters</span>
+        {repositorySavedCollections.filter((c) => QUICK_FILTERS[c.id]).map((c) => (
+          <button
+            key={c.id}
+            className={`${styles.savedChip} ${quickFilter === c.id ? styles.savedChipActive : ''}`}
+            aria-pressed={quickFilter === c.id}
+            title={c.filter}
+            onClick={() => setQuickFilter((q) => (q === c.id ? '' : c.id))}
+          >{c.label}</button>
         ))}
       </div>
 
@@ -213,11 +238,11 @@ function RepositoryList({ records, versions, billContent, currentRole, onOpen, o
           </tr>
         </thead>
         <tbody>
-          {records.map((r) => {
+          {records.map((r, i) => {
             const vs = recordVersionStatus(r, versions, billContent);
             const access = canAccessRecord(r, currentRole);
             return (
-              <tr key={r.id} className={styles.row} onClick={() => onOpen(r.id)}>
+              <tr key={r.id} className={`${styles.row} item-in`} style={{ '--item-delay': `${Math.min(i, 12) * 0.03}s` } as CSSProperties} onClick={() => onOpen(r.id)}>
                 <td>
                   <div className={styles.recCell}>
                     <span className={styles.recIcon} aria-hidden>{recordIcon(r)}</span>
@@ -241,10 +266,9 @@ function RepositoryList({ records, versions, billContent, currentRole, onOpen, o
                   )}>
                     {(close) => (
                       <div className={styles.menu} onClick={close}>
-                        <button className={styles.menuItem} onClick={() => onOpen(r.id)}>Preview record</button>
                         <button className={styles.menuItem} onClick={() => onOpen(r.id)}>Open record</button>
                         {access
-                          ? <button className={styles.menuItem} onClick={() => showToast('Preparing official output for download…')}>Download official output</button>
+                          ? <button className={styles.menuItem} onClick={() => { downloadRecordText(r); showToast('Record output downloaded.'); }}>Download official output</button>
                           : <button className={styles.menuItem} onClick={() => onRequestAccess(r.id)}>Request access</button>}
                       </div>
                     )}
@@ -265,13 +289,13 @@ interface CardProps extends ListProps { onMore: (name: string, id: string) => vo
 function RepositoryCards({ records, versions, billContent, currentRole, onOpen, onRequestAccess, onMore, showToast }: CardProps) {
   return (
     <ul className={styles.cardGrid}>
-      {records.map((r) => {
+      {records.map((r, i) => {
         const vs = recordVersionStatus(r, versions, billContent);
         const access = canAccessRecord(r, currentRole);
         const restricted = r.restricted && !access;
         const isScan = r.recordSource === 'Historical scan';
         return (
-          <li key={r.id} className={`${styles.card} ${restricted ? styles.cardRestricted : ''}`}>
+          <li key={r.id} className={`${styles.card} ${restricted ? styles.cardRestricted : ''} item-in`} style={{ '--item-delay': `${Math.min(i, 12) * 0.03}s` } as CSSProperties}>
             <div className={styles.cardTop}>
               <span className={`${styles.cardIcon} ${styles['tone_' + vs.tone]}`} aria-hidden>{recordIcon(r)}</span>
               <div className={styles.cardPills}>
@@ -300,16 +324,16 @@ function RepositoryCards({ records, versions, billContent, currentRole, onOpen, 
             <div className={styles.cardFoot}>
               <span className={styles.cardUpdated}>Updated {fmt(r.lastUpdated)}</span>
               <div className={styles.cardTools}>
-                <button className={styles.cardToolBtn} onClick={() => showToast('Record saved to your research.')} aria-label="Save record"><Bookmark width={15} height={15} /></button>
+                <button className={styles.cardToolBtn} onClick={() => onMore('collection', r.id)} aria-label="Save to research collection" title="Save to research collection"><Bookmark width={15} height={15} /></button>
                 <Popover label="Record actions" align="left" trigger={({ toggle, ref }) => (
                   <button ref={ref} className={styles.cardToolBtn} onClick={toggle} aria-label="Record actions"><MoreVertical width={15} height={15} /></button>
                 )}>
                   {(close) => (
                     <div className={styles.menu} onClick={close}>
-                      <button className={styles.menuItem} onClick={() => onOpen(r.id)}>Preview record</button>
+                      <button className={styles.menuItem} onClick={() => onOpen(r.id)}>Open record</button>
                       <button className={styles.menuItem} onClick={() => onMore('collection', r.id)}>Add to research collection</button>
                       {access
-                        ? <button className={styles.menuItem} onClick={() => showToast('Preparing official output for download…')}>Download official output</button>
+                        ? <button className={styles.menuItem} onClick={() => { downloadRecordText(r); showToast('Record output downloaded.'); }}>Download official output</button>
                         : <button className={styles.menuItem} onClick={() => onRequestAccess(r.id)}>Request access</button>}
                     </div>
                   )}
