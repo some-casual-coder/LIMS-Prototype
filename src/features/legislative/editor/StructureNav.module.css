@@ -32,6 +32,8 @@
 .clauseActive { background: var(--soft-green); color: var(--green-800); font-weight: var(--fw-semibold); }
 .clauseActive .leafIcon { color: var(--green-700); }
 
-.badges { display: inline-flex; align-items: center; gap: 5px; flex: none; }
+/* Find match-count badge — pill that grows with the number of hits in a clause. */
+.matchBadge { flex: none; margin-left: auto; display: inline-grid; place-items: center; min-width: 18px; height: 17px; padding: 0 5px; border-radius: 999px; background: var(--gold-soft); color: var(--on-gold); font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.badges { display: inline-flex; align-items: center; gap: 5px; flex: none; margin-left: 6px; }
 .badgeBlocking { display: inline-flex; align-items: center; gap: 2px; font-size: 11px; font-weight: var(--fw-bold); color: var(--on-red); }
 .badgeWarn { display: inline-flex; color: var(--status-warning); }

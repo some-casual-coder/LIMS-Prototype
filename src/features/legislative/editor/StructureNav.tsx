@@ -4,7 +4,7 @@ import { documentParts, clauseTitle } from '@/data/draftContent';
 import { LONG_TITLE, PREAMBLE, SCHEDULES } from './DocumentSurface';
 import styles from './StructureNav.module.css';
 
-export function StructureNav({ active, onSelect }: { active: number; onSelect: (n: number) => void }) {
+export function StructureNav({ active, onSelect, matchCounts }: { active: number; onSelect: (n: number) => void; matchCounts?: Record<number, number> }) {
   const [query, setQuery] = useState('');
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const q = query.trim().toLowerCase();
@@ -13,6 +13,11 @@ export function StructureNav({ active, onSelect }: { active: number; onSelect: (
   const matches = (n: number) => !q || `clause ${n} ${clauseTitle(n)}`.toLowerCase().includes(q);
   const toggleAll = () => setCollapsed(allCollapsed ? {} : Object.fromEntries(documentParts.map((p) => [p.id, true])));
   const leafClass = (target: number) => `${styles.leaf} ${active === target ? styles.clauseActive : ''}`;
+  // Find match-count badge for a target (clause number / Long Title / Preamble).
+  const countBadge = (target: number) => {
+    const c = matchCounts?.[target];
+    return c ? <span className={styles.matchBadge} title={`${c} match${c === 1 ? '' : 'es'}`}>{c}</span> : null;
+  };
 
   return (
     <div className={styles.nav}>
@@ -26,8 +31,8 @@ export function StructureNav({ active, onSelect }: { active: number; onSelect: (
       </label>
 
       <div className={styles.tree}>
-        <button className={leafClass(LONG_TITLE)} onClick={() => onSelect(LONG_TITLE)}><FileText width={14} height={14} className={styles.leafIcon} /> Long Title</button>
-        <button className={leafClass(PREAMBLE)} onClick={() => onSelect(PREAMBLE)}><FileText width={14} height={14} className={styles.leafIcon} /> Preamble</button>
+        <button className={leafClass(LONG_TITLE)} onClick={() => onSelect(LONG_TITLE)}><FileText width={14} height={14} className={styles.leafIcon} /> Long Title {countBadge(LONG_TITLE)}</button>
+        <button className={leafClass(PREAMBLE)} onClick={() => onSelect(PREAMBLE)}><FileText width={14} height={14} className={styles.leafIcon} /> Preamble {countBadge(PREAMBLE)}</button>
 
         {documentParts.map((part) => {
           const isCollapsed = collapsed[part.id];
@@ -50,6 +55,7 @@ export function StructureNav({ active, onSelect }: { active: number; onSelect: (
                   >
                     <FileText width={14} height={14} className={styles.leafIcon} />
                     <span className={styles.clauseLabel}>Clause {n} — {clauseTitle(n)}</span>
+                    {countBadge(n)}
                     {isC14 && (
                       <span className={styles.badges}>
                         <span className={styles.badgeBlocking} title="1 blocking comment"><CircleAlert width={13} height={13} /> 1</span>

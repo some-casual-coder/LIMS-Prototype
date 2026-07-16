@@ -1,18 +1,19 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
-  ArrowLeft, ChevronRight, ChevronDown, CircleCheck, Scale, RotateCcw,
-  Undo2, Redo2, Plus, GitCompare, Eye, Sparkles, Search, MoreHorizontal, ShieldCheck, MessageSquare, Send, PenLine,
+  ArrowLeft, ChevronRight, ChevronDown, ChevronUp, CircleCheck, Scale, RotateCcw,
+  Undo2, Redo2, Plus, GitCompare, Eye, Sparkles, Search, MoreHorizontal, ShieldCheck, MessageSquare, Send, PenLine, X,
 } from 'lucide-react';
 import { EditorShell } from './EditorShell';
 import { StructureNav } from './StructureNav';
-import { DocumentSurface, type EditorMode, type ChangeStatus } from './DocumentSurface';
+import { DocumentSurface, type EditorMode, type ChangeStatus, LONG_TITLE, PREAMBLE } from './DocumentSurface';
 import { ContextPanel, type PanelTab } from './ContextPanel';
 import { CompareSheet } from './CompareSheet';
 import { SubmitSheet } from './SubmitSheet';
 import { AddCommentSheet } from './AddCommentSheet';
 import { Button, Popover } from '@/components/ui';
-import { changeSummary, clause14Changes, clause14Draft } from '@/data/draftContent';
+import { changeSummary, clause14Changes, clause14Draft, documentParts } from '@/data/draftContent';
+import { primaryBillContent } from '@/data/billContent';
 import { useDemoStore } from '@/store/demoStore';
 import { recordAudit } from '@/mocks/mockApi';
 import styles from './DraftingWorkspace.module.css';
@@ -37,6 +38,7 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
   const [toast, setToast] = useState('');
   const [inserted, setInserted] = useState<Array<{ id: string; clause: number; type: string; text: string }>>([]);
   const [find, setFind] = useState('');
+  const [findCursor, setFindCursor] = useState(-1);
   const [viewVersion, setViewVersion] = useState<string | null>(null);
   const [autoNumber, setAutoNumber] = useState(true);
   const navigate = useNavigate();
@@ -85,6 +87,41 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
     const last = inserted[inserted.length - 1];
     setInserted((list) => list.slice(0, -1));
     showToast(`Removed inserted ${last.type.toLowerCase()}.`);
+  }
+
+  // Find in document: count occurrences across the whole Bill (Long Title,
+  // Preamble, Clause 14 draft, and every other clause) so we can cycle between
+  // clauses that contain the term and badge match counts in the structure nav.
+  const findData = useMemo(() => {
+    const q = find.trim().toLowerCase();
+    if (!q) return { perTarget: {} as Record<number, number>, order: [] as number[], total: 0 };
+    const count = (s: string) => (s ? s.toLowerCase().split(q).length - 1 : 0);
+    const perTarget: Record<number, number> = {};
+    perTarget[LONG_TITLE] = count(primaryBillContent.longTitle);
+    perTarget[PREAMBLE] = count(primaryBillContent.preamble);
+    perTarget[14] = count(clause14Draft.map((p) => `${p.label ?? ''} ${p.runs.map((r) => r.text).join('')}`).join(' '));
+    primaryBillContent.clauses.forEach((c) => {
+      if (c.number === 14) return;
+      perTarget[c.number] = count(`${c.heading} ${c.paragraphs.join(' ')}`);
+    });
+    const order: number[] = [];
+    let total = 0;
+    const push = (n: number) => { const c = perTarget[n] ?? 0; if (c > 0) { order.push(n); total += c; } };
+    push(LONG_TITLE); push(PREAMBLE);
+    documentParts.forEach((part) => part.clauses.forEach(push));
+    return { perTarget, order, total };
+  }, [find]);
+
+  // A new query resets the cursor; typing highlights live without jumping.
+  useEffect(() => { setFindCursor(-1); }, [find]);
+
+  function stepFind(direction: 1 | -1) {
+    if (!findData.order.length) return;
+    const next = findCursor < 0
+      ? (direction === 1 ? 0 : findData.order.length - 1)
+      : (findCursor + direction + findData.order.length) % findData.order.length;
+    setFindCursor(next);
+    setActiveClause(findData.order[next]);
   }
 
   const readOnlyVersion = viewVersion !== null;
@@ -195,18 +232,20 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
             {(close) => (<div className={styles.menu} onClick={close}>{['Suggest clearer wording', 'Check consistency', 'Identify ambiguity', 'Compare related provisions', 'Summarise selected clause', 'Draft explanatory note'].map((it) => <button key={it} className={styles.menuItem} onClick={() => setPanelTab('AI Assistant')}>{it}</button>)}</div>)}
           </Popover>
         )}
-        <Popover label="Find" trigger={({ toggle, ref }) => (
-          <button ref={ref} className={styles.toolText} onClick={toggle}><Search width={15} height={15} /> Find</button>
-        )}>
-          {(close) => (
-            <form className={styles.findBar} onSubmit={(e) => { e.preventDefault(); const q = (e.currentTarget.elements.namedItem('q') as HTMLInputElement).value.trim(); close(); setFind(q); showToast(q ? `Highlighting “${q}” in the document.` : 'Cleared find highlighting.'); }}>
-              <input name="q" className={styles.findInput} placeholder="Find in document…" aria-label="Find in document" autoFocus />
-              <button type="submit" className={styles.findGo}>Find</button>
-            </form>
+        <form className={`${styles.findField} ${find.trim() ? styles.findFieldActive : ''}`} style={{ marginLeft: 'auto' }} onSubmit={(e) => { e.preventDefault(); stepFind(1); }}>
+          <Search width={15} height={15} />
+          <input value={find} onChange={(e) => setFind(e.target.value)} className={styles.findInput} placeholder="Find in document…" aria-label="Find in document" />
+          {find.trim() && (
+            <div className={styles.findCtrls}>
+              <span className={styles.findCount} title={`${findData.total} match${findData.total === 1 ? '' : 'es'} in ${findData.order.length} clause${findData.order.length === 1 ? '' : 's'}`}>{findData.order.length ? `${findCursor >= 0 ? findCursor + 1 : 1}/${findData.order.length}` : '0/0'}</span>
+              <button type="button" className={styles.findNav} aria-label="Previous match" disabled={!findData.order.length} onClick={() => stepFind(-1)}><ChevronUp width={15} height={15} /></button>
+              <button type="button" className={styles.findNav} aria-label="Next match" disabled={!findData.order.length} onClick={() => stepFind(1)}><ChevronDown width={15} height={15} /></button>
+              <button type="button" className={styles.findNav} aria-label="Clear search" onClick={() => setFind('')}><X width={14} height={14} /></button>
+            </div>
           )}
-        </Popover>
+        </form>
         <Popover label="More" align="right" trigger={({ toggle, ref }) => (
-          <button ref={ref} className={styles.tool} style={{ marginLeft: 'auto' }} onClick={toggle} aria-label="More"><MoreHorizontal width={16} height={16} /></button>
+          <button ref={ref} className={styles.tool} onClick={toggle} aria-label="More"><MoreHorizontal width={16} height={16} /></button>
         )}>
           {(close) => (
             <div className={styles.menu} onClick={close}>
@@ -234,7 +273,7 @@ export function DraftingWorkspace({ reviewRoute = false }: { reviewRoute?: boole
 
       {/* Three columns */}
       <main className={`${styles.columns} ${mode === 'preview' ? styles.previewColumns : ''}`}>
-        <StructureNav active={activeClause} onSelect={(n) => { setActiveClause(n); }} />
+        <StructureNav active={activeClause} matchCounts={find.trim() ? findData.perTarget : undefined} onSelect={(n) => { setActiveClause(n); }} />
         <DocumentSurface
           mode={effectiveMode}
           activeClause={activeClause}

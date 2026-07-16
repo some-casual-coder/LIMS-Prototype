@@ -74,10 +74,17 @@
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* Find bar */
-.findBar { display: flex; align-items: center; gap: 6px; }
-.findInput { height: 34px; padding: 0 10px; border: 1px solid var(--border-strong); border-radius: var(--r-button); font-size: var(--fs-table); width: 180px; }
-.findInput:focus { outline: none; border-color: var(--green-700); }
-.findGo { height: 34px; padding: 0 12px; border: none; background: var(--ink); color: #fff; border-radius: var(--r-button); font-size: var(--fs-table); font-weight: var(--fw-semibold); }
+/* Persistent inline Find field with cycle controls (replaces the popover so it
+   no longer disappears when you search). */
+.findField { display: flex; align-items: center; gap: 7px; height: 34px; width: 230px; padding: 0 8px 0 10px; border: 1px solid var(--border-strong); border-radius: var(--r-button); background: var(--bg-card); color: var(--text-muted); }
+.findField:focus-within { border-color: var(--green-700); box-shadow: var(--focus-ring); }
+.findFieldActive { width: 320px; }
+.findInput { min-width: 0; flex: 1; height: 100%; border: none; outline: none; background: transparent; color: var(--text); font-size: var(--fs-table); }
+.findCtrls { display: flex; flex: none; align-items: center; gap: 1px; padding-left: 4px; border-left: 1px solid var(--border); }
+.findCount { padding: 0 6px 0 4px; color: var(--text-muted); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.findNav { display: grid; place-items: center; width: 24px; height: 24px; border: none; border-radius: 5px; background: transparent; color: var(--text-muted); }
+.findNav:hover:not(:disabled) { background: var(--soft-grey); color: var(--text); }
+.findNav:disabled { color: var(--border-strong); cursor: not-allowed; }
 
 /* Toast */
 .toast {
