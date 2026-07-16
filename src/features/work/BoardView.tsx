@@ -1,11 +1,10 @@
-import { useState } from 'react';
-import { Lock, MessageSquare, Paperclip, Flag } from 'lucide-react';
+import { useState, type CSSProperties } from 'react';
+import { Lock, MessageSquare, Paperclip, Flag, ListChecks } from 'lucide-react';
 import { StatusBadge } from '@/components/ui';
 import { priorityTone, toneVars } from '@/components/ui/tone';
 import type { WorkItem, WorkState } from '@/data/myWork';
 import { boardColumns } from './logic';
 import type { PendingTransition } from './sheets/TransitionSheet';
-import { WorkProgress } from './WorkProgress';
 import styles from './BoardView.module.css';
 
 // Personal work-state moves permitted from these columns (controlled).
@@ -52,10 +51,11 @@ export function BoardView({ items, onOpenItem, onTransition }: {
               <span className={styles.colCount} style={{ color: tv.fg }}>{colItems.length}</span>
             </header>
             <div className={styles.colBody}>
-              {colItems.map((item) => (
+              {colItems.map((item, cardIndex) => (
                 <BoardCard
                   key={item.recordId}
                   item={item}
+                  index={cardIndex}
                   draggable={DRAG_ALLOWED.includes(item.workState)}
                   dragging={dragId === item.recordId}
                   onDragStart={() => setDragId(item.recordId)}
@@ -71,13 +71,16 @@ export function BoardView({ items, onOpenItem, onTransition }: {
   );
 }
 
-function BoardCard({ item, draggable, dragging, onDragStart, onDragEnd, onOpen }: {
-  item: WorkItem; draggable: boolean; dragging: boolean;
+function BoardCard({ item, index, draggable, dragging, onDragStart, onDragEnd, onOpen }: {
+  item: WorkItem; index: number; draggable: boolean; dragging: boolean;
   onDragStart: () => void; onDragEnd: () => void; onOpen: () => void;
 }) {
+  const { done, total } = item.progress;
+  const people = item.assignedPeople;
   return (
     <article
-      className={`${styles.card} ${dragging ? styles.cardDragging : ''}`}
+      className={`${styles.card} ${dragging ? styles.cardDragging : ''} item-in`}
+      style={{ '--item-delay': `${index * 0.04}s` } as CSSProperties}
       draggable={draggable}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
@@ -87,7 +90,7 @@ function BoardCard({ item, draggable, dragging, onDragStart, onDragEnd, onOpen }
       onKeyDown={(e) => { if (e.key === 'Enter') onOpen(); }}
     >
       <div className={styles.cardTop}>
-        <span className={`${styles.cardDue} ${item.dueUrgent ? styles.cardDueUrgent : ''}`}>{item.due}</span>
+        <span className={`${styles.cardDue} ${item.dueUrgent ? styles.cardDueUrgent : ''}`}>Due: {item.due}</span>
         <span className={styles.cardTopRight}>
           {item.confidentiality !== 'Public' && (
             <span title={`${item.confidentiality} record`} aria-label={`${item.confidentiality} record`}>
@@ -97,19 +100,37 @@ function BoardCard({ item, draggable, dragging, onDragStart, onDragEnd, onOpen }
         </span>
       </div>
       <h4 className={styles.cardTitle}>{item.title}</h4>
-      <p className={styles.cardRef}>{item.reference}{item.version ? ` · v${item.version}` : ''}</p>
       <p className={styles.cardAction}>{item.requiredAction}</p>
-      <StatusBadge tone={item.stageTone} size="sm">{item.stage}</StatusBadge>
-      <div className={styles.cardProgress}>
-        <WorkProgress done={item.progress.done} total={item.progress.total} />
-        <span className={styles.progressText}>{item.progress.done} of {item.progress.total} done</span>
+
+      {/* Milestone: green segmented battery bar (1 segment = 1 checklist item). */}
+      <div className={styles.milestoneHead}>
+        <span className={styles.milestoneLabel}><ListChecks width={14} height={14} /> Milestone</span>
+        <span className={styles.milestoneCount}>{done}/{total}</span>
       </div>
+      <div className={styles.milestoneTrack} role="img" aria-label={`${done} of ${total} checklist items complete`}>
+        {Array.from({ length: Math.max(1, total) }, (_, seg) => {
+          const filled = seg < done;
+          return filled ? (
+            <i key={seg} className="charge-bar" style={{ '--charge-fill': 'var(--green-700)', '--charge-track': 'var(--soft-grey)', '--charge-delay': `${seg * 0.05}s` } as CSSProperties} />
+          ) : <i key={seg} style={{ background: 'var(--soft-grey)' }} />;
+        })}
+      </div>
+
+      <div className={styles.assignRow}>
+        <span className={styles.assignLabel}>Assigned for</span>
+        <span className={styles.avatars}>
+          {people.slice(0, 3).map((person) => (
+            <span key={person.id} className={styles.avatar} title={person.name} aria-label={person.name}>{person.initials}</span>
+          ))}
+          {people.length > 3 && <span className={`${styles.avatar} ${styles.avatarMore}`}>+{people.length - 3}</span>}
+        </span>
+      </div>
+
       <div className={styles.cardBottom}>
-        <span className={styles.cardRole}>{item.myRole}</span>
+        <StatusBadge tone={priorityTone[item.priority]} size="sm" icon={<Flag width={11} height={11} />}>{item.priority}</StatusBadge>
         <span className={styles.cardMeta}>
-          <StatusBadge tone={priorityTone[item.priority]} size="sm" icon={<Flag width={11} height={11} />}>{item.priority}</StatusBadge>
-          {item.commentCount > 0 && <span className={styles.metaItem}><MessageSquare width={13} height={13} /> {item.commentCount}</span>}
           {item.attachmentCount > 0 && <span className={styles.metaItem}><Paperclip width={13} height={13} /> {item.attachmentCount}</span>}
+          {item.commentCount > 0 && <span className={styles.metaItem}><MessageSquare width={13} height={13} /> {item.commentCount}</span>}
         </span>
       </div>
     </article>

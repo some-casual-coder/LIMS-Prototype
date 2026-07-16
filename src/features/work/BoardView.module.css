@@ -64,14 +64,25 @@
 .cardTopRight { display: inline-flex; align-items: center; gap: 4px; }
 .cardLock { color: var(--text-muted); }
 
-.cardTitle { font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--text-strong); line-height: 1.3; margin: 8px 0 3px; }
-.cardRef { font-size: var(--fs-meta); color: var(--text-muted); }
-.cardAction { font-size: var(--fs-table); color: var(--text); margin: 9px 0 10px; line-height: 1.4; }
+.cardTitle { font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--text-strong); line-height: 1.3; margin: 9px 0 4px; }
+.cardAction { font-size: var(--fs-meta); color: var(--text-muted); margin: 0 0 13px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-.cardProgress { margin: 12px 0 10px; }
-.progressText { font-size: 11px; color: var(--text-muted); margin-top: 5px; display: inline-block; }
+/* Milestone: green segmented battery bar (1 segment = 1 checklist item). */
+.milestoneHead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.milestoneLabel { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-meta); font-weight: var(--fw-medium); color: var(--text-muted); }
+.milestoneLabel svg { color: var(--text-muted); }
+.milestoneCount { font-size: var(--fs-meta); font-weight: var(--fw-bold); color: var(--text-strong); font-variant-numeric: tabular-nums; }
+.milestoneTrack { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 3px; margin-bottom: 13px; }
+.milestoneTrack i { height: 6px; border-radius: 3px; }
 
-.cardBottom { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 10px; border-top: 1px solid var(--border); }
-.cardRole { font-size: var(--fs-meta); color: var(--text-muted); font-weight: var(--fw-medium); }
-.cardMeta { display: inline-flex; align-items: center; gap: 8px; }
+/* Assignees: overlapping initial avatars. */
+.assignRow { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.assignLabel { font-size: var(--fs-meta); color: var(--text-muted); }
+.avatars { display: inline-flex; }
+.avatar { display: inline-grid; place-items: center; width: 26px; height: 26px; margin-left: -7px; border-radius: 50%; background: var(--soft-green); border: 1.5px solid var(--bg-card); color: var(--green-800); font-size: 10px; font-weight: var(--fw-bold); }
+.avatar:first-child { margin-left: 0; }
+.avatarMore { background: var(--soft-grey); color: var(--text-muted); }
+
+.cardBottom { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 11px; border-top: 1px solid var(--border); }
+.cardMeta { display: inline-flex; align-items: center; gap: 10px; }
 .metaItem { display: inline-flex; align-items: center; gap: 3px; font-size: var(--fs-meta); color: var(--text-muted); }
