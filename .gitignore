@@ -22,3 +22,10 @@ vite.config.d.ts
 
 # Demonstrator guides (internal, not shipped)
 demo-guides/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
