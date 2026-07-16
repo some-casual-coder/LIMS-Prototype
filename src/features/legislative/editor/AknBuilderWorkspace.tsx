@@ -142,7 +142,9 @@ export function AknBuilderWorkspace({ record, mode }: Props) {
       return;
     }
     checkpoint();
-    addSection(record.id, makeDraftSection(tag));
+    const section = makeDraftSection(tag);
+    addSection(record.id, section);
+    setActiveSection(record.id, section.id); // jump to it so the change is visible
     announce(`<${tag}> added to the document structure.`);
   }
 
@@ -157,6 +159,8 @@ export function AknBuilderWorkspace({ record, mode }: Props) {
     const ordinal = target.blocks.filter((block) => block.type === type).length + 1;
     const block = makeDraftBlock(type, ordinal);
     addBlock(record.id, target.id, initialText ? { ...block, text: initialText } : block);
+    // Make sure the section receiving the block is the one on screen.
+    if (target.id !== draft.activeSectionId) setActiveSection(record.id, target.id);
     announce(`${akomaBlockOptions.find((item) => item.type === type)?.label ?? 'Content block'} inserted in <${target.tag}>.`);
   }
 
@@ -560,20 +564,46 @@ function ContextReferences({ count }: { count: number }) {
   );
 }
 
+// Clean, reader-facing rendering. Per Akoma Ntoso, content/structure is
+// separated from presentation, so the machine element names (<meta>, <preface>,
+// <preamble>, <body>) are NOT shown here — only the published legislative form:
+// title, long title, enacting formula, then Parts/Clauses with legislative
+// numbering. <meta> and internal annotations are omitted from the document.
+function previewBlock(block: StructuredDraftBlock) {
+  switch (block.type) {
+    case 'annotation':
+      return null; // internal drafting note — not part of the published Bill
+    case 'part':
+      return <h2 className={styles.pvPart}>{block.text}</h2>;
+    case 'heading':
+      return <h3 className={styles.pvHeading}>{block.text}</h3>;
+    case 'schedule':
+      return <h3 className={styles.pvSchedule}>{block.text}</h3>;
+    case 'formula':
+    case 'recital':
+    case 'longTitle':
+      return <p className={styles.pvLead}>{block.text}</p>;
+    case 'clause':
+      return <p className={styles.pvClause}><b className={styles.pvNum}>{block.number ?? ''}.</b> {block.text}</p>;
+    case 'subclause':
+      return <p className={styles.pvSub}><b className={styles.pvNum}>({block.number ?? ''})</b> {block.text}</p>;
+    case 'table':
+      return <pre className={styles.pvTable}>{block.text}</pre>;
+    default:
+      return <p className={styles.pvPara}>{block.text}</p>;
+  }
+}
+
 function DocumentPreview({ draft }: { draft: StructuredBillDraft }) {
+  const sections = draft.sections.filter((section) => section.tag !== 'meta');
   return (
     <div className={styles.previewDocument}>
       <p className={styles.previewRef}>{draft.reference}</p>
       <h1>{draft.title}</h1>
-      <p className={styles.previewSponsor}>{draft.sponsor}</p>
-      {draft.sections.filter((section) => section.tag !== 'meta').map((section) => (
-        <section key={section.id}>
-          <span className={styles.previewTag}>&lt;{section.tag}&gt;</span>
-          {section.blocks.map((block) => (
-            <div key={block.id} className={styles.previewBlock}>
-              {(block.type === 'heading' || block.type === 'part' || block.type === 'schedule') ? <h2>{block.text}</h2> : <p>{block.number && <b>({block.number}) </b>}{block.text}</p>}
-            </div>
-          ))}
+      {draft.sponsor && <p className={styles.previewSponsor}>Sponsored by {draft.sponsor}</p>}
+      {sections.map((section) => (
+        <section key={section.id} className={styles.pvSection}>
+          {section.blocks.map((block) => <div key={block.id}>{previewBlock(block)}</div>)}
         </section>
       ))}
     </div>
