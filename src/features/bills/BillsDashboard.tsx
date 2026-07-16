@@ -127,6 +127,7 @@ function ThroughputChart() {
         <rect x="0" y="0" width={CHART_W} height={CHART_H} fill="transparent" onMouseMove={onMove} />
       </svg>
       <div className={styles.weekLabels} aria-hidden>{WEEK_LABELS.map((label, index) => <span key={label} className={hover === index ? styles.weekActive : ''}>{label}</span>)}</div>
+      <p className={styles.xAxisLabel}>Week ending · 2026</p>
       {hover != null && (
         <div className={styles.chartTip} style={{ left: `clamp(82px, ${(hoverX / CHART_W) * 100}%, calc(100% - 82px))` }} role="status">
           <strong>{WEEK_LABELS[hover]}</strong>

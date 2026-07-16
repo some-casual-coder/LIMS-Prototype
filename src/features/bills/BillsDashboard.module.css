@@ -46,6 +46,7 @@
 @keyframes billsDraw { to { stroke-dashoffset:0; } }
 .crosshair { stroke:var(--border-strong); stroke-width:1; stroke-dasharray:3 4; vector-effect:non-scaling-stroke; }
 .weekActive { color:var(--text-strong) !important; font-weight:var(--fw-bold); }
+.xAxisLabel { margin:5px 0 0; padding-left:24px; font-size:9px; font-weight:var(--fw-bold); text-transform:uppercase; letter-spacing:0.04em; color:var(--text-muted); }
 .chartTip { position:absolute; top:-8px; transform:translateX(-50%); z-index:6; min-width:154px; padding:8px 10px; border-radius:var(--r-button); background:var(--ink); box-shadow:var(--shadow-pop); pointer-events:none; }
 .chartTip strong { display:block; margin-bottom:5px; color:#fff; font-size:11px; }
 .chartTip span { display:flex; align-items:center; gap:6px; font-size:10px; color:rgba(255,255,255,.82); line-height:1.75; }
