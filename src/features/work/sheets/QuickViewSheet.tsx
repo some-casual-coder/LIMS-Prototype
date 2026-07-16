@@ -53,7 +53,7 @@ export function QuickViewSheet({ item, open, onClose }: { item: WorkItem | null;
       }
     >
       <div className={styles.pills}>
-        <StatusBadge tone={item.stageTone} size="sm">{item.stage}</StatusBadge>
+        <StatusBadge tone={item.stageTone} size="sm" pulse={item.stageTone === 'red'}>{item.stage}</StatusBadge>
         <StatusBadge tone={priorityTone[item.priority]} size="sm" icon={<Flag width={12} height={12} />}>{item.priority}</StatusBadge>
         <span className={styles.classPill}><Lock width={12} height={12} /> {item.confidentiality}</span>
       </div>

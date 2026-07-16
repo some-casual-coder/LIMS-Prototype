@@ -99,7 +99,7 @@ function Row({ item, index, selected, onToggleSelect, onOpen }: {
         <span className={styles.itemRef}>{item.reference}{item.version ? ` · v${item.version}` : ''}</span>
       </td>
       <td className={styles.cellType}>{item.type}</td>
-      <td className={styles.cellStage}><StatusBadge tone={item.stageTone} size="sm">{item.stage}</StatusBadge></td>
+      <td className={styles.cellStage}><StatusBadge tone={item.stageTone} size="sm" pulse={item.stageTone === 'red'}>{item.stage}</StatusBadge></td>
       <td className={styles.cellAction}>{item.requiredAction}</td>
       <td className={styles.cellRole}>{item.myRole}</td>
       <td className={`${styles.cellDue} ${item.dueUrgent || item.overdue ? styles.dueUrgent : ''}`}>{item.due}</td>
