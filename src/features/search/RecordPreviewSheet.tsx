@@ -95,7 +95,7 @@ export function RecordPreviewSheet(props: Props) {
               <button className={styles.navBtn} onClick={onNext} disabled={!hasNext} aria-label="Next result"><ChevronRight width={18} height={18} /></button>
             </>
           )}
-          <button className={styles.navBtn} onClick={() => props.showToast('Saved to your research.')} aria-label="Save result"><Bookmark width={17} height={17} /></button>
+          <button className={styles.navBtn} onClick={() => props.onAddToCollection?.(record.id, passage)} aria-label="Save to research collection" title="Save to research collection"><Bookmark width={17} height={17} /></button>
           <button className={styles.navBtn} onClick={copyLink} aria-label="Copy link"><Link2 width={17} height={17} /></button>
         </div>
       }
@@ -111,7 +111,14 @@ export function RecordPreviewSheet(props: Props) {
           </div>
           <div className={styles.footerIcons}>
             <button onClick={() => props.onAddToCollection?.(record.id, passage)}><FolderPlus width={15} height={15} /> Add to collection</button>
-            <button onClick={() => props.showToast('Preparing official PDF for download…')}><FileText width={15} height={15} /> Download PDF</button>
+            <button onClick={() => {
+              const lines = [record.title, `${record.reference} · ${record.workflowType} · Version ${record.currentVersion}`, ''];
+              if (passage) { if (passage.clauseRef) lines.push(passage.clauseRef); lines.push(passage.excerpt); }
+              const url = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' }));
+              const a = document.createElement('a'); a.href = url; a.download = `${record.reference.replace(/\//g, '-')}.txt`; a.click();
+              URL.revokeObjectURL(url);
+              props.showToast('Record extract downloaded.');
+            }}><FileText width={15} height={15} /> Download extract</button>
             <button onClick={() => navigate(`/legislative/${record.id}?tab=Activity`)}><History width={15} height={15} /> Activity</button>
           </div>
         </>

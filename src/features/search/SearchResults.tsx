@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import {
   Sparkles, Bookmark, MoreVertical, ArrowRight, ArrowUpRight, Check, Lock, ScanLine,
   ChevronDown, X, FileSearch, Info,
@@ -125,7 +125,15 @@ export function SearchResults(props: Props) {
           </div>
         ) : answer && mode !== 'exact' && !summaryHidden ? (
           <GroundedAnswerPanel answer={answer} onOpenPassage={(rid, pid) => props.onOpenSheet('__preview', { recordId: rid, passageId: pid })}
-            onEvidence={() => props.onOpenSheet('evidence')} onCopy={() => props.showToast('Summary copied with references.')}
+            onEvidence={() => props.onOpenSheet('evidence')}
+            onCopy={() => {
+              const text = [
+                ...answer.paragraphs, '', 'References:',
+                ...answer.evidence.map((e) => `• ${e.label} — ${byId[e.recordId]?.reference ?? e.recordId}`),
+              ].join('\n');
+              navigator.clipboard?.writeText(text);
+              props.showToast('Summary copied with references.');
+            }}
             onSave={() => props.onOpenSheet('save')} onHide={() => setSummaryHidden(true)} />
         ) : answer && mode !== 'exact' && summaryHidden ? (
           <button className={styles.showSummary} onClick={() => setSummaryHidden(false)}><Sparkles width={13} height={13} /> Show summary from legislative records</button>
@@ -235,9 +243,10 @@ function ResultCard({ index, passage, record, versionStatus, canAccess, onOpen, 
 }) {
   const restricted = record.restricted && !canAccess;
   const isScan = record.recordSource === 'Historical scan';
+  const inDelay = { '--item-delay': `${Math.min(index - 1, 8) * 0.05}s` } as CSSProperties;
 
   return (
-    <li className={styles.card}>
+    <li className={`${styles.card} item-in`} style={inDelay}>
       <div className={styles.cardNum} aria-hidden>{index}</div>
       <div className={styles.cardBody}>
         <div className={styles.cardHead}>
@@ -281,7 +290,7 @@ function ResultCard({ index, passage, record, versionStatus, canAccess, onOpen, 
       </div>
 
       <div className={styles.cardTools}>
-        <button className={styles.toolBtn} onClick={() => showToast('Result saved to your research.')} aria-label="Save result"><Bookmark width={16} height={16} /></button>
+        <button className={styles.toolBtn} onClick={() => onOpenSheet('collection', { recordId: record.id, passageId: passage.id })} aria-label="Save to research collection" title="Save to research collection"><Bookmark width={16} height={16} /></button>
         <Popover label="More actions" align="left" trigger={({ toggle, ref }) => (
           <button ref={ref} className={styles.toolBtn} onClick={toggle} aria-label="More actions"><MoreVertical width={16} height={16} /></button>
         )}>
