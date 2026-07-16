@@ -33,7 +33,7 @@ export function BoardView({ items, onOpenItem, onTransition }: {
 
   return (
     <div className={styles.board}>
-      {columns.map(({ meta, items: colItems }) => {
+      {columns.map(({ meta, items: colItems }, colIndex) => {
         const tv = toneVars[meta.tone];
         const isValid = canDropTo(meta.id);
         const isOver = overCol === meta.id;
@@ -56,6 +56,7 @@ export function BoardView({ items, onOpenItem, onTransition }: {
                   key={item.recordId}
                   item={item}
                   index={cardIndex}
+                  columnIndex={colIndex}
                   draggable={DRAG_ALLOWED.includes(item.workState)}
                   dragging={dragId === item.recordId}
                   onDragStart={() => setDragId(item.recordId)}
@@ -71,8 +72,8 @@ export function BoardView({ items, onOpenItem, onTransition }: {
   );
 }
 
-function BoardCard({ item, index, draggable, dragging, onDragStart, onDragEnd, onOpen }: {
-  item: WorkItem; index: number; draggable: boolean; dragging: boolean;
+function BoardCard({ item, index, columnIndex, draggable, dragging, onDragStart, onDragEnd, onOpen }: {
+  item: WorkItem; index: number; columnIndex: number; draggable: boolean; dragging: boolean;
   onDragStart: () => void; onDragEnd: () => void; onOpen: () => void;
 }) {
   const { done, total } = item.progress;
@@ -80,7 +81,7 @@ function BoardCard({ item, index, draggable, dragging, onDragStart, onDragEnd, o
   return (
     <article
       className={`${styles.card} ${dragging ? styles.cardDragging : ''} item-in`}
-      style={{ '--item-delay': `${index * 0.04}s` } as CSSProperties}
+      style={{ '--item-delay': `${columnIndex * 0.16 + index * 0.05}s` } as CSSProperties}
       draggable={draggable}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
