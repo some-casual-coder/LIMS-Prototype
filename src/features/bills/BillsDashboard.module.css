@@ -15,7 +15,11 @@
 .metricTicks { flex:1; min-width:64px; height:26px; display:flex; align-items:flex-end; justify-content:flex-end; gap:2px; }
 .metricTicks i { width:3px; border-radius:2px; }
 .metricTicks i:nth-child(3n+1){height:10px}.metricTicks i:nth-child(3n+2){height:18px}.metricTicks i:nth-child(3n){height:25px}
+.metricFoot { display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .metric p { margin:0; font-size:11px; color:var(--text-muted); }
+/* "Explore" cue: portfolio KPIs link to a related view (not an exact-count list). */
+.metricArrow { flex:none; color:var(--text-muted); opacity:.45; transition:opacity .12s ease, transform .12s ease, color .12s ease; }
+.metric:hover .metricArrow { opacity:1; color:var(--green-700); transform:translate(2px,-2px); }
 .matrixPanel,.actionPanel,.performancePanel,.statusPanel,.agePanel { padding:16px; }
 .sectionHead { display:flex; align-items:center; justify-content:space-between; gap:14px; }
 .sectionHead h2,.aknTop h2 { margin:3px 0 0; font-size:16px; line-height:1.25; color:var(--text-strong); }

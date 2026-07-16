@@ -1,6 +1,6 @@
 import { useMemo, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { CalendarClock, CircleAlert, Eye, FileCheck2, FileClock, Files, Plus, Scale, Workflow } from 'lucide-react';
+import { ArrowUpRight, CalendarClock, CircleAlert, Eye, FileCheck2, FileClock, Files, Plus, Scale, Workflow } from 'lucide-react';
 import { AppShell } from '@/components/shell';
 import { Button, StatusBadge } from '@/components/ui';
 import { useDemoStore } from '@/store/demoStore';
@@ -284,7 +284,10 @@ function Metric({ label, value, detail, icon, tone, to }: { label: string; value
           })}
         </span>
       </div>
-      <p>{detail}</p>
+      <div className={styles.metricFoot}>
+        <p>{detail}</p>
+        <ArrowUpRight width={15} height={15} className={styles.metricArrow} aria-hidden />
+      </div>
     </Link>
   );
 }
