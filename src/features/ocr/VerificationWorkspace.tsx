@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import {
   ChevronRight, ZoomIn, ZoomOut, Maximize, Sun, Check, AlertTriangle, ChevronDown,
-  ShieldCheck, GitCompare, ArrowRight,
+  ShieldCheck, ArrowRight,
 } from 'lucide-react';
 import { Button, Popover, StatusBadge } from '@/components/ui';
 import { useDemoStore } from '@/store/demoStore';
@@ -26,6 +26,7 @@ export function VerificationWorkspace() {
   const { id } = useParams();
   const [params, setParams] = useSearchParams();
   const jobs = useDemoStore((s) => s.ocrJobs);
+  const navigate = useNavigate();
   const setOcrPageState = useDemoStore((s) => s.setOcrPageState);
   const correctOcrLine = useDemoStore((s) => s.correctOcrLine);
   const confirmOcrMeta = useDemoStore((s) => s.confirmOcrMeta);
@@ -36,6 +37,8 @@ export function VerificationWorkspace() {
   const [activeLineId, setActiveLineId] = useState<string | null>(null);
   const [editingLineId, setEditingLineId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
+  const [pageFilter, setPageFilter] = useState('All Statuses');
+  const [severityFilter, setSeverityFilter] = useState('All severity');
   const [tab, setTab] = useState<'Transcription' | 'Structure' | 'Metadata' | 'Issues'>('Transcription');
   const [enhanced, setEnhanced] = useState(true);
   const [showRegions, setShowRegions] = useState(true);
@@ -47,6 +50,12 @@ export function VerificationWorkspace() {
   const page = job?.pages?.find((p) => p.n === currentPage);
   const pageIssues = useMemo(() => (job?.issues ?? []).filter((i) => i.page === currentPage), [job, currentPage]);
   const openPageIssues = pageIssues.filter((i) => i.status === 'open');
+  const shownIssues = openPageIssues.filter((i) => {
+    if (severityFilter === 'Blocking') return i.severity === 'blocking';
+    if (severityFilter === 'Review required') return i.severity === 'review';
+    if (severityFilter === 'Informational') return i.severity === 'info';
+    return true;
+  });
   const activeIssue = (job?.issues ?? []).find((i) => i.id === issueId);
 
   if (!job || !job.pages) {
@@ -113,8 +122,11 @@ export function VerificationWorkspace() {
               </div>
             </div>
             <div className={styles.headActions}>
-              <button className={styles.hBtn} onClick={() => showToast('Structural and metadata checks passed. 5 issues require review.')}><ShieldCheck width={15} height={15} /> Run Checks</button>
-              <button className={styles.hBtn} onClick={() => showToast('Compare layout — source scan and extracted structure side by side.')}><GitCompare width={15} height={15} /> Compare Layout</button>
+              <button className={styles.hBtn} onClick={() => {
+                const low = lines.filter((l) => l.low).length;
+                const open = (job.issues ?? []).filter((i) => i.status === 'open').length;
+                showToast(`Checks complete — ${open} open issue${open === 1 ? '' : 's'} and ${low} low-confidence line${low === 1 ? '' : 's'} on page ${currentPage}.`);
+              }}><ShieldCheck width={15} height={15} /> Run Checks</button>
               <Button variant="primary" size="sm" leftIcon={<ShieldCheck width={15} height={15} />} onClick={() => openSheet('quality')}>Complete Verification</Button>
             </div>
           </div>
@@ -126,12 +138,17 @@ export function VerificationWorkspace() {
           <aside className={styles.pagesCol}>
             <div className={styles.pagesHead}>
               <span className={styles.colHead}>Pages</span>
-              <Popover label="Filter pages" trigger={({ toggle, ref }) => (<button ref={ref} className={styles.miniControl} onClick={toggle}>All Statuses <ChevronDown width={12} height={12} /></button>)}>
-                {(close) => (<div className={styles.menu} onClick={close}>{['All Statuses', 'Needs Review', 'Low Confidence', 'Verified'].map((o) => <button key={o} className={styles.menuItem} onClick={() => showToast(`Filtered pages: ${o}.`)}>{o}</button>)}</div>)}
+              <Popover label="Filter pages" trigger={({ toggle, ref }) => (<button ref={ref} className={styles.miniControl} onClick={toggle}>{pageFilter} <ChevronDown width={12} height={12} /></button>)}>
+                {(close) => (<div className={styles.menu} onClick={close}>{['All Statuses', 'Needs Review', 'Low Confidence', 'Verified'].map((o) => <button key={o} className={`${styles.menuItem} ${pageFilter === o ? styles.menuItemActive : ''}`} onClick={() => setPageFilter(o)}>{o}</button>)}</div>)}
               </Popover>
             </div>
             <div className={styles.pageList}>
-              {job.pages.map((p) => {
+              {job.pages.filter((p) => {
+                if (pageFilter === 'Verified') return p.state === 'verified';
+                if (pageFilter === 'Needs Review') return p.state === 'needs-review';
+                if (pageFilter === 'Low Confidence') return p.confidence < 90;
+                return true;
+              }).map((p) => {
                 const meta = PAGE_STATE_META[p.state];
                 return (
                   <button key={p.n} className={`${styles.pageItem} ${p.n === currentPage ? styles.pageActive : ''}`} onClick={() => { setCurrentPage(p.n); setActiveLineId(null); }}>
@@ -276,12 +293,12 @@ export function VerificationWorkspace() {
           {openPageIssues.length > 0 && (
             <aside className={styles.issuesCol}>
               <div className={styles.issuesHead}>
-                <div><p className={styles.colHead}>Issues</p><p className={styles.issuesSub}>{openPageIssues.length} issues on this page</p></div>
-                <Popover label="Severity" trigger={({ toggle, ref }) => (<button ref={ref} className={styles.miniControl} onClick={toggle}>All severity <ChevronDown width={12} height={12} /></button>)}>
-                  {(close) => (<div className={styles.menu} onClick={close}>{['All severity', 'Blocking', 'Review required', 'Informational'].map((o) => <button key={o} className={styles.menuItem} onClick={() => showToast(`Filtered issues: ${o}.`)}>{o}</button>)}</div>)}
+                <div><p className={styles.colHead}>Issues</p><p className={styles.issuesSub}>{shownIssues.length} issue{shownIssues.length === 1 ? '' : 's'} on this page</p></div>
+                <Popover label="Severity" trigger={({ toggle, ref }) => (<button ref={ref} className={styles.miniControl} onClick={toggle}>{severityFilter} <ChevronDown width={12} height={12} /></button>)}>
+                  {(close) => (<div className={styles.menu} onClick={close}>{['All severity', 'Blocking', 'Review required', 'Informational'].map((o) => <button key={o} className={`${styles.menuItem} ${severityFilter === o ? styles.menuItemActive : ''}`} onClick={() => setSeverityFilter(o)}>{o}</button>)}</div>)}
                 </Popover>
               </div>
-              <div className={styles.issueCards}><IssueList issues={openPageIssues} compact onReview={(iid) => openSheet('issue', { issue: iid })} /></div>
+              <div className={styles.issueCards}><IssueList issues={shownIssues} compact onReview={(iid) => openSheet('issue', { issue: iid })} /></div>
               <div className={styles.pageConfFoot}><span>Page confidence</span><button className={styles.viewDetails} onClick={() => showToast(`${openPageIssues.length} low-confidence regions on this page.`)}>View details</button></div>
             </aside>
           )}
@@ -291,7 +308,7 @@ export function VerificationWorkspace() {
         <footer className={styles.footer}>
           <span className={styles.footNote}><ShieldCheck width={15} height={15} /> You are reviewing machine-extracted text. Please verify carefully. All corrections are saved to the verification history.</span>
           <div className={styles.footActions}>
-            <Button variant="secondary" size="sm" onClick={() => showToast('Progress saved.')}>Save Progress</Button>
+            <Button variant="secondary" size="sm" onClick={() => { showToast('Progress saved — corrections are in the verification history.'); navigate('/archive/ocr'); }}>Save &amp; Close</Button>
             <Button variant="primary" size="sm" leftIcon={<Check width={15} height={15} />} onClick={markVerified}>Mark Page as Verified</Button>
           </div>
         </footer>

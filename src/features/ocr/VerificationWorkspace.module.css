@@ -34,7 +34,8 @@
 .miniControl { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: var(--fw-medium); color: var(--text-strong); background: var(--bg-card); border: 1px solid var(--border-strong); border-radius: 7px; padding: 4px 8px; }
 .menu { min-width: 170px; padding: 6px; }
 .menuItem { display: block; width: 100%; text-align: left; font-size: 13px; color: var(--text); background: none; border: none; padding: 8px 10px; border-radius: 8px; }
-.menuItem:hover { background: var(--bg-app); }
+.menuItem:hover { background: rgba(11, 107, 58, 0.05); }
+.menuItemActive { color: var(--green-800); font-weight: var(--fw-semibold); background: var(--soft-green); }
 
 /* Pages navigator */
 .pagesCol { display: flex; flex-direction: column; min-height: 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 10px; }
