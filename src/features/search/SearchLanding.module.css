@@ -11,7 +11,7 @@
 }
 .chip:hover { border-color: var(--green-700); background: var(--green-100); color: var(--green-800); }
 
-.cols { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
 .colMain { display: grid; gap: 20px; }
 
 .viewAll { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; font-weight: var(--fw-medium); color: var(--green-700); background: none; border: none; }
@@ -21,7 +21,7 @@
 /* Recent */
 .recentList { display: grid; gap: 2px; }
 .recentItem { display: flex; align-items: center; gap: 8px; border-radius: 10px; padding: 4px; }
-.recentItem:hover { background: var(--bg-app); }
+.recentItem:hover { background: rgba(11, 107, 58, 0.05); }
 .recentMain { flex: 1; min-width: 0; text-align: left; background: none; border: none; padding: 6px 8px; }
 .recentQuery { display: flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: var(--fw-medium); color: var(--text-strong); }
 .pinIcon { color: var(--gold-strong); }
@@ -51,10 +51,10 @@
 }
 .runBtn:hover { border-color: var(--green-700); color: var(--green-800); }
 
-/* Collections */
-.collections { display: grid; gap: 4px; }
-.collection { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: none; border: none; padding: 10px 8px; border-radius: 10px; }
-.collection:hover { background: var(--bg-app); }
+/* Collections — full-width launcher card grid */
+.collections { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.collection { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: var(--bg-card); border: 1px solid var(--border); padding: 12px; border-radius: 12px; transition: background 0.12s ease, border-color 0.12s ease; }
+.collection:hover { background: rgba(11, 107, 58, 0.05); border-color: var(--border-strong); }
 .collIcon { flex: none; width: 38px; height: 38px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; }
 .collIcon svg { width: 18px; height: 18px; }
 .tone_green { background: var(--soft-green); color: var(--on-green); }
@@ -80,4 +80,8 @@
 
 @media (max-width: 1120px) {
   .cols { grid-template-columns: 1fr; }
+  .collections { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 680px) {
+  .collections { grid-template-columns: 1fr; }
 }
