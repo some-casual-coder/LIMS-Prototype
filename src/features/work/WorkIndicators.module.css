@@ -6,9 +6,9 @@
 }
 
 .card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  position: relative;
+  display: grid;
+  gap: 9px;
   padding: 14px 16px;
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -16,31 +16,60 @@
   text-align: left;
   transition: border-color 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
 }
-.card:hover { box-shadow: var(--shadow-card); }
+.card:hover { background: rgba(46, 125, 50, 0.05); }
 .active {
   border-color: var(--green-700);
   background: var(--soft-green);
 }
 
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+.label {
+  font-size: var(--fs-table);
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+  line-height: 1.25;
+}
 .iconWrap {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 11px;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-button);
   flex: none;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 14%, transparent);
 }
 
-.text { display: flex; flex-direction: column; min-width: 0; }
-.value { font-size: 26px; font-weight: var(--fw-bold); color: var(--text-strong); line-height: 1.05; letter-spacing: 0; }
-.label { font-size: var(--fs-table); font-weight: var(--fw-semibold); color: var(--text-strong); margin-top: 2px; }
-.sub { font-size: 11.5px; color: var(--text-muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.metric {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+}
+.value {
+  font-size: 28px;
+  font-weight: var(--fw-bold);
+  color: var(--text-strong);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+/* Thin equalizer: crisp 3px bars, ascending silhouette; `value` bars lit. */
+.miniTicks { flex: 1; min-width: 70px; height: 28px; display: flex; align-items: flex-end; justify-content: flex-end; gap: 2px; }
+.miniTicks i { width: 3px; border-radius: 2px; transform-origin: center bottom; }
+.miniTicks i:nth-child(3n+1) { height: 11px; }
+.miniTicks i:nth-child(3n+2) { height: 19px; }
+.miniTicks i:nth-child(3n) { height: 26px; }
+
+.sub { font-size: 11.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 @media (max-width: 1240px) {
-  .grid { grid-template-columns: repeat(3, 1fr); }
+  .grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 780px) {
-  .grid { grid-template-columns: repeat(2, 1fr); }
+  .grid { grid-template-columns: 1fr; }
 }
