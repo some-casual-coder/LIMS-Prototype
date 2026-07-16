@@ -69,7 +69,7 @@ export function Sidebar({ collapsed, mobileOpen = false, onCloseNavigation, onTo
   return (
     <nav className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''} ${mobileOpen ? styles.mobileOpen : ''}`} aria-label="Primary">
       <div className={styles.brand}>
-        <Link to="/dashboard" className={styles.brandLink} aria-label="LIMS, National Assembly of Kenya, home" onClick={onCloseNavigation}>
+        <Link to="/dashboard" className={styles.brandLink} aria-label="LIMS National Assembly of Kenya, home" onClick={onCloseNavigation}>
           <LogoMark size={collapsed ? 36 : 40} framed />
           {!collapsed && <span className={styles.brandDivider} aria-hidden />}
           {!collapsed && (

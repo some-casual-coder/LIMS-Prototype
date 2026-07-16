@@ -14,7 +14,9 @@
   border: none;
   background: transparent;
   border-radius: 7px;
-  color: var(--text-muted);
+  /* --text (not --text-muted) so inactive labels meet AA contrast on the grey
+     track; the active pill is distinguished by its white fill + shadow. */
+  color: var(--text);
   font-weight: var(--fw-semibold);
   font-size: var(--fs-table);
   transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
