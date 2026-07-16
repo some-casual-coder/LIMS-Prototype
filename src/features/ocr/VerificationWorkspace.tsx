@@ -2,8 +2,7 @@ import { useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import {
   ChevronRight, ZoomIn, ZoomOut, Maximize, Sun, Check, AlertTriangle, ChevronDown,
-  MousePointer2, SquareDashed, MessageSquare, PenLine, Bookmark, ShieldCheck, GitCompare,
-  Hand, Search as SearchIcon, ArrowRight,
+  ShieldCheck, GitCompare, ArrowRight,
 } from 'lucide-react';
 import { Button, Popover, StatusBadge } from '@/components/ui';
 import { useDemoStore } from '@/store/demoStore';
@@ -28,12 +27,15 @@ export function VerificationWorkspace() {
   const [params, setParams] = useSearchParams();
   const jobs = useDemoStore((s) => s.ocrJobs);
   const setOcrPageState = useDemoStore((s) => s.setOcrPageState);
+  const correctOcrLine = useDemoStore((s) => s.correctOcrLine);
   const confirmOcrMeta = useDemoStore((s) => s.confirmOcrMeta);
   const job = jobs.find((j) => j.id === id);
   const { showToast, ToastHost } = useToast();
 
   const [currentPage, setCurrentPage] = useState(7);
   const [activeLineId, setActiveLineId] = useState<string | null>(null);
+  const [editingLineId, setEditingLineId] = useState<string | null>(null);
+  const [editText, setEditText] = useState('');
   const [tab, setTab] = useState<'Transcription' | 'Structure' | 'Metadata' | 'Issues'>('Transcription');
   const [enhanced, setEnhanced] = useState(true);
   const [showRegions, setShowRegions] = useState(true);
@@ -58,6 +60,18 @@ export function VerificationWorkspace() {
 
   const openSheet = (name: string, extra?: Record<string, string>) => setParams((p) => { p.set('sheet', name); if (extra) Object.entries(extra).forEach(([k, v]) => p.set(k, v)); return p; });
   const closeSheet = () => setParams((p) => { p.delete('sheet'); p.delete('issue'); return p; }, { replace: true });
+
+  function beginEdit(lineId: string, text: string) {
+    setActiveLineId(lineId);
+    setEditingLineId(lineId);
+    setEditText(text);
+  }
+  function saveLine(lineId: string) {
+    const next = editText.trim();
+    if (next) correctOcrLine(job!.id, currentPage, lineId, next);
+    setEditingLineId(null);
+    showToast(next ? 'Correction saved to the verification history.' : 'No change made.');
+  }
 
   function markVerified() {
     setOcrPageState(job!.id, currentPage, 'verified');
@@ -157,17 +171,10 @@ export function VerificationWorkspace() {
               <div className={styles.scanZoom} style={{ width: `${zoom}%` }}>
                 <ScanPage lines={lines} pageNumber={currentPage} enhanced={enhanced} showRegions={showRegions} activeLineId={activeLineId} onSelectRegion={(lid) => { setActiveLineId(lid); const iss = pageIssues.find((i) => i.lineId === lid && i.status === 'open'); if (iss) openSheet('issue', { issue: iss.id }); }} />
               </div>
-              <div className={styles.toolRail}>
-                {[[<MousePointer2 width={16} height={16} />, 'Select'], [<SquareDashed width={16} height={16} />, 'Region'], [<MessageSquare width={16} height={16} />, 'Comment'], [<PenLine width={16} height={16} />, 'Edit'], [<Bookmark width={16} height={16} />, 'Bookmark']].map(([icon, label], i) => (
-                  <button key={i} className={styles.toolBtn} aria-label={label as string} title={label as string} onClick={() => showToast(`${label} tool selected.`)}>{icon}</button>
-                ))}
-              </div>
             </div>
             <div className={styles.floatBar}>
-              <button aria-label="Pan"><Hand width={15} height={15} /></button>
               <button onClick={() => setZoom((z) => Math.max(60, z - 10))} aria-label="Zoom out"><ZoomOut width={15} height={15} /></button>
               <button onClick={() => setZoom((z) => Math.min(160, z + 10))} aria-label="Zoom in"><ZoomIn width={15} height={15} /></button>
-              <button aria-label="Search in page" onClick={() => showToast('Find in page.')}><SearchIcon width={15} height={15} /></button>
               <button className={styles.fitBtn} onClick={() => setZoom(100)}>Fit page</button>
             </div>
           </section>
@@ -189,12 +196,34 @@ export function VerificationWorkspace() {
                   {lines.map((l) => {
                     const showConf = l.kind !== 'page-number' && l.kind !== 'title';
                     const cm = confidenceMeta(l.confidence);
+                    const editing = editingLineId === l.id;
                     return (
-                      <button key={l.id} className={`${styles.exLine} ${activeLineId === l.id ? styles.exActive : ''} ${l.low ? styles.exLow : ''}`} onClick={() => setActiveLineId(l.id)}>
+                      <div key={l.id} className={`${styles.exLine} ${activeLineId === l.id ? styles.exActive : ''} ${l.low ? styles.exLow : ''} ${editing ? styles.exEditing : ''}`}>
                         <span className={styles.exNo}>{l.n}</span>
-                        <span className={styles.exText}>{l.low && <AlertTriangle width={12} height={12} className={styles.exWarn} />}{l.text}</span>
-                        {showConf && <span className={`${styles.confChip} ${styles['cc_' + cm.tone]}`}>{l.confidence}%</span>}
-                      </button>
+                        {editing ? (
+                          <div className={styles.exEdit}>
+                            <textarea
+                              className={styles.exInput}
+                              value={editText}
+                              autoFocus
+                              rows={2}
+                              onChange={(e) => setEditText(e.target.value)}
+                              onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) saveLine(l.id); if (e.key === 'Escape') setEditingLineId(null); }}
+                              aria-label={`Correct line ${l.n}`}
+                            />
+                            <div className={styles.exEditActions}>
+                              <button className={styles.exSave} onClick={() => saveLine(l.id)}>Save correction</button>
+                              <button className={styles.exCancel} onClick={() => setEditingLineId(null)}>Cancel</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button className={styles.exText} onClick={() => beginEdit(l.id, l.text)} title="Click to correct this line">
+                            {l.low && <AlertTriangle width={12} height={12} className={styles.exWarn} />}{l.text}
+                            {l.corrected && <span className={styles.exCorrected}>corrected</span>}
+                          </button>
+                        )}
+                        {showConf && !editing && <span className={`${styles.confChip} ${styles['cc_' + cm.tone]}`}>{l.confidence}%</span>}
+                      </div>
                     );
                   })}
                 </div>

@@ -88,13 +88,25 @@
 .textSub { flex: none; padding: 8px 14px; font-size: 12px; color: var(--text-muted); }
 .textBody { flex: 1; overflow-y: auto; padding: 0 12px 8px; }
 .exLine { display: flex; align-items: flex-start; gap: 10px; width: 100%; text-align: left; background: none; border: none; padding: 7px 8px; border-radius: 8px; font-family: var(--font-serif); font-size: 13px; line-height: 1.5; color: var(--text); }
-.exLine:hover { background: var(--bg-app); }
+.exLine:hover { background: rgba(11, 107, 58, 0.05); }
 .exActive { background: var(--soft-gold); outline: 1px solid var(--gold-strong); }
 .exLow { background: var(--soft-amber); }
 .exLow.exActive { outline: 1px solid var(--status-warning); }
+.exEditing { background: #fff; outline: 1px solid var(--green-700); }
 .exNo { flex: none; width: 18px; font-size: 11px; color: var(--text-muted); font-family: var(--font-ui); padding-top: 2px; }
-.exText { flex: 1; min-width: 0; }
+.exText { flex: 1; min-width: 0; text-align: left; background: none; border: none; padding: 0; font: inherit; color: inherit; cursor: text; }
+.exText:hover { color: var(--text-strong); }
 .exWarn { color: var(--status-warning); vertical-align: middle; margin-right: 4px; }
+.exCorrected { display: inline-block; margin-left: 8px; font-family: var(--font-ui); font-size: 10px; font-weight: 700; color: var(--on-green); background: var(--soft-green); border-radius: 999px; padding: 1px 7px; vertical-align: middle; }
+/* Inline correction editor */
+.exEdit { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.exInput { width: 100%; resize: vertical; border: 1px solid var(--border-strong); border-radius: 6px; padding: 6px 8px; font-family: var(--font-serif); font-size: 13px; line-height: 1.5; color: var(--text-strong); }
+.exInput:focus { outline: none; border-color: var(--green-700); box-shadow: 0 0 0 3px rgba(11, 107, 58, 0.12); }
+.exEditActions { display: flex; gap: 8px; }
+.exSave { font-family: var(--font-ui); font-size: 12px; font-weight: var(--fw-semibold); color: #fff; background: var(--green-700); border: none; border-radius: 6px; padding: 5px 12px; }
+.exSave:hover { background: var(--green-800); }
+.exCancel { font-family: var(--font-ui); font-size: 12px; font-weight: var(--fw-medium); color: var(--text-muted); background: none; border: none; padding: 5px 8px; }
+.exCancel:hover { color: var(--text-strong); }
 .confChip { flex: none; font-size: 10.5px; font-weight: var(--fw-semibold); border-radius: 5px; padding: 1px 6px; font-family: var(--font-ui); }
 .cc_green { background: var(--soft-green); color: var(--on-green); }
 .cc_amber { background: var(--soft-amber); color: var(--on-amber); }
